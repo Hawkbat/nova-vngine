@@ -1,0 +1,28 @@
+{
+  "name": "nova-vngine",
+  "version": "1.0.0",
+  "description": "A browser-based visual novel game engine.",
+  "type": "module",
+  "scripts": {
+    "esbuild:build": "node scripts/build.js",
+    "esbuild:serve": "node scripts/serve.js",
+    "neu:start": "neu run",
+    "neu:build": "neu build --release"
+  },
+  "author": "Nova",
+  "license": "MIT",
+  "devDependencies": {
+    "@chialab/esbuild-plugin-html": "^0.18.2",
+    "@mdi/js": "^7.4.47",
+    "@mdi/react": "^1.6.1",
+    "@neutralinojs/lib": "^5.3.0",
+    "@neutralinojs/neu": "^11.2.2",
+    "@types/react": "^18.3.4",
+    "@types/react-dom": "^18.3.0",
+    "esbuild": "^0.23.1",
+    "esbuild-plugin-clean": "^1.0.1",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "typescript": "^5.5.4"
+  }
+}

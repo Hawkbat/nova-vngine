@@ -1,0 +1,13 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": true,
+    "composite": true,
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "exactOptionalPropertyTypes": false,
+    "jsx": "react-jsxdev"
+  }
+}

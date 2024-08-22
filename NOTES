@@ -1,0 +1,37 @@
+
+The engine is intended to bake in features common to many visual novels, such as character profiles, character relationship tracking, RPG stats, time and location tracking, chapters, knowledge encyclopedias, character customization, CG gallery, etc.
+
+The editor is designed to mirror the gameplay UI as much as possible for intuitive editing.
+
+Game state 'flows' from one state to the next, with each step only recording the delta from the previous state. This goes for both the UI state (what background is displayed, what characters are on screen) and gameplay variable state (current position in the scene graph, flags being set, numbers changing, etc.). This should allow for seamlessly rewinding and viewing history in a deterministic way without storing the entire game state in save data.
+
+Visualize as a timeline of events, like a keyframed animation. Graphics, sprites, music, etc. only change when a 'keyframe' event changes them, otherwise they persist. Branching points split the timeline in two.
+
+Story: The overall game structure.
+Chapter: A long sequence of related scenes.
+    Used as a breakpoint to discard granular variable state history and serve as a reload point for save files.
+Scene: A continouous sequence of writing, presentation, and gameplay, typically at the same time and location.
+    Gives a clean slate for the graphics.
+Character: A singular person in the story.
+
+Side Scene: A special type of reusable scene that can interrupt the current scene and branch back into it afterward. Can take in parameters and the initial view state and output return values afterward when branching back. Generally used to implement 'minigames' like combat or shops.
+
+Global Variables (defined globally, values stored as singleton)
+Chapter Variables (defined globally or per chapter, values stored per chapter)
+Scene Variables (defined globally or per scene, values stored per scene)
+Character Variables (defined globally or per character, values stored per character)
+
+Variables can be customized for display in various preset places in the UI (or in dialogue)
+
+Flag (boolean; can be labeled as Yes/No, True/False, On/Off, etc. depending on definition)
+Integer (integer; can have specified range, different ways of displaying with icons, etc.)
+Number (floating point number; can have specified range, different ways of displaying with icons, etc.)
+Single Choice (string enum; select from fixed list of options)
+Multiple Choice (string enum array; select from fixed list of options without duplicates)
+Chapter (chapter ID; references specific chapter)
+Scene (scene ID; references specific scene)
+Character (character ID; references specific character)
+List (generic array of any other variable type)
+Lookup (generic map of a specific list of keys (e.g. character IDs, scene IDs, fixed list of options, etc.) to any other variable type)
+
+Use a deterministic resumable RNG so the only state that needs to be recorded is how many times it's been used, not what the results were

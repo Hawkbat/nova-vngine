@@ -1,0 +1,33 @@
+
+.backsplash {
+    position: fixed;
+    left: 0;
+    top: 0;
+    right: 0;
+    bottom: 0;
+}
+
+.menu {
+    position: absolute;
+    background: #222;
+    border: 1px solid #444;
+    border-radius: 4px;
+    display: flex;
+    flex-flow: column;
+    gap: 2px;
+    padding: 2px;
+
+    color: white;
+    font-family: sans-serif;
+    font-size: 16px;
+}
+
+.menuItem {
+    display: flex;
+    align-items: center;
+}
+
+.menuItem:hover {
+    background: #555;
+    cursor: pointer;
+}

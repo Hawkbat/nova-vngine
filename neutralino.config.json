@@ -1,0 +1,48 @@
+{
+  "$schema": "neutralino.config.schema.json",
+  "applicationId": "nova.vngine",
+  "version": "1.0.0",
+  "defaultMode": "window",
+  "port": 0,
+  "documentRoot": "/resources/",
+  "url": "/",
+  "enableServer": true,
+  "enableNativeAPI": true,
+  "tokenSecurity": "one-time",
+  "logging": {
+    "enabled": true,
+    "writeToLogFile": true
+  },
+  "nativeAllowList": [
+    "app.*",
+    "os.*",
+    "debug.log"
+  ],
+  "globalVariables": {},
+  "modes": {
+    "window": {
+      "title": "Nova VNgine",
+      "width": 800,
+      "height": 500,
+      "minWidth": 400,
+      "minHeight": 200,
+      "center": true,
+      "fullScreen": false,
+      "alwaysOnTop": false,
+      "icon": "/resources/icons/appIcon.png",
+      "enableInspector": true,
+      "borderless": false,
+      "maximize": false,
+      "hidden": false,
+      "resizable": true,
+      "exitProcessOnClose": false
+    }
+  },
+  "cli": {
+    "binaryName": "app",
+    "resourcesPath": "/resources/",
+    "extensionsPath": "/extensions/",
+    "binaryVersion": "5.3.0",
+    "clientVersion": "5.3.0"
+  }
+}
