@@ -3,7 +3,7 @@
   "name": "Example Project",
   "editorRandState": [
     "xorshift32",
-    -14366797
+    -2130292209
   ],
   "stories": [
     {
@@ -12,7 +12,7 @@
     },
     {
       "id": "DCV72REE",
-      "name": ""
+      "name": "Second Story"
     }
   ],
   "chapters": [
@@ -20,13 +20,76 @@
       "id": "213RCRAR",
       "name": "My First Chapter",
       "storyID": "X12ECOS8"
+    },
+    {
+      "id": "Z3BR438Y",
+      "name": "",
+      "storyID": "X12ECOS8"
+    },
+    {
+      "id": "M9SJNA1A",
+      "name": "Story 2 Chapter",
+      "storyID": "DCV72REE"
     }
   ],
-  "scenes": [],
-  "characters": [],
-  "portraits": [],
-  "backdrops": [],
-  "songs": [],
-  "sounds": [],
-  "variables": []
+  "scenes": [
+    {
+      "id": "E3CCYXP6",
+      "name": "My First Scene",
+      "chapterID": "213RCRAR"
+    }
+  ],
+  "characters": [
+    {
+      "id": "1U58I1SC",
+      "name": "My Cool Character"
+    }
+  ],
+  "portraits": [
+    {
+      "id": "7R9ORU1P",
+      "name": "Neutral",
+      "characterID": "1U58I1SC"
+    }
+  ],
+  "backdrops": [
+    {
+      "id": "4YAVCQUO",
+      "name": "My Cool Backdrop"
+    }
+  ],
+  "songs": [
+    {
+      "id": "HVBBNPAO",
+      "name": "Neat Song"
+    }
+  ],
+  "sounds": [
+    {
+      "id": "2KX8AFHT",
+      "name": "Awesome Sound"
+    }
+  ],
+  "variables": [
+    {
+      "id": "4BTATXCJ",
+      "name": "Test",
+      "type": "flag",
+      "scope": {
+        "type": "allStories"
+      },
+      "default": {
+        "type": "boolean",
+        "args": [
+          false
+        ]
+      },
+      "setValueLabel": {
+        "type": "unset"
+      },
+      "unsetValueLabel": {
+        "type": "unset"
+      }
+    }
+  ]
 }

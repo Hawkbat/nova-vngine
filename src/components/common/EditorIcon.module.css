@@ -9,13 +9,15 @@
 
 .icon > span {
     font-size: 0.25em;
+    width: 6em;
+    text-align: center;
 }
 
 .icon.active {
     opacity: 1;
 }
 
-.icon:hover {
+.icon.clickable:hover {
     opacity: 0.9;
 }
 

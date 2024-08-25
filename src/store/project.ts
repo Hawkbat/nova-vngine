@@ -1,4 +1,4 @@
-import { AnyVariableDefinition, BackdropDefinition, BackdropID, ChapterDefinition, ChapterID, CharacterDefinition, CharacterID, PortraitDefinition, PortraitID, ProjectDefinition, ProjectID, SceneDefinition, SceneID, SongDefinition, SongID, SoundDefinition, SoundID, StoryDefinition, StoryID, VariableID } from "../types/definitions"
+import { AnyVariableDefinition, BackdropDefinition, BackdropID, ChapterDefinition, ChapterID, CharacterDefinition, CharacterID, EntityDefinition, EntityIDOf, EntityOfType, EntityParentOf, EntityType, getEntityParentID, getEntityParentType, getProjectEntityKey, PortraitDefinition, PortraitID, ProjectDefinition, ProjectID, SceneDefinition, SceneID, SongDefinition, SongID, SoundDefinition, SoundID, StoryDefinition, StoryID, VariableID } from "../types/definitions"
 import { createDefaultExpr } from "../types/expressions"
 import { immAppend, immSet } from "../utils/imm"
 import { randID, randSeedRandom } from "../utils/rand"
@@ -26,6 +26,36 @@ export function createProject(): ProjectDefinition {
     }
 
     return project
+}
+
+export function getEntityByID<T extends EntityType>(type: T, id: EntityIDOf<T>): EntityOfType<T> | null {
+    const project = projectStore.getSnapshot()
+    const key = getProjectEntityKey(type)
+    const entities = project[key]
+    const entity = entities.find(e => e.id === id)
+    if (entity) return entity as EntityOfType<T>
+    return null
+}
+
+export function getEntityParent<T extends EntityType>(type: T, entity: EntityOfType<T>): EntityOfType<EntityParentOf<T>> | null {
+    const parentType = getEntityParentType(type)
+    if (!parentType) return null
+    const parentID = getEntityParentID(type, entity)
+    if (!parentID) return null
+    const parent = getEntityByID(parentType, parentID)
+    if (!parent) return null
+    return parent
+}
+
+type EntityPair<T extends EntityType> = { type: T, entity: EntityOfType<T> }
+
+export function getEntityHierarchy<T extends EntityType>(type: T, id: EntityIDOf<T>): EntityPair<EntityType>[] {
+    const entity = getEntityByID(type, id)
+    if (!entity) return []
+    const parentType = getEntityParentType(type)
+    const parentID = getEntityParentID(type, entity)
+    if (parentType && parentID) return [...getEntityHierarchy(parentType, parentID), { type, entity }]
+    return [{ type, entity }]
 }
 
 function immGenerateID<T extends string>(project: ProjectDefinition): [ProjectDefinition, T] {

@@ -1,8 +1,31 @@
 import { RandState } from "../utils/rand"
-import { Branded } from "../utils/types"
+import { Branded, hintTypeTuple } from "../utils/types"
 import { BooleanExpr, ChapterExpr, CharacterExpr, IntegerExpr, ListExpr, NumberExpr, PortraitExpr, SceneExpr, StringExpr, ValueExpr } from "./expressions"
 
-export type ProjectID = Branded<string, 'Project'>
+type EntityID<T extends EntityType> = Branded<string, T>
+
+export interface EntityDefinition<T extends EntityID<EntityType>> {
+    id: T
+    name: string
+}
+
+type EntityTypeMap = {
+    story: StoryDefinition
+    chapter: ChapterDefinition
+    scene: SceneDefinition
+    character: CharacterDefinition
+    portrait: PortraitDefinition
+    backdrop: BackdropDefinition
+    song: SongDefinition
+    sound: SoundDefinition
+    variable: AnyVariableDefinition
+}
+
+export type EntityType = keyof EntityTypeMap
+export type EntityOfType<T extends EntityType> = T extends EntityType ? EntityTypeMap[T] : never
+export type EntityIDOf<T extends EntityType> = T extends EntityType ? EntityOfType<T>['id'] : never
+
+export type ProjectID = Branded<string, 'project'>
 
 export interface ProjectDefinition {
     id: ProjectID
@@ -19,66 +42,139 @@ export interface ProjectDefinition {
     variables: AnyVariableDefinition[]
 }
 
-export type StoryID = Branded<string, 'Story'>
-
-export interface StoryDefinition {
-    id: StoryID
-    name: string
+type ProjectKeyByTypeMap = {
+    [K in EntityType]-?: keyof {
+        [L in keyof ProjectDefinition as ProjectDefinition[L] extends EntityDefinition<infer U>[] ?
+        U extends EntityOfType<K>['id'] ? L : never
+        : never]: L
+    }
 }
 
-export type ChapterID = Branded<string, 'Chapter'>
+const PROJECT_KEY_BY_TYPE_MAP: ProjectKeyByTypeMap = {
+    story: 'stories',
+    chapter: 'chapters',
+    scene: 'scenes',
+    character: 'characters',
+    portrait: 'portraits',
+    backdrop: 'backdrops',
+    song: 'songs',
+    sound: 'sounds',
+    variable: 'variables',
+}
 
-export interface ChapterDefinition {
-    id: ChapterID
-    name: string
+type TypeByProjectKeyMap = { [K in keyof ProjectKeyByTypeMap as ProjectKeyByTypeMap[K]]: K }
+
+const TYPE_BY_PROJECT_KEY_MAP = Object.fromEntries(Object.entries(PROJECT_KEY_BY_TYPE_MAP).map(([k, v]) => hintTypeTuple(v, k))) as TypeByProjectKeyMap
+
+export const ENTITY_TYPES = Object.keys(PROJECT_KEY_BY_TYPE_MAP) as EntityType[]
+export const PROJECT_ENTITY_KEYS = Object.values(PROJECT_KEY_BY_TYPE_MAP) as ProjectEntityKey[]
+
+export type ProjectEntityKey = ProjectEntityKeyOf<EntityType>
+
+export type ProjectEntityKeyOf<T extends EntityType> = T extends EntityType ? ProjectKeyByTypeMap[T] : never
+
+export type EntityTypeOfProjectKey<T extends ProjectEntityKey> = TypeByProjectKeyMap[T]
+
+export function getEntityTypeByProjectKey<T extends ProjectEntityKey>(key: T): EntityTypeOfProjectKey<T> {
+    return TYPE_BY_PROJECT_KEY_MAP[key] as EntityTypeOfProjectKey<T>
+}
+
+export function getProjectEntityKey<T extends EntityType>(type: T): ProjectEntityKeyOf<T> {
+    return PROJECT_KEY_BY_TYPE_MAP[type] as ProjectEntityKeyOf<T>
+}
+
+export function isEntityType(str: string): str is EntityType {
+    return str in PROJECT_KEY_BY_TYPE_MAP
+}
+
+export function isProjectEntityKey(str: string): str is ProjectEntityKey {
+    return str in TYPE_BY_PROJECT_KEY_MAP
+}
+
+const ENTITY_PARENTS = {
+    chapter: 'story',
+    scene: 'chapter',
+    portrait: 'character',
+} satisfies { [K in EntityType]?: EntityType }
+
+type EntityParentMap = typeof ENTITY_PARENTS
+
+export type EntityParentOf<T extends EntityType> = T extends keyof EntityParentMap ? EntityParentMap[T] : never
+
+export type EntityParentIDOf<T extends EntityType> = T extends keyof EntityParentMap ? EntityIDOf<EntityParentMap[T]> : never
+
+export function getEntityParentType<T extends EntityType>(type: T): EntityParentOf<T> | null {
+    if (type in ENTITY_PARENTS) return ENTITY_PARENTS[type as keyof EntityParentMap] as EntityParentOf<T>
+    return null
+}
+
+export function getEntityTypeHierarchy<T extends EntityType>(type: T): EntityType[] {
+    if (type in ENTITY_PARENTS) return [...getEntityTypeHierarchy(ENTITY_PARENTS[type as keyof EntityParentMap]), type]
+    return [type]
+}
+
+const ENTITY_PARENT_GETTERS = {
+    chapter: c => c.storyID,
+    scene: s => s.chapterID,
+    portrait: p => p.characterID,
+} satisfies { [K in keyof EntityParentMap]: (entity: EntityOfType<K>) => EntityID<EntityParentMap[K]> }
+
+export function getEntityParentID<T extends EntityType>(type: T, entity: EntityOfType<T>): EntityParentIDOf<T> | null {
+    if (type in ENTITY_PARENT_GETTERS) {
+        return (ENTITY_PARENT_GETTERS as any)[type](entity)
+    }
+    return null
+}
+
+export type StoryID = EntityID<'story'>
+
+export interface StoryDefinition extends EntityDefinition<StoryID> {
+
+}
+
+export type ChapterID = EntityID<'chapter'>
+
+export interface ChapterDefinition extends EntityDefinition<ChapterID> {
     storyID: StoryID
 }
 
-export type SceneID = Branded<string, 'Scene'>
+export type SceneID = EntityID<'scene'>
 
-export interface SceneDefinition {
-    id: SceneID
-    name: string
+export interface SceneDefinition extends EntityDefinition<SceneID> {
     chapterID: ChapterID
 }
 
-export type CharacterID = Branded<string, 'Character'>
+export type CharacterID = EntityID<'character'>
 
-export interface CharacterDefinition {
-    id: CharacterID
-    name: string
+export interface CharacterDefinition extends EntityDefinition<CharacterID> {
+
 }
 
-export type PortraitID = Branded<string, 'Portrait'>
+export type PortraitID = EntityID<'portrait'>
 
-export interface PortraitDefinition {
-    id: PortraitID
-    name: string
+export interface PortraitDefinition extends EntityDefinition<PortraitID> {
     characterID: CharacterID
 }
 
-export type BackdropID = Branded<string, 'Backdrop'>
+export type BackdropID = EntityID<'backdrop'>
 
-export interface BackdropDefinition {
-    id: BackdropID
-    name: string
+export interface BackdropDefinition extends EntityDefinition<BackdropID> {
+
 }
 
-export type SongID = Branded<string, 'Song'>
+export type SongID = EntityID<'song'>
 
-export interface SongDefinition {
-    id: SongID
-    name: string
+export interface SongDefinition extends EntityDefinition<SongID> {
+    
 }
 
-export type SoundID = Branded<string, 'Sound'>
+export type SoundID = EntityID<'sound'>
 
-export interface SoundDefinition {
-    id: SoundID
-    name: string
+export interface SoundDefinition extends EntityDefinition<SoundID> {
+    
 }
 
-export type VariableID = Branded<string, 'Variable'>
+export type VariableID = EntityID<'variable'>
 
 type VariableScopeMap = {
     allStories: { }
@@ -146,10 +242,8 @@ type VariableDefinitionMap = {
 }
 
 export type VariableDefinitionType = keyof VariableDefinitionMap
-export type VariableDefinitionOfType<T extends VariableDefinitionType> = T extends VariableDefinitionType ? {
-    id: VariableID
+export type VariableDefinitionOfType<T extends VariableDefinitionType> = T extends VariableDefinitionType ? EntityDefinition<VariableID> & {
     type: T
-    name: string
     scope: AnyVariableScope
 } & VariableDefinitionMap[T] : never
 export type AnyVariableDefinition = VariableDefinitionOfType<VariableDefinitionType>

@@ -11,6 +11,7 @@ export const COMMON_ICONS = {
     checkboxUnchecked: mdiCheckboxBlankOutline,
     addItem: mdiPlusBox,
     deleteItem: mdiTrashCan,
+    breadcrumbArrow: mdiChevronRight,
 } satisfies Record<string, string>
 
 export const EXPR_ICONS: Record<ExprType, string> = {

@@ -9,12 +9,18 @@
     flex-direction: column;
     font-size: 40px;
     overflow: auto;
-    padding: 2px;
+    background: #222;
+    padding-bottom: 0.25em;
+    gap: 0.1em;
 }
 
 .sidebarSpacer {
-    padding-top: 20px;
-    flex: 1 0 auto;
+    flex: 1 0 0;
+}
+
+.sidebarLine {
+    margin: 5px;
+    border-bottom: 1px solid #444;
 }
 
 .pane {
@@ -36,11 +42,7 @@
     flex-flow: row wrap;
     font-size: 16px;
     gap: 5px;
-}
-
-.breadcrumbLabel {
-    padding: 5px;
-    padding-right: 0px;
+    padding-bottom: 5px;
 }
 
 .footer {

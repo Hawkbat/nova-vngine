@@ -1,4 +1,4 @@
-import { ProjectDefinition } from "../../types/definitions"
+import { ENTITY_TYPES, EntityType, getEntityTypeByProjectKey, getEntityTypeHierarchy, getProjectEntityKey, isProjectEntityKey, PROJECT_ENTITY_KEYS, ProjectEntityKeyOf } from "../../types/definitions"
 import styles from './ProjectEditor.module.css'
 import { EditorIcon } from "../common/EditorIcon"
 import { COMMON_ICONS, EXPR_VALUE_ICONS, PROJECT_TAB_ICONS } from "../common/Icons"
@@ -7,55 +7,44 @@ import { ProjectWorkspace } from "../workspaces/ProjectWorkspace"
 import { SceneWorkspace } from "../workspaces/SceneWorkspace"
 import { HomeWorkspace } from "../workspaces/HomeWorkspace"
 import { projectStore } from "../../store/project"
-import { useViewStateTab, ViewState, viewStateStore } from "../../store/viewstate"
-import { useStore, useSelector } from "../../utils/store"
+import { useViewStateScope, useViewStateTab, viewStateStore } from "../../store/viewstate"
+import { useSelector } from "../../utils/store"
 import { StoryWorkspace } from "../workspaces/StoryWorkspace"
-import { immSet } from "../../utils/imm"
 import { ChapterWorkspace } from "../workspaces/ChapterWorkspace"
-import { EditorButton, EditorButtonGroup } from "../common/EditorButton"
-import { platform } from "../../utils/platform/platform"
+import { EditorButton } from "../common/EditorButton"
+import { CharacterWorkspace } from "../workspaces/CharacterWorkspace"
+import { PortraitWorkspace } from "../workspaces/PortraitWorkspace"
+import { BackdropWorkspace } from "../workspaces/BackdropWorkspace"
+import { SongWorkspace } from "../workspaces/SongWorkspace"
+import { SoundWorkspace } from "../workspaces/SoundWorkspace"
+import { VariableWorkspace } from "../workspaces/VariableWorkspace"
 
-export type ProjectEditorTab = 'home' | 'manual' | 'settings' | 'project' | Exclude<keyof ProjectDefinition, 'id' | 'name' | 'editorRandState'>
+export type ProjectEditorTab = 'home' | 'manual' | 'settings' | 'project' | ProjectEntityKeyOf<EntityType>
 
-const PROJECT_TABS: ProjectEditorTab[] = [
-    'project',
-    'stories',
-    'chapters',
-    'scenes',
-    'characters',
-    'portraits',
-    'backdrops',
-    'songs',
-    'sounds',
-    'variables',
-]
-
-const Breadcrumb = <T extends keyof ViewState['scopes']>({ name, tab, scope }: { name: string | undefined, tab: ProjectEditorTab, scope: T }) => {
-    const [, setCurrentTab] = useViewStateTab()
+const Breadcrumb = <T extends EntityType>({ type }: { type: T }) => {
+    const tab = getProjectEntityKey(type)
+    const [scope, setScope] = useViewStateScope(type)
+    const [name] = useSelector(projectStore, s => s[tab].find(i => i.id === scope)?.name)
+    const [currentTab, setCurrentTab] = useViewStateTab()
     if (name === undefined) return
-    if (!name) name = `Untitled ${prettyPrintIdentifier(scope)}`
+    if (!isProjectEntityKey(currentTab) || !getEntityTypeHierarchy(getEntityTypeByProjectKey(currentTab)).includes(type)) return
 
-    return <EditorButton icon={EXPR_VALUE_ICONS[scope]} style='outline' onClick={() => setCurrentTab(tab)}>
-        <span>{name}</span>
-        <EditorIcon path={COMMON_ICONS.cancel} label={`Stop Filtering By ${prettyPrintIdentifier(scope)}`} onClick={() => viewStateStore.setValue(s => immSet(s, 'scopes', immSet(s.scopes, scope, undefined)))} />
-    </EditorButton>
+    return <>
+        <EditorIcon path={COMMON_ICONS.breadcrumbArrow} />
+        <EditorButton icon={EXPR_VALUE_ICONS[type]} style='outline' onClick={() => setCurrentTab(tab)}>
+            <span>{name ? name : `Untitled ${prettyPrintIdentifier(type)}`}</span>
+            <EditorIcon path={COMMON_ICONS.cancel} label={`Stop Filtering By ${prettyPrintIdentifier(type)}`} onClick={() => setScope(undefined)} />
+        </EditorButton>
+    </>
 }
 
 const Breadcrumbs = ({} : {}) => {
-    const [project] = useStore(projectStore)
+    const [projectName] = useSelector(projectStore, s => s.name)
     const [projectIsLoaded] = useSelector(viewStateStore, s => s.loadedProject !== null)
-    const [scopes] = useSelector(viewStateStore, s => s.scopes)
+    const [, setCurrentTab] = useViewStateTab()
     return projectIsLoaded ? <div className={styles.breadcrumbs}>
-        {Object.values(scopes).filter(s => s && s.length).length ? <span className={styles.breadcrumbLabel}>Filtering by:</span> : null}
-        {scopes.story ? <Breadcrumb scope='story' tab='stories' name={project.stories.find(o => o.id === scopes.story)?.name} /> : null}
-        {scopes.chapter ? <Breadcrumb scope='chapter' tab='chapters' name={project.chapters.find(o => o.id === scopes.chapter)?.name} /> : null}
-        {scopes.scene ? <Breadcrumb scope='scene' tab='scenes' name={project.scenes.find(o => o.id === scopes.scene)?.name} /> : null}
-        {scopes.character ? <Breadcrumb scope='character' tab='characters' name={project.characters.find(o => o.id === scopes.character)?.name} /> : null}
-        {scopes.portrait ? <Breadcrumb scope='portrait' tab='portraits' name={project.portraits.find(o => o.id === scopes.portrait)?.name} /> : null}
-        {scopes.backdrop ? <Breadcrumb scope='backdrop' tab='backdrops' name={project.backdrops.find(o => o.id === scopes.backdrop)?.name} /> : null}
-        {scopes.song ? <Breadcrumb scope='song' tab='songs' name={project.songs.find(o => o.id === scopes.song)?.name} /> : null}
-        {scopes.sound ? <Breadcrumb scope='sound' tab='sounds' name={project.sounds.find(o => o.id === scopes.sound)?.name} /> : null}
-        {scopes.variable ? <Breadcrumb scope='variable' tab='variables' name={project.variables.find(o => o.id === scopes.variable)?.name} /> : null}
+        <EditorButton icon={PROJECT_TAB_ICONS.project} style='outline' onClick={() => setCurrentTab('project')}>{projectName}</EditorButton>
+        {ENTITY_TYPES.map(e => <Breadcrumb key={e} type={e} />)}
     </div> : null
 }
 
@@ -64,43 +53,49 @@ const TabButton = ({ tab }: { tab: ProjectEditorTab }) => {
     return <EditorIcon path={PROJECT_TAB_ICONS[tab]} label={prettyPrintIdentifier(tab)} active={currentTab === tab} showLabel onClick={() => setCurrentTab(tab)} />
 }
 
-const Sidebar = ({ }: { }) => {
+const Sidebar = () => {
     const [projectIsLoaded] = useSelector(viewStateStore, s => s.loadedProject !== null)
 
     return <div className={styles.sidebar}>
         <TabButton tab='home' />
-        <div className={styles.sidebarSpacer} />
         {projectIsLoaded ? <>
-            {PROJECT_TABS.map(t => <TabButton key={t} tab={t} />)}
-            <div className={styles.sidebarSpacer} />
+            <div className={styles.sidebarLine} />
+            <TabButton tab='project' />
+            {PROJECT_ENTITY_KEYS.map(t => <TabButton key={t} tab={t} />)}
         </> : null}
+        <div className={styles.sidebarSpacer} />
+        <div className={styles.sidebarLine} />
         <TabButton tab='manual' />
         <TabButton tab='settings' />
     </div>
 }
 
-const Footer = ({ }: { }) => {
+const Footer = () => {
     const [loadedProject] = useSelector(viewStateStore, s => s.loadedProject)
     return loadedProject ? <div className={styles.footer}>
-        <EditorButtonGroup>
-            <EditorButton onClick={() => platform.saveProject(loadedProject.directory, projectStore.getSnapshot())}>Save Project</EditorButton>
-        </EditorButtonGroup>
+        
     </div> : null
 }
 
-export const ProjectEditor = ({ }: { }) => {
+export const ProjectEditor = () => {
     const [currentTab] = useSelector(viewStateStore, s => s.currentTab)
     
     return <div className={styles.editor}>
         <Sidebar />
         <div className={styles.pane}>
-            <Breadcrumbs />
+            {currentTab !== 'home' ? <Breadcrumbs /> : null}
             <div className={styles.workspace}>
                 {currentTab === 'home' ? <HomeWorkspace /> : null}
                 {currentTab === 'project' ? <ProjectWorkspace /> : null}
                 {currentTab === 'stories' ? <StoryWorkspace /> : null}
                 {currentTab === 'chapters' ? <ChapterWorkspace /> : null}
                 {currentTab === 'scenes' ? <SceneWorkspace /> : null}
+                {currentTab === 'characters' ? <CharacterWorkspace /> : null}
+                {currentTab === 'portraits' ? <PortraitWorkspace /> : null}
+                {currentTab === 'backdrops' ? <BackdropWorkspace /> : null}
+                {currentTab === 'songs' ? <SongWorkspace /> : null}
+                {currentTab === 'sounds' ? <SoundWorkspace /> : null}
+                {currentTab === 'variables' ? <VariableWorkspace /> : null}
             </div>
             <Footer />
         </div>

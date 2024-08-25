@@ -1,13 +1,13 @@
 import { projectStore } from "../../store/project"
 import { useMetaSelector, useSelector } from "../../utils/store"
-import faviconSvgUrl from '../../favicon.svg'
-import styles from './HomeWorkspace.module.css'
 import { EditorIcon } from "../common/EditorIcon"
 import { COMMON_ICONS, PROJECT_TAB_ICONS } from "../common/Icons"
 import { loadProjectFromFolder, ProjectMetaData, useViewStateTab, viewStateStore } from "../../store/viewstate"
 import { openDialog } from "../common/Dialog"
 import { isProjectFile } from "../../utils/platform/common"
 import { platform } from "../../utils/platform/platform"
+import faviconSvgUrl from '../../favicon.svg'
+import styles from './HomeWorkspace.module.css'
 
 export const HomeWorkspace = () => {
     const [, setCurrentTab] = useViewStateTab()

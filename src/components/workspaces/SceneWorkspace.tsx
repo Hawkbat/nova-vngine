@@ -1,16 +1,14 @@
 import { useState } from "react"
-import { projectStore } from "../../store/project"
-import { SceneID } from "../../types/definitions"
-import { useSelector } from "../../utils/store"
+import { immCreateScene } from "../../store/project"
 import { AnyExpr, createDefaultExpr } from "../../types/expressions"
 import { ExpressionEmbed } from "../editors/ExpressionEditor"
+import { SceneDefinition } from "../../types/definitions"
+import { EntityWorkspace } from "./EntityWorkspace"
+import styles from "./SceneWorkspace.module.css"
 
-export const SceneWorkspace = ({}: {}) => {
-    const [sceneID, setSceneID] = useState('' as SceneID)
-    const [scene, setProject] = useSelector(projectStore, s => s.scenes.find(i => i.id === sceneID))
-    
+const SceneEditor = ({ scene }: { scene: SceneDefinition }) => {
     const [expr, setExpr] = useState<AnyExpr>(createDefaultExpr('unset'))
-    
+
     return <>
         <span>
             This is a first line of text with a lot of content in it so it will extend above the expression editor
@@ -24,4 +22,8 @@ export const SceneWorkspace = ({}: {}) => {
             A final line to show the line spacing is even
         </span>
     </>
+}
+
+export const SceneWorkspace = () => {
+    return <EntityWorkspace type='scene' immCreate={immCreateScene}>{scene => <SceneEditor scene={scene} />}</EntityWorkspace>
 }

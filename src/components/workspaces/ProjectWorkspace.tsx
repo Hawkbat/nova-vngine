@@ -4,7 +4,7 @@ import { useStore } from "../../utils/store"
 import { NumberField, StringField } from "../common/StringField"
 import styles from './ProjectWorkspace.module.css'
 
-export const ProjectWorkspace = ({}: {}) => {
+export const ProjectWorkspace = () => {
     const [project, setProject] = useStore(projectStore)
     return <div className={styles.workspace}>
         <StringField label='Project Name' value={project.name} setValue={name => setProject(project => immSet(project, 'name', name))} validate={s => s ? '' : 'Name must be filled out'} />

@@ -1,12 +1,12 @@
 import { useCallback } from "react"
 import { ProjectEditorTab } from "../components/editors/ProjectEditor"
-import { BackdropID, ChapterID, CharacterID, PortraitID, SceneID, SongID, SoundID, StoryID, VariableID } from "../types/definitions"
+import { ENTITY_TYPES, EntityIDOf, EntityOfType, EntityType, getEntityTypeHierarchy } from "../types/definitions"
 import { createSimpleStore, useSelector } from "../utils/store"
 import { immSet } from "../utils/imm"
 import { hintTypeTuple } from "../utils/types"
 import { PlatformFilesystemEntry } from "../utils/platform/common"
 import { platform } from "../utils/platform/platform"
-import { projectStore } from "./project"
+import { getEntityHierarchy, projectStore } from "./project"
 
 export interface ProjectMetaData {
     id: string
@@ -19,17 +19,7 @@ export interface ViewState {
     currentTab: ProjectEditorTab
     loadedProject: ProjectMetaData | null
     recentProjects: ProjectMetaData[]
-    scopes: {
-        story?: StoryID
-        chapter?: ChapterID
-        scene?: SceneID
-        character?: CharacterID
-        portrait?: PortraitID
-        backdrop?: BackdropID
-        song?: SongID
-        sound?: SoundID
-        variable?: VariableID
-    }
+    scopes: { [K in EntityType]?: EntityOfType<K>['id'] }
 }
 
 export const viewStateStore = createSimpleStore<ViewState>({
@@ -46,6 +36,24 @@ export function useViewStateTab() {
         setViewState(s => immSet(s, 'currentTab', tab))
     }, [])
     return hintTypeTuple(tab, setTab)
+}
+
+export function useViewStateScope<T extends EntityType>(type: T | null) {
+    const [scopes, setViewState] = useSelector(viewStateStore, s => s.scopes)
+    const scope = type ? scopes[type] : null
+    const setScope = useCallback((id: EntityIDOf<T> | undefined) => {
+        if (!type) return
+        if (!id) {
+            const subTypes = ENTITY_TYPES.filter(e => getEntityTypeHierarchy(e).includes(type))
+            const scopeValues = Object.fromEntries(subTypes.map(t => hintTypeTuple(t, undefined)))
+            setViewState(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues } }))
+            return
+        }
+        const hierarchy = getEntityHierarchy(type, id)
+        const scopeValues = Object.fromEntries(hierarchy.map(h => hintTypeTuple(h.type, h.entity.id)))
+        setViewState(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues } }))
+    }, [type])
+    return hintTypeTuple(scope, setScope)
 }
 
 export async function loadInitialViewState() {
