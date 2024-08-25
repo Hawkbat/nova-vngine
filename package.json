@@ -5,24 +5,29 @@
   "type": "module",
   "scripts": {
     "esbuild:build": "node scripts/build.js",
+    "esbuild:watch": "node scripts/watch.js",
     "esbuild:serve": "node scripts/serve.js",
-    "neu:start": "neu run",
+    "neu:start": "neu run -- --window-enable-inspector",
     "neu:build": "neu build --release"
   },
   "author": "Nova",
   "license": "MIT",
   "devDependencies": {
-    "@chialab/esbuild-plugin-html": "^0.18.2",
+    "@craftamap/esbuild-plugin-html": "^0.7.0",
     "@mdi/js": "^7.4.47",
     "@mdi/react": "^1.6.1",
     "@neutralinojs/lib": "^5.3.0",
     "@neutralinojs/neu": "^11.2.2",
     "@types/react": "^18.3.4",
     "@types/react-dom": "^18.3.0",
+    "@types/wicg-file-system-access": "^2023.10.5",
     "esbuild": "^0.23.1",
     "esbuild-plugin-clean": "^1.0.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "idb-keyval": "^6.2.1"
   }
 }

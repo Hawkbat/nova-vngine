@@ -13,11 +13,7 @@
     "enabled": true,
     "writeToLogFile": true
   },
-  "nativeAllowList": [
-    "app.*",
-    "os.*",
-    "debug.log"
-  ],
+  "nativeBlockList": [],
   "globalVariables": {},
   "modes": {
     "window": {
@@ -29,8 +25,8 @@
       "center": true,
       "fullScreen": false,
       "alwaysOnTop": false,
-      "icon": "/resources/icons/appIcon.png",
-      "enableInspector": true,
+      "icon": "/src/favicon.png",
+      "enableInspector": false,
       "borderless": false,
       "maximize": false,
       "hidden": false,

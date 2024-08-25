@@ -1,0 +1,27 @@
+
+:root {
+    background: black;
+    color: white;
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    height: 100%;
+}
+
+#appContainer {
+    height: 100%;
+}
+
+* {
+    box-sizing: border-box;
+    scrollbar-color: transparent transparent;
+    scrollbar-width: thin;
+    transition: scrollbar-color 0.1s;
+}
+
+*:hover {
+    scrollbar-color: white transparent;
+}

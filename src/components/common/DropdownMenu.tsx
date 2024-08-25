@@ -13,8 +13,10 @@ export const DropdownMenu = ({ x, y, children, onClose }: { x: number, y: number
     }
 
     return createPortal(<div className={styles.backsplash} onClick={onBacksplashClick}>
-        <div className={styles.menu} style={{ left: `${x}px`, top: `${y}px` }} onClick={onMenuClick}>
-            {children}
+        <div className={styles.menuContainer} style={{ left: `${x}px`, top: `${y}px` }} onClick={onMenuClick}>
+            <div className={styles.menu}>
+                {children}
+            </div>
         </div>
     </div>, document.body)
 }

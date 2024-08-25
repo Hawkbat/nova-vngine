@@ -1,0 +1,32 @@
+{
+  "id": "9TF8BIOT",
+  "name": "Example Project",
+  "editorRandState": [
+    "xorshift32",
+    -14366797
+  ],
+  "stories": [
+    {
+      "id": "X12ECOS8",
+      "name": "My First Story"
+    },
+    {
+      "id": "DCV72REE",
+      "name": ""
+    }
+  ],
+  "chapters": [
+    {
+      "id": "213RCRAR",
+      "name": "My First Chapter",
+      "storyID": "X12ECOS8"
+    }
+  ],
+  "scenes": [],
+  "characters": [],
+  "portraits": [],
+  "backdrops": [],
+  "songs": [],
+  "sounds": [],
+  "variables": []
+}

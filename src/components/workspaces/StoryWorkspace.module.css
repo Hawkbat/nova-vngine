@@ -1,0 +1,13 @@
+
+.workspace {
+    display: flex;
+    flex-direction: column;
+    padding: 5px;
+}
+
+.storyList {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 10px;
+    font-size: 48px;
+}

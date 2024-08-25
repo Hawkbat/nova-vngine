@@ -1,0 +1,48 @@
+
+.editor {
+    display: flex;
+    height: 100%;
+}
+
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    font-size: 40px;
+    overflow: auto;
+    padding: 2px;
+}
+
+.sidebarSpacer {
+    padding-top: 20px;
+    flex: 1 0 auto;
+}
+
+.pane {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    flex: 1 1 0;
+}
+
+.workspace {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 0;
+    overflow: auto;
+}
+
+.breadcrumbs {
+    display: flex;
+    flex-flow: row wrap;
+    font-size: 16px;
+    gap: 5px;
+}
+
+.breadcrumbLabel {
+    padding: 5px;
+    padding-right: 0px;
+}
+
+.footer {
+    font-size: 16px;
+}

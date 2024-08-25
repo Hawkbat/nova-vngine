@@ -10,11 +10,15 @@ function xorShift(value: number): number {
     return value
 }
 
-type RandState = [type: 'xorshift32', state: number]
-type RandResult<T> = [state: RandState, result: T]
+export type RandState = [type: 'xorshift32', state: number]
+export type RandResult<T> = [state: RandState, result: T]
 
 function advance(state: RandState): RandState {
     return ['xorshift32', xorShift(state[1])]
+}
+
+export function randSeedRandom(): RandState {
+    return randSeed(Math.floor(remap(Math.random(), 0, 1, INT32_MIN, INT32_MAX)))
 }
 
 export function randSeed(seed: number): RandState {

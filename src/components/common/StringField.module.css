@@ -1,0 +1,20 @@
+
+input.field {
+    display: inline-block;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    field-sizing: content;
+}
+
+input.field:focus {
+    outline: 0;
+    border: 0;
+}
+
+input.field[readonly] {
+    opacity: 0.7;
+}

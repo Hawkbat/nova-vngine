@@ -1,14 +1,18 @@
+import { RandState } from "../utils/rand"
 import { Branded } from "../utils/types"
-import { BooleanExpr, ChapterExpr, CharacterExpr, IntegerExpr, ListExpr, NumberExpr, SceneExpr, StringExpr, ValueExpr } from "./expressions"
+import { BooleanExpr, ChapterExpr, CharacterExpr, IntegerExpr, ListExpr, NumberExpr, PortraitExpr, SceneExpr, StringExpr, ValueExpr } from "./expressions"
 
 export type ProjectID = Branded<string, 'Project'>
 
 export interface ProjectDefinition {
     id: ProjectID
+    name: string
+    editorRandState: RandState
     stories: StoryDefinition[]
     chapters: ChapterDefinition[]
     scenes: SceneDefinition[]
     characters: CharacterDefinition[]
+    portraits: PortraitDefinition[]
     backdrops: BackdropDefinition[]
     songs: SongDefinition[]
     sounds: SoundDefinition[]
@@ -27,6 +31,7 @@ export type ChapterID = Branded<string, 'Chapter'>
 export interface ChapterDefinition {
     id: ChapterID
     name: string
+    storyID: StoryID
 }
 
 export type SceneID = Branded<string, 'Scene'>
@@ -34,6 +39,7 @@ export type SceneID = Branded<string, 'Scene'>
 export interface SceneDefinition {
     id: SceneID
     name: string
+    chapterID: ChapterID
 }
 
 export type CharacterID = Branded<string, 'Character'>
@@ -41,6 +47,14 @@ export type CharacterID = Branded<string, 'Character'>
 export interface CharacterDefinition {
     id: CharacterID
     name: string
+}
+
+export type PortraitID = Branded<string, 'Portrait'>
+
+export interface PortraitDefinition {
+    id: PortraitID
+    name: string
+    characterID: CharacterID
 }
 
 export type BackdropID = Branded<string, 'Backdrop'>
@@ -116,6 +130,9 @@ type VariableDefinitionMap = {
     }
     character: {
         default: CharacterExpr
+    }
+    portrait: {
+        default: PortraitExpr
     }
     list: {
         elements: Omit<AnyVariableDefinition, 'id' | 'default' | 'name' | 'scope'>

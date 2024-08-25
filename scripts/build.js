@@ -17,7 +17,7 @@ function formatBytes(b) {
     }
 }
 
-await rm('bundle', { recursive: true, force: true })
+await rm('./resources', { recursive: true, force: true })
 const result = await buildContext.rebuild()
 for (const warning of result.warnings) console.log(warning)
 for (const error of result.errors) console.log(error)

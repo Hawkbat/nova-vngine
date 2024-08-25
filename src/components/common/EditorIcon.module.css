@@ -1,0 +1,24 @@
+
+.icon {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0.8;
+}
+
+.icon > span {
+    font-size: 0.25em;
+}
+
+.icon.active {
+    opacity: 1;
+}
+
+.icon:hover {
+    opacity: 0.9;
+}
+
+.icon.clickable {
+    cursor: pointer;
+}

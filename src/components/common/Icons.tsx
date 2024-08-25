@@ -1,0 +1,80 @@
+import { mdiAccount, mdiAlert, mdiArchive, mdiArchiveEdit, mdiArchivePlus, mdiArrowExpandHorizontal, mdiBookMultipleOutline, mdiBookOpenVariantOutline, mdiCheckboxBlankOutline, mdiCheckboxMarked, mdiChevronRight, mdiClose, mdiCog, mdiEmoticon, mdiEqual, mdiFlag, mdiFormatListCheckbox, mdiFormatListChecks, mdiFormatListGroup, mdiFormatText, mdiGreaterThan, mdiGreaterThanOrEqual, mdiHome, mdiImageArea, mdiLessThan, mdiLessThanOrEqual, mdiMapSearch, mdiMinus, mdiMusic, mdiNotEqualVariant, mdiPercent, mdiPlus, mdiPlusBox, mdiPound, mdiPoundBox, mdiSignatureText, mdiSlashForward, mdiSquareOutline, mdiTextBoxOutline, mdiTrashCan, mdiVariable, mdiVolumeHigh } from '@mdi/js'
+import { ExprPrimitiveValueType, ExprType } from "../../types/expressions"
+import { ProjectEditorTab } from '../editors/ProjectEditor'
+
+export const COMMON_ICONS = {
+    warning: mdiAlert,
+    newProject: mdiArchivePlus,
+    openProject: mdiArchiveEdit,
+    cancel: mdiClose,
+    checkboxChecked: mdiCheckboxMarked,
+    checkboxUnchecked: mdiCheckboxBlankOutline,
+    addItem: mdiPlusBox,
+    deleteItem: mdiTrashCan,
+} satisfies Record<string, string>
+
+export const EXPR_ICONS: Record<ExprType, string> = {
+    unset: mdiSquareOutline,
+    list: mdiFormatListGroup,
+    string: mdiFormatText,
+    number: mdiPound,
+    integer: mdiPoundBox,
+    boolean: mdiFlag,
+    story: mdiBookMultipleOutline,
+    chapter: mdiBookOpenVariantOutline,
+    scene: mdiTextBoxOutline,
+    variable: mdiVariable,
+    character: mdiAccount,
+    portrait: mdiEmoticon,
+    backdrop: mdiImageArea,
+    song: mdiMusic,
+    sound: mdiVolumeHigh,
+    location: mdiArrowExpandHorizontal,
+    add: mdiPlus,
+    subtract: mdiMinus,
+    multiply: mdiClose,
+    divide: mdiSlashForward,
+    modulo: mdiPercent,
+    format: mdiSignatureText,
+    equal: mdiEqual,
+    notEqual: mdiNotEqualVariant,
+    lessThan: mdiLessThan,
+    lessThanOrEqual: mdiLessThanOrEqual,
+    greaterThan: mdiGreaterThan,
+    greaterThanOrEqual: mdiGreaterThanOrEqual,
+    pick: mdiFormatListChecks,
+    switch: mdiFormatListCheckbox,
+}
+
+export const EXPR_VALUE_ICONS: Record<ExprPrimitiveValueType, string> = {
+    string: EXPR_ICONS['string'],
+    number: EXPR_ICONS['number'],
+    boolean: EXPR_ICONS['boolean'],
+    integer: EXPR_ICONS['integer'],
+    story: EXPR_ICONS['story'],
+    chapter: EXPR_ICONS['chapter'],
+    scene: EXPR_ICONS['scene'],
+    variable: EXPR_ICONS['variable'],
+    character: EXPR_ICONS['character'],
+    portrait: EXPR_ICONS['portrait'],
+    backdrop: EXPR_ICONS['backdrop'],
+    song: EXPR_ICONS['song'],
+    sound: EXPR_ICONS['sound'],
+    location: EXPR_ICONS['location'],
+}
+
+export const PROJECT_TAB_ICONS: Record<ProjectEditorTab, string> = {
+    home: mdiHome,
+    manual: mdiMapSearch,
+    settings: mdiCog,
+    project: mdiArchive,
+    stories: EXPR_ICONS['story'],
+    chapters: EXPR_ICONS['chapter'],
+    scenes: EXPR_ICONS['scene'],
+    characters: EXPR_ICONS['character'],
+    portraits: EXPR_ICONS['portrait'],
+    backdrops: EXPR_ICONS['backdrop'],
+    songs: EXPR_ICONS['song'],
+    sounds: EXPR_ICONS['sound'],
+    variables: EXPR_ICONS['variable'],
+}

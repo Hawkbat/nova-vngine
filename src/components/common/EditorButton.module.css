@@ -1,0 +1,40 @@
+
+.buttonGroup {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-end;
+    gap: 5px;
+    padding: 5px;
+}
+
+.button {
+    display: flex;
+    align-items: center;
+    gap: 0.2em;
+    border-radius: 0.25em;
+    padding: 0.25em 0.5em;
+    opacity: 0.8;
+    cursor: pointer;
+}
+
+.button.solid {
+    background: white;
+    color: black;
+    border: 1px solid transparent;
+}
+
+.button.outline {
+    background: transparent;
+    color: white;
+    border: 1px solid white;
+}
+
+.button.text {
+    background: transparent;
+    color: white;
+    border: 1px solid transparent;
+}
+
+.button:hover {
+    opacity: 1;
+}

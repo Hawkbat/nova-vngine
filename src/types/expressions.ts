@@ -1,113 +1,103 @@
 import { assertExhaustive } from "../utils/types"
-import { StoryID, ChapterID, SceneID, VariableID, CharacterID, BackdropID, SongID, SoundID, AnyVariableDefinition, CharacterDefinition, BackdropDefinition, ChapterDefinition, SceneDefinition, SongDefinition, SoundDefinition, StoryDefinition } from "./definitions"
+import { StoryID, ChapterID, SceneID, VariableID, CharacterID, BackdropID, SongID, SoundID, AnyVariableDefinition, CharacterDefinition, BackdropDefinition, ChapterDefinition, SceneDefinition, SongDefinition, SoundDefinition, StoryDefinition, PortraitID } from "./definitions"
 
 export type LocationValue = 'left' | 'center' | 'right' | number
 
-type ExprMapEntry<Args extends Record<string, ExprPrimitiveValueType>, Params extends Record<string, ExprValueType[] | null>, ReturnTypes extends ExprValueType[] | null, Children extends Record<string, ExprValueType[] | null> | undefined = undefined> = {
-    args: Args
-    params: Params
-    returnTypes: ReturnTypes
-    children: Children
+export interface ExprArgDefinition {
+    label: string
+    type: ExprPrimitiveValueType
 }
 
-type ExprMap = {
-    unset: ExprMapEntry<{}, {}, null>
+export interface ExprParamDefinition {
+    label: string
+    types: ExprValueType[] | null
+}
 
-    list: ExprMapEntry<{}, {}, null, { item: null }>
-
-    string: ExprMapEntry<{ value: 'string' }, {}, ['string']>
-    number: ExprMapEntry<{ value: 'number' }, {}, ['number']>
-    integer: ExprMapEntry<{ value: 'integer' }, {}, ['integer']>
-    boolean: ExprMapEntry<{ value: 'boolean' }, {}, ['boolean']>
-    location: ExprMapEntry<{ value: 'location' }, {}, ['location']>
-
-    story: ExprMapEntry<{ value: 'story' }, {}, ['story']>
-    chapter: ExprMapEntry<{ value: 'chapter' }, {}, ['chapter']>
-    scene: ExprMapEntry<{ value: 'scene' }, {}, ['scene']>
-    variable: ExprMapEntry<{ value: 'variable' }, {}, ['variable']>
-    character: ExprMapEntry<{ value: 'character' }, {}, ['character']>
-    backdrop: ExprMapEntry<{ value: 'backdrop' }, {}, ['backdrop']>
-    song: ExprMapEntry<{ value: 'song' }, {}, ['song']>
-    sound: ExprMapEntry<{ value: 'sound' }, {}, ['sound']>
-
-    add: ExprMapEntry<{}, { left: ['number', 'integer'], right: ['number', 'integer'] }, ['number', 'integer']>
-    subtract: ExprMapEntry<{}, { left: ['number', 'integer'], right: ['number', 'integer'] }, ['number', 'integer']>
-    multiply: ExprMapEntry<{}, { left: ['number', 'integer'], right: ['number', 'integer'] }, ['number', 'integer']>
-    divide: ExprMapEntry<{}, { left: ['number', 'integer'], right: ['number', 'integer'] }, ['number', 'integer']>
-    modulo: ExprMapEntry<{}, { left: ['number', 'integer'], right: ['number', 'integer'] }, ['number', 'integer']>
-
-    format: ExprMapEntry<{}, {}, ['string'], { part: ['string'] }>
-
-    equal: ExprMapEntry<{}, { left: null, right: null }, ['boolean']>
-    notEqual: ExprMapEntry<{}, { left: null, right: null }, ['boolean']>
-    lessThan: ExprMapEntry<{}, { left: ['number'], right: ['number'] }, ['boolean']>
-    lessThanOrEqual: ExprMapEntry<{}, { left: ['number'], right: ['number'] }, ['boolean']>
-    greaterThan: ExprMapEntry<{}, { left: ['number'], right: ['number'] }, ['boolean']>
-    greaterThanOrEqual: ExprMapEntry<{}, { left: ['number'], right: ['number'] }, ['boolean']>
-
-    pick: ExprMapEntry<{}, { if: ['boolean'], then: null, else: null }, null>
-    switch: ExprMapEntry<{}, { default: null }, null, { if: ['boolean'], then: null }>
+export interface ExprChildParamDefinition {
+    label: string
+    types: ExprValueType[] | null
 }
 
 export interface ExprDefinition {
     type: ExprType
     label: string
-    args: Record<string, ExprPrimitiveValueType>
-    params: Record<string, ExprValueType[] | null>
     returnTypes: ExprValueType[] | null
-    children?: Record<string, ExprValueType[] | null> | undefined
-    default: () => AnyExpr
+    args: ExprArgDefinition[]
+    params: ExprParamDefinition[]
+    children: ExprChildParamDefinition[]
 }
 
-const EXPRS = {
-    unset: { label: 'Unset', args: {}, params: {}, returnTypes: null, children: undefined, default: () => ({ type: 'unset' }) },
+interface PartialExprDefinition {
+    label: string
+    returnTypes: ExprValueType[] | null
+    args?: ExprArgDefinition[]
+    params?: ExprParamDefinition[]
+    children?: ExprChildParamDefinition[]
+}
 
-    list: { label: 'List', args: {}, params: {}, returnTypes: null, children: { item: null }, default: () => ({ type: 'list', children: [{ item: { type: 'unset' } }] }) },
+function validateExprDefinitions<T extends Record<string, PartialExprDefinition>>(defs: T): T {
+    return defs
+}
 
-    string: { label: 'Text', args: { value: 'string' }, params: {}, returnTypes: ['string'], children: undefined, default: () => ({ type: 'string', value: '' }) },
-    number: { label: 'Number', args: { value: 'number' }, params: {}, returnTypes: ['number'], children: undefined, default: () => ({ type: 'number', value: 0 }) },
-    integer: { label: 'Integer', args: { value: 'integer' }, params: {}, returnTypes: ['integer'], children: undefined, default: () => ({ type: 'integer', value: 0 }) },
-    boolean: { label: 'Flag', args: { value: 'boolean' }, params: {}, returnTypes: ['boolean'], children: undefined, default: () => ({ type: 'boolean', value: false }) },
-    location: { label: 'Location', args: { value: 'location' }, params: {}, returnTypes: ['location'], children: undefined, default: () => ({ type: 'location', value: 'center' }) },
+const EXPRS = validateExprDefinitions({
+    unset: { label: 'Unset', returnTypes: null },
+
+    list: { label: 'List', returnTypes: null, children: [{ label: 'Item', types: null }] },
+
+    string: { label: 'Text', args: [{ label: 'Value', type: 'string' }], returnTypes: ['string'] },
+    number: { label: 'Number', args: [{ label: 'Value', type: 'number' }], returnTypes: ['number'] },
+    integer: { label: 'Integer', args: [{ label: 'Value', type: 'integer' }], returnTypes: ['integer'] },
+    boolean: { label: 'Flag', args: [{ label: 'Value', type: 'boolean' }], returnTypes: ['boolean'] },
+    location: { label: 'Location', args: [{ label: 'Value', type: 'location' }], returnTypes: ['location'] },
     
-    story: { label: 'Story', args: { value: 'story' }, params: {}, returnTypes: ['story'], children: undefined, default: () => ({ type: 'story', value: '' as StoryID }) },
-    chapter: { label: 'Chapter', args: { value: 'chapter' }, params: {}, returnTypes: ['chapter'], children: undefined , default: () => ({ type: 'chapter', value: '' as ChapterID })},
-    scene: { label: 'Scene', args: { value: 'scene' }, params: {}, returnTypes: ['scene'], children: undefined, default: () => ({ type: 'scene', value: '' as SceneID }) },
-    variable: { label: 'Variable', args: { value: 'variable' }, params: {}, returnTypes: ['variable'], children: undefined, default: () => ({ type: 'variable', value: '' as VariableID }) },
-    character: { label: 'Character', args: { value: 'character' }, params: {}, returnTypes: ['character'], children: undefined, default: () => ({ type: 'character', value: '' as CharacterID }) },
-    backdrop: { label: 'Backdrop', args: { value: 'backdrop' }, params: {}, returnTypes: ['backdrop'], children: undefined, default: () => ({ type: 'backdrop', value: '' as BackdropID }) },
-    song: { label: 'Song', args: { value: 'song' }, params: {}, returnTypes: ['song'], children: undefined, default: () => ({ type: 'song', value: '' as SongID }) },
-    sound: { label: 'Sound', args: { value: 'sound' }, params: {}, returnTypes: ['sound'], children: undefined, default: () => ({ type: 'sound', value: '' as SoundID }) },
+    story: { label: 'Story', args: [{ label: 'Value', type: 'story' }], returnTypes: ['story'] },
+    chapter: { label: 'Chapter', args: [{ label: 'Value', type: 'chapter' }], returnTypes: ['chapter'] },
+    scene: { label: 'Scene', args: [{ label: 'Value', type: 'scene' }], returnTypes: ['scene'] },
+    variable: { label: 'Variable', args: [{ label: 'Value', type: 'variable' }], returnTypes: ['variable'] },
+    character: { label: 'Character', args: [{ label: 'Value', type: 'character' }], returnTypes: ['character'] },
+    portrait: { label: 'Portrait', args: [{ label: 'Value', type: 'portrait' }], returnTypes: ['portrait'] },
+    backdrop: { label: 'Backdrop', args: [{ label: 'Value', type: 'backdrop' }], returnTypes: ['backdrop'] },
+    song: { label: 'Song', args: [{ label: 'Value', type: 'song' }], returnTypes: ['song'] },
+    sound: { label: 'Sound', args: [{ label: 'Value', type: 'sound' }], returnTypes: ['sound'] },
 
-    add: { label: 'Add', args: {}, params: { left: ['number', 'integer'], right: ['number', 'integer'] }, returnTypes: ['number', 'integer'], children: undefined, default: () => ({ type: 'add', left: { type: 'unset' }, right: { type: 'number', value: 0 } }) },
-    subtract: { label: 'Subtract', args: {}, params: { left: ['number', 'integer'], right: ['number', 'integer'] }, returnTypes: ['number', 'integer'], children: undefined, default: () => ({ type: 'subtract', left: { type: 'unset' }, right: { type: 'number', value: 0 } }) },
-    multiply: { label: 'Multiply', args: {}, params: { left: ['number', 'integer'], right: ['number', 'integer'] }, returnTypes: ['number', 'integer'], children: undefined, default: () => ({ type: 'multiply', left: { type: 'unset' }, right: { type: 'number', value: 1 } }) },
-    divide: { label: 'Divide', args: {}, params: { left: ['number', 'integer'], right: ['number', 'integer'] }, returnTypes: ['number', 'integer'], children: undefined, default: () => ({ type: 'divide', left: { type: 'unset' }, right: { type: 'number', value: 1 } }) },
-    modulo: { label: 'Remainder', args: {}, params: { left: ['number', 'integer'], right: ['number', 'integer'] }, returnTypes: ['number', 'integer'], children: undefined, default: () => ({ type: 'modulo', left: { type: 'unset' }, right: { type: 'number', value: 1 } }) },
-    format: { label: 'Formatted Text', args: {}, params: {}, returnTypes: ['string'], children: { part: ['string'] }, default: () => ({ type: 'format', children: [] }) },
+    add: { label: 'Add', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
+    subtract: { label: 'Subtract', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
+    multiply: { label: 'Multiply', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
+    divide: { label: 'Divide', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
+    modulo: { label: 'Remainder', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
+    
+    format: { label: 'Formatted Text', returnTypes: ['string'], children: [{ label: 'Item', types: ['string'] }] },
 
-    equal: { label: 'Equal To', args: {}, params: { left: null, right: null }, returnTypes: ['boolean'], children: undefined, default: () => ({ type: 'equal', left: { type: 'unset' }, right: { type: 'unset' } }) },
-    notEqual: { label: 'Not Equal To', args: {}, params: { left: null, right: null }, returnTypes: ['boolean'], children: undefined, default: () => ({ type: 'notEqual', left: { type: 'unset' }, right: { type: 'unset' } }) },
-    lessThan: { label: 'Less Than', args: {}, params: { left: ['number'], right: ['number'] }, returnTypes: ['boolean'], children: undefined, default: () => ({ type: 'lessThan', left: { type: 'unset' }, right: { type: 'unset' } }) },
-    lessThanOrEqual: { label: 'Less Than Or Equal To', args: {}, params: { left: ['number'], right: ['number'] }, returnTypes: ['boolean'], children: undefined, default: () => ({ type: 'lessThanOrEqual', left: { type: 'unset' }, right: { type: 'unset' } }) },
-    greaterThan: { label: 'Greater Than', args: {}, params: { left: ['number'], right: ['number'] }, returnTypes: ['boolean'], children: undefined, default: () => ({ type: 'greaterThan', left: { type: 'unset' }, right: { type: 'unset' } }) },
-    greaterThanOrEqual: { label: 'Greater Than Or Equal To', args: {}, params: { left: ['number'], right: ['number'] }, returnTypes: ['boolean'], children: undefined, default: () => ({ type: 'greaterThanOrEqual', left: { type: 'unset' }, right: { type: 'unset' } }) },
+    equal: { label: 'Equal To', params: [{ label: 'Left', types: null }, { label: 'Right', types: null }], returnTypes: ['boolean'] },
+    notEqual: { label: 'Not Equal To', params: [{ label: 'Left', types: null }, { label: 'Right', types: null }], returnTypes: ['boolean'] },
+    lessThan: { label: 'Less Than', params: [{ label: 'Left', types: ['number'] }, { label: 'Right', types: ['number'] }], returnTypes: ['boolean'] },
+    lessThanOrEqual: { label: 'Less Than Or Equal To', params: [{ label: 'Left', types: ['number'] }, { label: 'Right', types: ['number'] }], returnTypes: ['boolean'] },
+    greaterThan: { label: 'Greater Than', params: [{ label: 'Left', types: ['number'] }, { label: 'Right', types: ['number'] }], returnTypes: ['boolean'] },
+    greaterThanOrEqual: { label: 'Greater Than Or Equal To', params: [{ label: 'Left', types: ['number'] }, { label: 'Right', types: ['number'] }], returnTypes: ['boolean'] },
 
-    pick: { label: 'Either-Or', args: {}, params: { if: ['boolean'], then: null, else: null }, returnTypes: null, children: undefined, default: () => ({ type: 'pick', if: { type: 'equal', left: { type: 'unset' }, right: { type: 'unset' } }, then: { type: 'unset' }, else: { type: 'unset' } }) },
-    switch: { label: 'One-Of', args: {}, params: { default: null }, returnTypes: null, children: { if: ['boolean'], then: null }, default: () => ({ type: 'switch', default: { type: 'unset' }, children: [{ if: { type: 'equal', left: { type: 'unset' }, right: { type: 'unset' } }, then: { type: 'unset' } }] }) },
-} as const satisfies { [K in ExprType]: ExprMap[K] & Omit<ExprDefinition, 'type'> & { default: () => ExprOfType<K> } }
+    pick: { label: 'Either-Or', params: [{ label: 'If', types: ['boolean'] }, { label: 'Then', types: null }, { label: 'Else', types: null }], returnTypes: null },
+    switch: { label: 'One-Of', params: [{ label: 'Else', types: null }], returnTypes: null, children: [{ label: 'If', types: ['boolean'] }, { label: 'Then', types: null }] },
+} as const)
 
-export const EXPR_DEFINITION_MAP: Record<ExprType, Omit<ExprDefinition, 'type'>> = EXPRS
+type ExprMap = typeof EXPRS
 
-export const EXPR_DEFINITIONS: ExprDefinition[] = Object.entries(EXPRS).map(([k, v]) => ({ type: k as ExprType, ...v }))
+export const EXPR_DEFINITION_MAP: Record<ExprType, PartialExprDefinition> = EXPRS
+
+export const EXPR_DEFINITIONS: ExprDefinition[] = Object.entries(EXPRS).map(([k, v]) => ({ type: k as ExprType, args: [], params: [], children: [], ...v }))
+
+type ArgValues<T extends [...ExprArgDefinition[]]> = T extends [...ExprArgDefinition[]] ? { [I in keyof T]: ExprPrimitiveRawValueOfType<T[I]['type']> } & { length: T['length'] } : undefined
+type ParamValues<T extends [...ExprParamDefinition[]]> = T extends [...ExprParamDefinition[]] ? { [I in keyof T]: AnyExpr } & { length: T['length'] } : undefined
+type ChildValues<T extends [...ExprChildParamDefinition[]]> = T extends [...ExprChildParamDefinition[]] ? ({ [I in keyof T]: AnyExpr } & { length: T['length'] })[] : undefined
+
+type ExprOfTypeFromDef<T extends ExprType, D extends PartialExprDefinition> = {
+    type: T
+    args: D['args'] extends undefined ? undefined : ArgValues<Exclude<D['args'], undefined>>
+    params: D['params'] extends undefined ? undefined : ParamValues<Exclude<D['params'], undefined>>
+    children: D['children'] extends undefined ? undefined : ChildValues<Exclude<D['children'], undefined>>
+}
 
 export type ExprType = keyof ExprMap
-export type ExprOfType<T extends ExprType> = T extends ExprType ?
-    { type: T } &
-    { [K in keyof ExprMap[T]['args']]: ExprPrimitiveRawValueOfType<Extract<ExprMap[T]['args'][K], ExprPrimitiveValueType>> } &
-    { [K in keyof ExprMap[T]['params']]: AnyExpr } &
-    (ExprMap[T]['children'] extends undefined ? { children?: undefined } : { children: { [K in keyof ExprMap[T]['children']]: AnyExpr }[] })
-    : never
+export type ExprOfType<T extends ExprType> = T extends ExprType ? ExprOfTypeFromDef<T, ExprMap[T]> : never
 export type AnyExpr = ExprOfType<ExprType>
 
 type ExprPrimitiveValueTypeMap = {
@@ -120,16 +110,34 @@ type ExprPrimitiveValueTypeMap = {
     scene: SceneID
     variable: VariableID
     character: CharacterID
+    portrait: PortraitID
     backdrop: BackdropID
     song: SongID
     sound: SoundID
     location: LocationValue
 }
 
+const PRIMITIVE_DEFAULT_VALUES: ExprPrimitiveValueTypeMap = {
+    string: '',
+    number: 0,
+    integer: 0,
+    boolean: false,
+    story: '' as StoryID,
+    chapter: '' as ChapterID,
+    scene: '' as SceneID,
+    variable: '' as VariableID,
+    character: '' as CharacterID,
+    portrait: '' as PortraitID,
+    backdrop: '' as BackdropID,
+    song: '' as SongID,
+    sound: '' as SoundID,
+    location: 'center',
+}
+
 export type ExprPrimitiveRawValueOfType<T extends ExprPrimitiveValueType> = ExprPrimitiveValueTypeMap[T]
 
 export type ExprPrimitiveValueType = keyof ExprPrimitiveValueTypeMap
-export type ExprPrimitiveValue<T extends ExprPrimitiveValueType> = { type: T, value: ExprPrimitiveValueTypeMap[T] }
+export type ExprPrimitiveValue<T extends ExprPrimitiveValueType> = { type: T, value: ExprPrimitiveRawValueOfType<T> }
 export type ExprPrimitiveValueOfType<T extends ExprPrimitiveValueType> = T extends ExprPrimitiveValueType ? ExprPrimitiveValue<T> : never
 export type AnyExprPrimitiveValue = ExprPrimitiveValueOfType<ExprPrimitiveValueType>
 
@@ -151,6 +159,7 @@ export type ChapterExpr = AnyExpr
 export type SceneExpr = AnyExpr
 export type VariableExpr = AnyExpr
 export type CharacterExpr = AnyExpr
+export type PortraitExpr = AnyExpr
 export type BackdropExpr = AnyExpr
 export type SongExpr = AnyExpr
 export type SoundExpr = AnyExpr
@@ -206,47 +215,71 @@ export function resolveExpr(expr: AnyExpr, ctx: ExprContext): AnyExprValue {
     switch (expr.type) {
         case 'unset': throw new Error(`Could not resolve incomplete expression`)
         case 'list': {
-            const values = expr.children.map(c => resolveExpr(c.item, ctx))
+            const values = expr.children.map(([item]) => resolveExpr(item, ctx))
             const subType: ExprValueType = values.length ? values[0].type : 'string'
             if (!isPrimitiveValueType(subType)) {
                 throw new Error(`Could not resolve expression containing a list of lists: ${JSON.stringify(expr)}`)
             }
             return { type: `list:${subType}`, values: values.map(v => castExprValue(v, subType, ctx)) as any }
         }
-        case 'string': return { type: 'string', value: expr.value }
-        case 'number': return { type: 'number', value: expr.value }
-        case 'integer': return { type: 'integer', value: expr.value }
-        case 'boolean': return { type: 'boolean', value: expr.value }
-        case 'story': return { type: 'story', value: expr.value }
-        case 'chapter': return { type: 'chapter', value: expr.value }
-        case 'scene': return { type: 'scene', value: expr.value }
-        case 'variable': return { type: 'variable', value: expr.value }
-        case 'character': return { type: 'character', value: expr.value }
-        case 'backdrop': return { type: 'backdrop', value: expr.value }
-        case 'song': return { type: 'song', value: expr.value }
-        case 'sound': return { type: 'sound', value: expr.value }
-        case 'location': return { type: 'location', value: expr.value }
-        case 'add': return resolveNumberOp(expr.left, expr.right, (a, b) => a + b, ctx)
-        case 'subtract': return resolveNumberOp(expr.left, expr.right, (a, b) => a - b, ctx)
-        case 'multiply': return resolveNumberOp(expr.left, expr.right, (a, b) => a * b, ctx)
-        case 'divide': return resolveNumberOp(expr.left, expr.right, (a, b, i) => i ? Math.floor(a / b) : a / b, ctx)
-        case 'modulo': return resolveNumberOp(expr.left, expr.right, (a, b) => a % b, ctx)
-        case 'format': return { type: 'string', value: expr.children.map(p => castExprValue(resolveExpr(p.part, ctx), 'string', ctx)).join('') }
-        case 'equal': return { type: 'boolean', value: exprValuesEqual(resolveExpr(expr.left, ctx), resolveExpr(expr.right, ctx)) }
-        case 'notEqual': return { type: 'boolean', value: !exprValuesEqual(resolveExpr(expr.left, ctx), resolveExpr(expr.right, ctx)) }
-        case 'lessThan': return resolveNumberComparison(expr.left, expr.right, (a, b) => a < b, ctx)
-        case 'lessThanOrEqual': return resolveNumberComparison(expr.left, expr.right, (a, b) => a <= b, ctx)
-        case 'greaterThan': return resolveNumberComparison(expr.left, expr.right, (a, b) => a > b, ctx)
-        case 'greaterThanOrEqual': return resolveNumberComparison(expr.left, expr.right, (a, b) => a >= b, ctx)
-        case 'pick': return resolveExprAs(expr.if, 'boolean', ctx).value ? resolveExpr(expr.then, ctx) : resolveExpr(expr.else, ctx)
+        case 'string': return { type: 'string', value: expr.args[0] }
+        case 'number': return { type: 'number', value: expr.args[0] }
+        case 'integer': return { type: 'integer', value: expr.args[0] }
+        case 'boolean': return { type: 'boolean', value: expr.args[0] }
+        case 'story': return { type: 'story', value: expr.args[0] }
+        case 'chapter': return { type: 'chapter', value: expr.args[0] }
+        case 'scene': return { type: 'scene', value: expr.args[0] }
+        case 'variable': return { type: 'variable', value: expr.args[0] }
+        case 'character': return { type: 'character', value: expr.args[0] }
+        case 'portrait': return { type: 'portrait', value: expr.args[0] }
+        case 'backdrop': return { type: 'backdrop', value: expr.args[0] }
+        case 'song': return { type: 'song', value: expr.args[0] }
+        case 'sound': return { type: 'sound', value: expr.args[0] }
+        case 'location': return { type: 'location', value: expr.args[0] }
+        case 'add': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a + b, ctx)
+        case 'subtract': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a - b, ctx)
+        case 'multiply': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a * b, ctx)
+        case 'divide': return resolveNumberOp(expr.params[0], expr.params[1], (a, b, i) => i ? Math.floor(a / b) : a / b, ctx)
+        case 'modulo': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a % b, ctx)
+        case 'format': return { type: 'string', value: expr.children.map(([part]) => resolveExprAs(part, 'string', ctx)).join('') }
+        case 'equal': return { type: 'boolean', value: exprValuesEqual(resolveExpr(expr.params[0], ctx), resolveExpr(expr.params[1], ctx)) }
+        case 'notEqual': return { type: 'boolean', value: !exprValuesEqual(resolveExpr(expr.params[0], ctx), resolveExpr(expr.params[1], ctx)) }
+        case 'lessThan': return resolveNumberComparison(expr.params[0], expr.params[1], (a, b) => a < b, ctx)
+        case 'lessThanOrEqual': return resolveNumberComparison(expr.params[0], expr.params[1], (a, b) => a <= b, ctx)
+        case 'greaterThan': return resolveNumberComparison(expr.params[0], expr.params[1], (a, b) => a > b, ctx)
+        case 'greaterThanOrEqual': return resolveNumberComparison(expr.params[0], expr.params[1], (a, b) => a >= b, ctx)
+        case 'pick': return resolveExprAs(expr.params[0], 'boolean', ctx).value ? resolveExpr(expr.params[1], ctx) : resolveExpr(expr.params[2], ctx)
         case 'switch': {
             for (const c of expr.children) {
-                if (resolveExprAs(c.if, 'boolean', ctx)) return resolveExpr(c.then, ctx)
+                if (resolveExprAs(c[0], 'boolean', ctx)) return resolveExpr(c[1], ctx)
             }
-            return resolveExpr(expr.default, ctx)
+            return resolveExpr(expr.params[0], ctx)
         }
         default: return assertExhaustive(expr, `Could not resolve expression ${JSON.stringify(expr)}`)
     }
+}
+
+export function createDefaultExpr<T extends ExprType>(type: T): ExprOfType<T> {
+    const def = EXPR_DEFINITION_MAP[type]
+    let expr: ExprOfType<T> = { type } as any
+    if (def.args) {
+        expr.args = def.args.map(a => PRIMITIVE_DEFAULT_VALUES[a.type]) as ExprOfType<T>['args']
+    }
+    if (def.params) {
+        expr.params = def.params.map(p => createDefaultExpr('unset')) as ExprOfType<T>['params']
+    }
+    if (def.children) {
+        expr.children = []
+    }
+    return expr
+}
+
+export function createDefaultExprChild<T extends ExprType>(type: T) {
+    const def = EXPR_DEFINITION_MAP[type]
+    if (def.children) {
+        return def.children.map(() => createDefaultExpr('unset'))
+    }
+    return null
 }
 
 export function guessExprReturnType(expr: AnyExpr, ctx: ExprContext): ExprValueType | null {
@@ -255,7 +288,7 @@ export function guessExprReturnType(expr: AnyExpr, ctx: ExprContext): ExprValueT
     switch (expr.type) {
         case 'list':
             if (expr.children.length) {
-                const firstChildType = guessExprReturnType(expr.children[0].item, ctx)
+                const firstChildType = guessExprReturnType(expr.children[0][0], ctx)
                 if (firstChildType === null) return null
                 if (isPrimitiveValueType(firstChildType)) return `list:${firstChildType}`
             }
@@ -265,14 +298,14 @@ export function guessExprReturnType(expr: AnyExpr, ctx: ExprContext): ExprValueT
         case 'multiply':
         case 'divide':
         case 'modulo':
-            const leftType = guessExprReturnType(expr.left, ctx)
-            const rightType = guessExprReturnType(expr.right, ctx)
+            const leftType = guessExprReturnType(expr.params[0], ctx)
+            const rightType = guessExprReturnType(expr.params[1], ctx)
             if (leftType === 'integer' && rightType === 'integer') return 'integer'
             else return 'number'
         case 'pick':
-            return guessExprReturnType(expr.then, ctx)
+            return guessExprReturnType(expr.params[1], ctx)
         case 'switch':
-            return guessExprReturnType(expr.default, ctx)
+            return guessExprReturnType(expr.params[0], ctx)
     }
     return null
 }
@@ -307,6 +340,15 @@ export function castExprValue<T extends ExprValueType>(expr: AnyExprValue, type:
     throw new Error(`Unable to convert expression value ${JSON.stringify(expr)} to ${type}`)
 }
 
+export function exprValueTypeAssignableTo(type: ExprValueType | null, types: ExprValueType[] | null) {
+    if (type === 'variable') return true
+    if (type === null || types === null) return true
+    if (type === 'integer' && types.includes('number')) return true
+    if (types.includes(type)) return true
+    if (types.includes('string')) return true
+    return false
+}
+
 export function exprValuesEqual(left: AnyExprValue, right: AnyExprValue): boolean {
     if (left.type !== right.type) return false
     if (isPrimitiveValue(left) && isPrimitiveValue(right)) {
@@ -320,22 +362,27 @@ export function exprValuesEqual(left: AnyExprValue, right: AnyExprValue): boolea
 export function prettyPrintExpr(expr: AnyExpr): string {
     const def = EXPR_DEFINITION_MAP[expr.type]
     let out = `${expr.type}(`
-    for (const k in def.args) {
-        out += `${k}: ${JSON.stringify((expr as any)[k])}, `
+    if (expr.args) {
+        for (const a of expr.args) {
+            out += `${JSON.stringify(a)}, `
+        }
     }
-    for (const k in def.params) {
-        out += `${k}: ${prettyPrintExpr((expr as any)[k])}, `
+    if (expr.params) {
+        for (const p of expr.params) {
+            out += `${prettyPrintExpr(p)}, `
+        }
     }
-    if (def.children) {
+    if (expr.children) {
         out += '['
-        for (const c of (expr as any).children) {
+        for (const c of expr.children) {
             out += '('
-            for (const k in def.children) {
-                out += `${k}: ${prettyPrintExpr(c[k])}, `
+            for (const v of c) {
+                out += `${prettyPrintExpr(v)}, `
             }
             if (out.endsWith(', ')) out = out.substring(0, out.length - 2)
             out += '), '
         }
+        if (out.endsWith(', ')) out = out.substring(0, out.length - 2)
         out += ']'
     }
     if (out.endsWith(', ')) out = out.substring(0, out.length - 2)

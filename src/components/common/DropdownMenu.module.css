@@ -5,10 +5,19 @@
     top: 0;
     right: 0;
     bottom: 0;
+    user-select: none;
+}
+
+.menuContainer {
+    position: absolute;
+    display: flex;
+    flex-flow: column;
+    bottom: 0;
 }
 
 .menu {
-    position: absolute;
+    flex: 0 1 auto;
+    overflow: auto;
     background: #222;
     border: 1px solid #444;
     border-radius: 4px;
@@ -19,7 +28,7 @@
 
     color: white;
     font-family: sans-serif;
-    font-size: 16px;
+    font-size: 20px;
 }
 
 .menuItem {

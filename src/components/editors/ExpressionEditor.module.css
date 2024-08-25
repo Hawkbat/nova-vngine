@@ -9,11 +9,10 @@
 .expr {
     display: inline-flex;
     flex-flow: row wrap;
-    gap: 5px;
     background: #8888;
     border-radius: 12px;
     padding-left: 5px;
-    padding-right: 10px;
+    padding-right: 5px;
     min-height: 25px;
     align-items: center;
 }
@@ -50,8 +49,11 @@
     font: inherit;
     border: 0;
     margin: 0;
+    padding: 0;
+    margin-right: 5px;
     field-sizing: content;
 }
+
 .arg > label > input[type="text"] {
     padding: 0px 10px;
 }
@@ -60,10 +62,4 @@
     outline: 0;
     border: 0;
     background: #0008;
-}
-
-.exprIcon {
-    display: inline-flex;
-    justify-content: center;
-    align-items: center;
 }
