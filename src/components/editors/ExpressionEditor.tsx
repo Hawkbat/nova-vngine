@@ -1,4 +1,4 @@
-import { AnyExpr, EXPR_DEFINITION_MAP, EXPR_DEFINITIONS, ExprContext, ExprDefinition, ExprPrimitiveRawValueOfType, ExprPrimitiveValueType, ExprType, ExprValueType, createDefaultExpr, guessExprReturnType, createDefaultExprChild, exprValueTypeAssignableTo } from "../../types/expressions"
+import { AnyExpr, EXPR_DEFINITION_MAP, EXPR_DEFINITIONS, ExprContext, ExprDefinition, ExprPrimitiveRawValueOfType, ExprPrimitiveValueType, ExprType, ExprValueType, createDefaultExpr, guessExprReturnType, createDefaultExprChild, exprValueTypeAssignableTo, validateExpr } from "../../types/expressions"
 import styles from './ExpressionEditor.module.css'
 import { Fragment, useState } from "react"
 import { DropdownMenu, DropdownMenuItem } from "../common/DropdownMenu"
@@ -6,6 +6,7 @@ import { inlineThrow } from "../../utils/types"
 import { immAppend, immRemoveAt, immReplaceAt, immSet } from "../../utils/imm"
 import { EditorIcon } from "../common/EditorIcon"
 import { COMMON_ICONS, EXPR_ICONS } from "../common/Icons"
+import { Field } from "../common/Field"
 
 type ArgEditorProps<T extends ExprPrimitiveValueType> = {
     label: string,
@@ -89,10 +90,10 @@ const BooleanArgEditor = ({ value, setValue, label }: ArgSubEditorProps<'boolean
     return <EditorIcon path={value ? COMMON_ICONS.checkboxChecked : COMMON_ICONS.checkboxUnchecked} label={label} onClick={onClick} />
 }
 
-const ParamEditor = ({ label, types, expr, setExpr }: { label: string, types: ExprValueType[] | null, expr: AnyExpr, setExpr: (value: AnyExpr) => void }) => {
+const ParamEditor = ({ label, types, expr, setExpr, ctx }: { label: string, types: ExprValueType[] | null, expr: AnyExpr, setExpr: (value: AnyExpr) => void, ctx: ExprContext }) => {
     return <div className={styles.param}>
         <label>
-            <ExpressionEditor expr={expr} setExpr={setExpr} paramTypes={types} />
+            <ExpressionEditor expr={expr} setExpr={setExpr} paramTypes={types} ctx={ctx} />
         </label>
     </div>
 }
@@ -103,21 +104,7 @@ const ExpressionIcon = ({ type, size, onClick }: { type: ExprType, size?: number
     return <EditorIcon path={icon} label={def.label} size={size} onClick={onClick} />
 }
 
-const nullExprContext: ExprContext = {
-    resolvers: {
-        story: id => inlineThrow(new Error(`Not implemented`)),
-        chapter: id => inlineThrow(new Error(`Not implemented`)),
-        scene: id => inlineThrow(new Error(`Not implemented`)),
-        character: id => inlineThrow(new Error(`Not implemented`)),
-        backdrop: id => inlineThrow(new Error(`Not implemented`)),
-        song: id => inlineThrow(new Error(`Not implemented`)),
-        sound: id => inlineThrow(new Error(`Not implemented`)),
-        variable: id => inlineThrow(new Error(`Not implemented`)),
-        variableValue: id => inlineThrow(new Error(`Not implemented`)),
-    }
-}
-
-export const ExpressionEditor = ({ expr, setExpr, paramTypes }: { expr: AnyExpr, setExpr: (newExpr: AnyExpr) => void, paramTypes?: ExprValueType[] | null }) => {
+export const ExpressionEditor = ({ expr, setExpr, paramTypes, ctx }: { expr: AnyExpr, setExpr: (newExpr: AnyExpr) => void, paramTypes?: ExprValueType[] | null, ctx: ExprContext }) => {
     const def = EXPR_DEFINITION_MAP[expr.type]
 
     const [exprMenuState, setExprMenuState] = useState({ open: false, x: 0, y: 0 })
@@ -134,7 +121,7 @@ export const ExpressionEditor = ({ expr, setExpr, paramTypes }: { expr: AnyExpr,
 
     const getCompatibilityScore = (d: ExprDefinition) => {
         if (d.type === 'unset') return 10
-        const currentReturnType = guessExprReturnType(expr, nullExprContext)
+        const currentReturnType = guessExprReturnType(expr, ctx)
         if (d.returnTypes && currentReturnType && exprValueTypeAssignableTo(currentReturnType, d.returnTypes)) return 5
         if (d.returnTypes && paramTypes && d.returnTypes.some(p => exprValueTypeAssignableTo(p, paramTypes))) return 4
 
@@ -146,7 +133,7 @@ export const ExpressionEditor = ({ expr, setExpr, paramTypes }: { expr: AnyExpr,
 
     const replaceWithType = (type: ExprType) => {
         const d = EXPR_DEFINITION_MAP[type]
-        const newExpr = createDefaultExpr(type)
+        const newExpr = createDefaultExpr(type, ctx)
         if (def.params && d.params && expr.params && newExpr.params) {
             for (let i = 0; i < def.params.length; i++) {
                 if (def.params[i].label === d.params[i].label) {
@@ -167,16 +154,16 @@ export const ExpressionEditor = ({ expr, setExpr, paramTypes }: { expr: AnyExpr,
             </> : null}
             {def.params ? <>
                 {def.params.map((p, i) => <Fragment key={i}>
-                    <ParamEditor label={p.label} types={p.types} expr={expr.params![i]} setExpr={v => setExpr({ ...expr, params: immReplaceAt(expr.params!, i, v) as any })} />
+                    <ParamEditor label={p.label} types={p.types} expr={expr.params![i]} setExpr={v => setExpr({ ...expr, params: immReplaceAt(expr.params!, i, v) as any })} ctx={ctx} />
                     {infix && i === 0 ? <ExpressionIcon type={expr.type} onClick={onIconClick} /> : null}
                 </Fragment>) ?? null}
             </> : null}
             {def.children ? <>
                 {expr.children?.map((c, i) => <div key={i} className={styles.child}>
                     <EditorIcon path={COMMON_ICONS.deleteItem} label='Remove Item' size={0.75} onClick={() => setExpr(immSet(expr, 'children', immRemoveAt<AnyExpr[]>(expr.children!, i) as any))} />
-                    {def.children?.map((d, j) => <ParamEditor key={j} label={d.label} types={d.types} expr={c[j]} setExpr={v => setExpr(immSet(expr, 'children', immReplaceAt(expr.children!, i, immReplaceAt(expr.children![i], j, v) as any)))} />)}
+                    {def.children?.map((d, j) => <ParamEditor key={j} label={d.label} types={d.types} expr={c[j]} setExpr={v => setExpr(immSet(expr, 'children', immReplaceAt(expr.children!, i, immReplaceAt(expr.children![i], j, v) as any)))} ctx={ctx} />)}
                 </div>)}
-                <EditorIcon path={COMMON_ICONS.addItem} label='Add Item' size={0.75} onClick={() => setExpr(immSet(expr, 'children', immAppend<AnyExpr[]>(expr.children!, createDefaultExprChild(expr.type)!) as any))} />
+                <EditorIcon path={COMMON_ICONS.addItem} label='Add Item' size={0.75} onClick={() => setExpr(immSet(expr, 'children', immAppend<AnyExpr[]>(expr.children!, createDefaultExprChild(expr.type, ctx)!) as any))} />
             </> : null}
         </div>
         {exprMenuState.open ? <DropdownMenu x={exprMenuState.x} y={exprMenuState.y} onClose={closeExprMenu}>
@@ -188,8 +175,20 @@ export const ExpressionEditor = ({ expr, setExpr, paramTypes }: { expr: AnyExpr,
     </>
 }
 
-export const ExpressionEmbed = ({ expr, setExpr }: { expr: AnyExpr, setExpr: (value: AnyExpr) => void }) => {
+export const ExpressionEmbed = ({ expr, setExpr, ctx }: { expr: AnyExpr, setExpr: (value: AnyExpr) => void, ctx: ExprContext }) => {
     return <div className={styles.embed}>
-        <ExpressionEditor expr={expr} setExpr={setExpr} paramTypes={['string']} />
+        <ExpressionEditor expr={expr} setExpr={setExpr} paramTypes={['string']} ctx={ctx} />
     </div>
+}
+
+export const ExpressionField = ({ label, value, setValue, paramTypes, ctx }: { label: string, value: AnyExpr, setValue?: (value: AnyExpr) => void, paramTypes?: ExprValueType[] | null, ctx: ExprContext }) => {
+
+    const validate = (expr: AnyExpr) => {
+        const errors = validateExpr(expr, ctx)
+        return errors.join('\n')
+    }
+
+    return <Field label={label} error={validate(value)}>
+        <ExpressionEditor expr={value} setExpr={setValue ?? (() => {})} paramTypes={paramTypes} ctx={ctx} />
+    </Field>
 }

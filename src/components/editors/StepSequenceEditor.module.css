@@ -1,0 +1,79 @@
+
+.sequenceEditor {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 auto;
+}
+
+.timeline {
+    display: flex;
+    overflow: scroll;
+    flex: 1 1 0;
+    align-items: center;
+}
+
+.timeline .timeline {
+    overflow: visible;
+}
+
+.stepEditor {
+    display: flex;
+    flex-direction: column;
+}
+
+.bubble {
+    display: flex;
+}
+
+.bubbleFront {
+    display: flex;
+}
+
+.bubbleBack {
+    display: flex;
+}
+
+.bubbleBody {
+    display: flex;
+    flex-direction: column;
+}
+
+.bubbleBodyRow {
+    display: flex;
+}
+
+.option {
+    display: flex;
+}
+
+.simpleBubble {
+    display: flex;
+    min-width: 2em;
+    height: 2em;
+    border-radius: 50%;
+    background: white;
+    color: black;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    opacity: 0.8;
+}
+
+.simpleBubble:hover {
+    opacity: 1.0;
+}
+
+.outlineBubble {
+    display: flex;
+    width: 2em;
+    height: 2em;
+    border-radius: 50%;
+    border: 2px solid white;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+.outlineBubble:hover {
+    background: #FFF4;
+}

@@ -18,6 +18,7 @@ import { BackdropWorkspace } from "../workspaces/BackdropWorkspace"
 import { SongWorkspace } from "../workspaces/SongWorkspace"
 import { SoundWorkspace } from "../workspaces/SoundWorkspace"
 import { VariableWorkspace } from "../workspaces/VariableWorkspace"
+import { platform } from "../../utils/platform/platform"
 
 export type ProjectEditorTab = 'home' | 'manual' | 'settings' | 'project' | ProjectEntityKeyOf<EntityType>
 
@@ -71,10 +72,10 @@ const Sidebar = () => {
 }
 
 const Footer = () => {
-    const [loadedProject] = useSelector(viewStateStore, s => s.loadedProject)
-    return loadedProject ? <div className={styles.footer}>
-        
-    </div> : null
+    return <div className={styles.footer}>
+        <span>Engine ver. 0.1.0</span>
+        <span>{platform.name}</span>
+    </div>
 }
 
 export const ProjectEditor = () => {
@@ -83,7 +84,7 @@ export const ProjectEditor = () => {
     return <div className={styles.editor}>
         <Sidebar />
         <div className={styles.pane}>
-            {currentTab !== 'home' ? <Breadcrumbs /> : null}
+            {isProjectEntityKey(currentTab) ? <Breadcrumbs /> : null}
             <div className={styles.workspace}>
                 {currentTab === 'home' ? <HomeWorkspace /> : null}
                 {currentTab === 'project' ? <ProjectWorkspace /> : null}

@@ -1,9 +1,10 @@
-import { AnyVariableDefinition, BackdropDefinition, BackdropID, ChapterDefinition, ChapterID, CharacterDefinition, CharacterID, EntityDefinition, EntityIDOf, EntityOfType, EntityParentOf, EntityType, getEntityParentID, getEntityParentType, getProjectEntityKey, PortraitDefinition, PortraitID, ProjectDefinition, ProjectID, SceneDefinition, SceneID, SongDefinition, SongID, SoundDefinition, SoundID, StoryDefinition, StoryID, VariableID } from "../types/definitions"
-import { createDefaultExpr } from "../types/expressions"
+import { AnyVariableDefinition, BackdropDefinition, BackdropID, ChapterDefinition, ChapterID, CharacterDefinition, CharacterID, EntityIDOf, EntityOfType, EntityParentOf, EntityType, getEntityParentID, getEntityParentType, getProjectEntityKey, PortraitDefinition, PortraitID, ProjectDefinition, ProjectID, SceneDefinition, SceneID, SongDefinition, SongID, SoundDefinition, SoundID, StoryDefinition, StoryID, VariableID } from "../types/definitions"
+import { createDefaultExpr, ExprContext, resolveExpr } from "../types/expressions"
 import { immAppend, immSet } from "../utils/imm"
 import { randID, randSeedRandom } from "../utils/rand"
 import { createTrackedStore } from "../utils/store"
 import { hintTypeTuple } from "../utils/types"
+import { viewStateStore } from "./viewstate"
 
 export const projectStore = createTrackedStore(createProject())
 
@@ -23,6 +24,7 @@ export function createProject(): ProjectDefinition {
         songs: [],
         sounds: [],
         variables: [],
+        macros: [],
     }
 
     return project
@@ -58,7 +60,7 @@ export function getEntityHierarchy<T extends EntityType>(type: T, id: EntityIDOf
     return [{ type, entity }]
 }
 
-function immGenerateID<T extends string>(project: ProjectDefinition): [ProjectDefinition, T] {
+export function immGenerateID<T extends string>(project: ProjectDefinition): [ProjectDefinition, T] {
     const [editorRandState, id] = randID(project.editorRandState)
     return hintTypeTuple(immSet(project, 'editorRandState', editorRandState), id as T)
 }
@@ -96,6 +98,7 @@ export function immCreateScene(project: ProjectDefinition, chapterID: ChapterID)
         id,
         name: '',
         chapterID,
+        steps: [],
     }
 
     return hintTypeTuple(immSet(project, 'scenes', immAppend(project.scenes, scene)), scene)
@@ -166,15 +169,61 @@ export function immCreateVariable(project: ProjectDefinition): [ProjectDefinitio
     let id: VariableID
     [project, id] = immGenerateID(project)
 
+    const ctx = getProjectExprContext()
+
     const variable: AnyVariableDefinition = {
         id,
         name: '',
         type: 'flag',
         scope: { type: 'allStories' },
-        default: createDefaultExpr('boolean'),
-        setValueLabel: createDefaultExpr('unset'),
-        unsetValueLabel: createDefaultExpr('unset'),
+        default: createDefaultExpr('boolean', ctx),
+        setValueLabel: createDefaultExpr('unset', ctx),
+        unsetValueLabel: createDefaultExpr('unset', ctx),
     }
 
     return hintTypeTuple(immSet(project, 'variables', immAppend(project.variables, variable)), variable)
+}
+
+export function getProjectExprContext(): ExprContext {
+    const project = projectStore.getSnapshot()
+    const scopes = viewStateStore.getSnapshot().scopes
+
+    const getSuggestions = <T extends EntityType>(type: T): EntityIDOf<T>[] => {
+        const projectKey = getProjectEntityKey(type)
+        const values = project[projectKey]
+        return values.sort((a, b) => {
+            if (a.id === scopes[type]) return -1
+            if (b.id === scopes[type]) return 1
+            return 0
+        }).map(v => v.id) as EntityIDOf<T>[]
+    }
+
+    const ctx: ExprContext = {
+        suggestions: {
+            story: () => getSuggestions('story'),
+            chapter: () => getSuggestions('chapter'),
+            scene: () => getSuggestions('scene'),
+            character: () => getSuggestions('character'),
+            portrait: () => getSuggestions('portrait'),
+            backdrop: () => getSuggestions('backdrop'),
+            song: () => getSuggestions('song'),
+            sound: () => getSuggestions('sound'),
+            macro: () => getSuggestions('macro'),
+            variable: () => getSuggestions('variable'),
+        },
+        resolvers: {
+            story: id => project.stories.find(e => e.id === id) ?? null,
+            chapter: id => project.chapters.find(e => e.id === id) ?? null,
+            scene: id => project.scenes.find(e => e.id === id) ?? null,
+            character: id => project.characters.find(e => e.id === id) ?? null,
+            portrait: id => project.portraits.find(e => e.id === id) ?? null,
+            backdrop: id => project.backdrops.find(e => e.id === id) ?? null,
+            song: id => project.songs.find(e => e.id === id) ?? null,
+            sound: id => project.sounds.find(e => e.id === id) ?? null,
+            macro: id => project.macros.find(e => e.id === id) ?? null,
+            variable: id => project.variables.find(e => e.id === id) ?? null,
+            variableValue: id => resolveExpr(project.variables.find(e => e.id === id)?.default ?? createDefaultExpr('unset', ctx), ctx),
+        },
+    }
+    return ctx
 }

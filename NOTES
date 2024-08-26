@@ -14,7 +14,9 @@ Scene: A continouous sequence of writing, presentation, and gameplay, typically 
     Gives a clean slate for the graphics.
 Character: A singular person in the story.
 
-Side Scene: A special type of reusable scene that can interrupt the current scene and branch back into it afterward. Can take in parameters and the initial view state and output return values afterward when branching back. Generally used to implement 'minigames' like combat or shops.
+Macro: A reusable expression, similar to a function in most programming languages
+
+Template Scene: A special type of reusable step sequence that can interrupt the current scene and branch back into it afterward. Can take in parameters and the initial view state and output return values afterward when branching back. Generally used to implement 'minigames' like combat or shops.
 
 Global Variables (defined globally, values stored as singleton)
 Chapter Variables (defined globally or per chapter, values stored per chapter)

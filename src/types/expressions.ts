@@ -1,7 +1,8 @@
+import { throwIfNull } from "../utils/guard"
 import { assertExhaustive } from "../utils/types"
-import { StoryID, ChapterID, SceneID, VariableID, CharacterID, BackdropID, SongID, SoundID, AnyVariableDefinition, CharacterDefinition, BackdropDefinition, ChapterDefinition, SceneDefinition, SongDefinition, SoundDefinition, StoryDefinition, PortraitID } from "./definitions"
+import { StoryID, ChapterID, SceneID, VariableID, CharacterID, BackdropID, SongID, SoundID, AnyVariableDefinition, CharacterDefinition, BackdropDefinition, ChapterDefinition, SceneDefinition, SongDefinition, SoundDefinition, StoryDefinition, PortraitID, MacroID, MacroDefinition, PortraitDefinition } from "./definitions"
 
-export type LocationValue = 'left' | 'center' | 'right' | number
+export type LocationValue = 'auto' | 'left' | 'center' | 'right' | number
 
 export interface ExprArgDefinition {
     label: string
@@ -53,12 +54,13 @@ const EXPRS = validateExprDefinitions({
     story: { label: 'Story', args: [{ label: 'Value', type: 'story' }], returnTypes: ['story'] },
     chapter: { label: 'Chapter', args: [{ label: 'Value', type: 'chapter' }], returnTypes: ['chapter'] },
     scene: { label: 'Scene', args: [{ label: 'Value', type: 'scene' }], returnTypes: ['scene'] },
-    variable: { label: 'Variable', args: [{ label: 'Value', type: 'variable' }], returnTypes: ['variable'] },
     character: { label: 'Character', args: [{ label: 'Value', type: 'character' }], returnTypes: ['character'] },
     portrait: { label: 'Portrait', args: [{ label: 'Value', type: 'portrait' }], returnTypes: ['portrait'] },
     backdrop: { label: 'Backdrop', args: [{ label: 'Value', type: 'backdrop' }], returnTypes: ['backdrop'] },
     song: { label: 'Song', args: [{ label: 'Value', type: 'song' }], returnTypes: ['song'] },
     sound: { label: 'Sound', args: [{ label: 'Value', type: 'sound' }], returnTypes: ['sound'] },
+    variable: { label: 'Variable', args: [{ label: 'Value', type: 'variable' }], returnTypes: ['variable'] },
+    macro: { label: 'Macro', args: [{ label: 'Macro', type: 'macro' }], returnTypes: ['macro'] },
 
     add: { label: 'Add', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
     subtract: { label: 'Subtract', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
@@ -108,12 +110,13 @@ type ExprPrimitiveValueTypeMap = {
     story: StoryID
     chapter: ChapterID
     scene: SceneID
-    variable: VariableID
     character: CharacterID
     portrait: PortraitID
     backdrop: BackdropID
     song: SongID
     sound: SoundID
+    variable: VariableID
+    macro: MacroID
     location: LocationValue
 }
 
@@ -125,13 +128,21 @@ const PRIMITIVE_DEFAULT_VALUES: ExprPrimitiveValueTypeMap = {
     story: '' as StoryID,
     chapter: '' as ChapterID,
     scene: '' as SceneID,
-    variable: '' as VariableID,
     character: '' as CharacterID,
     portrait: '' as PortraitID,
     backdrop: '' as BackdropID,
     song: '' as SongID,
     sound: '' as SoundID,
-    location: 'center',
+    variable: '' as VariableID,
+    macro: '' as MacroID,
+    location: 'auto',
+}
+
+function getContextualDefaultPrimitiveValue<T extends ExprPrimitiveValueType>(type: T, ctx: ExprContext) {
+    if (type in ctx.suggestions) {
+        return ctx.suggestions[type as keyof ExprContext['suggestions']]()
+    }
+    return PRIMITIVE_DEFAULT_VALUES[type]
 }
 
 export type ExprPrimitiveRawValueOfType<T extends ExprPrimitiveValueType> = ExprPrimitiveValueTypeMap[T]
@@ -157,27 +168,42 @@ export type BooleanExpr = AnyExpr
 export type StoryExpr = AnyExpr
 export type ChapterExpr = AnyExpr
 export type SceneExpr = AnyExpr
-export type VariableExpr = AnyExpr
 export type CharacterExpr = AnyExpr
 export type PortraitExpr = AnyExpr
 export type BackdropExpr = AnyExpr
 export type SongExpr = AnyExpr
 export type SoundExpr = AnyExpr
+export type VariableExpr = AnyExpr
+export type MacroExpr = AnyExpr
 export type LocationExpr = AnyExpr
 export type ListExpr = AnyExpr
 export type ValueExpr = AnyExpr
 
 export interface ExprContext {
+    suggestions: {
+        story: () => StoryID[]
+        chapter: () => ChapterID[]
+        scene: () => SceneID[]
+        character: () => CharacterID[]
+        portrait: () => PortraitID[]
+        backdrop: () => BackdropID[]
+        song: () => SongID[]
+        sound: () => SoundID[]
+        macro: () => MacroID[]
+        variable: () => VariableID[]
+    }
     resolvers: {
-        story: (id: StoryID) => StoryDefinition
-        chapter: (id: ChapterID) => ChapterDefinition
-        scene: (id: SceneID) => SceneDefinition
-        variable: (id: VariableID) => AnyVariableDefinition
-        character: (id: CharacterID) => CharacterDefinition
-        backdrop: (id: BackdropID) => BackdropDefinition
-        song: (id: SongID) => SongDefinition
-        sound: (id: SoundID) => SoundDefinition
-        variableValue: (id: VariableID) => AnyExprValue
+        story: (id: StoryID) => StoryDefinition | null
+        chapter: (id: ChapterID) => ChapterDefinition | null
+        scene: (id: SceneID) => SceneDefinition | null
+        character: (id: CharacterID) => CharacterDefinition | null
+        portrait: (id: PortraitID) => PortraitDefinition | null
+        backdrop: (id: BackdropID) => BackdropDefinition | null
+        song: (id: SongID) => SongDefinition | null
+        sound: (id: SoundID) => SoundDefinition | null
+        macro: (id: MacroID) => MacroDefinition | null
+        variable: (id: VariableID) => AnyVariableDefinition | null
+        variableValue: (id: VariableID) => AnyExprValue | null
     }
 }
 
@@ -235,6 +261,7 @@ export function resolveExpr(expr: AnyExpr, ctx: ExprContext): AnyExprValue {
         case 'backdrop': return { type: 'backdrop', value: expr.args[0] }
         case 'song': return { type: 'song', value: expr.args[0] }
         case 'sound': return { type: 'sound', value: expr.args[0] }
+        case 'macro': return { type: 'macro', value: expr.args[0] }
         case 'location': return { type: 'location', value: expr.args[0] }
         case 'add': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a + b, ctx)
         case 'subtract': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a - b, ctx)
@@ -259,14 +286,18 @@ export function resolveExpr(expr: AnyExpr, ctx: ExprContext): AnyExprValue {
     }
 }
 
-export function createDefaultExpr<T extends ExprType>(type: T): ExprOfType<T> {
+export function validateExpr(expr: AnyExpr, ctx: ExprContext): string[] {
+    return []
+}
+
+export function createDefaultExpr<T extends ExprType>(type: T, ctx: ExprContext): ExprOfType<T> {
     const def = EXPR_DEFINITION_MAP[type]
     let expr: ExprOfType<T> = { type } as any
     if (def.args) {
-        expr.args = def.args.map(a => PRIMITIVE_DEFAULT_VALUES[a.type]) as ExprOfType<T>['args']
+        expr.args = def.args.map(a => getContextualDefaultPrimitiveValue(a.type, ctx)) as ExprOfType<T>['args']
     }
     if (def.params) {
-        expr.params = def.params.map(p => createDefaultExpr('unset')) as ExprOfType<T>['params']
+        expr.params = def.params.map(p => createDefaultExpr('unset', ctx)) as ExprOfType<T>['params']
     }
     if (def.children) {
         expr.children = []
@@ -274,10 +305,10 @@ export function createDefaultExpr<T extends ExprType>(type: T): ExprOfType<T> {
     return expr
 }
 
-export function createDefaultExprChild<T extends ExprType>(type: T) {
+export function createDefaultExprChild<T extends ExprType>(type: T, ctx: ExprContext) {
     const def = EXPR_DEFINITION_MAP[type]
     if (def.children) {
-        return def.children.map(() => createDefaultExpr('unset'))
+        return def.children.map(() => createDefaultExpr('unset', ctx))
     }
     return null
 }
@@ -315,20 +346,22 @@ export function castExprValue<T extends ExprValueType>(expr: AnyExprValue, type:
         return expr as ExprValueOfType<T>
     }
     if (expr.type === 'variable') {
-        return castExprValue(ctx.resolvers.variableValue(expr.value), type, ctx) as ExprValueOfType<T>
+        return castExprValue(throwIfNull(ctx.resolvers.variableValue(expr.value)), type, ctx) as ExprValueOfType<T>
     }
     switch (type) {
         case 'string': {
             switch (expr.type) {
                 case 'number': return { type: 'string', value: expr.value.toString() } as ExprValueOfType<T>
                 case 'integer': return { type: 'string', value: expr.value.toString() } as ExprValueOfType<T>
-                case 'story': return { type: 'string', value: ctx.resolvers.story(expr.value).name } as ExprValueOfType<T>
-                case 'chapter': return { type: 'string', value: ctx.resolvers.chapter(expr.value).name } as ExprValueOfType<T>
-                case 'scene': return { type: 'string', value: ctx.resolvers.scene(expr.value).name } as ExprValueOfType<T>
-                case 'character': return { type: 'string', value: ctx.resolvers.character(expr.value).name } as ExprValueOfType<T>
-                case 'backdrop': return { type: 'string', value: ctx.resolvers.backdrop(expr.value).name } as ExprValueOfType<T>
-                case 'song': return { type: 'string', value: ctx.resolvers.song(expr.value).name } as ExprValueOfType<T>
-                case 'sound': return { type: 'string', value: ctx.resolvers.sound(expr.value).name } as ExprValueOfType<T>
+                case 'story': return { type: 'string', value: throwIfNull(ctx.resolvers.story(expr.value)).name } as ExprValueOfType<T>
+                case 'chapter': return { type: 'string', value: throwIfNull(ctx.resolvers.chapter(expr.value)).name } as ExprValueOfType<T>
+                case 'scene': return { type: 'string', value: throwIfNull(ctx.resolvers.scene(expr.value)).name } as ExprValueOfType<T>
+                case 'character': return { type: 'string', value: throwIfNull(ctx.resolvers.character(expr.value)).name } as ExprValueOfType<T>
+                case 'portrait': return { type: 'string', value: throwIfNull(ctx.resolvers.portrait(expr.value)).name } as ExprValueOfType<T>
+                case 'backdrop': return { type: 'string', value: throwIfNull(ctx.resolvers.backdrop(expr.value)).name } as ExprValueOfType<T>
+                case 'song': return { type: 'string', value: throwIfNull(ctx.resolvers.song(expr.value)).name } as ExprValueOfType<T>
+                case 'sound': return { type: 'string', value: throwIfNull(ctx.resolvers.sound(expr.value)).name } as ExprValueOfType<T>
+                case 'macro': return { type: 'string', value: throwIfNull(ctx.resolvers.macro(expr.value)).name } as ExprValueOfType<T>
             }
         }
         case 'number': {

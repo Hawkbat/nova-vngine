@@ -3,7 +3,7 @@
   "name": "Example Project",
   "editorRandState": [
     "xorshift32",
-    -2130292209
+    2052109814
   ],
   "stories": [
     {
@@ -34,9 +34,29 @@
   ],
   "scenes": [
     {
-      "id": "E3CCYXP6",
-      "name": "My First Scene",
-      "chapterID": "213RCRAR"
+      "id": "X81UH1BT",
+      "name": "",
+      "chapterID": "213RCRAR",
+      "steps": [
+        {
+          "id": "MZODX8B9",
+          "type": "text",
+          "text": {
+            "type": "string",
+            "args": [
+              ""
+            ]
+          },
+          "speaker": {
+            "type": "character",
+            "args": [
+              [
+                "1U58I1SC"
+              ]
+            ]
+          }
+        }
+      ]
     }
   ],
   "characters": [
@@ -91,5 +111,6 @@
         "type": "unset"
       }
     }
-  ]
+  ],
+  "macros": []
 }

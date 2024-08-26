@@ -1,6 +1,7 @@
-import { mdiAccount, mdiAlert, mdiArchive, mdiArchiveEdit, mdiArchivePlus, mdiArrowExpandHorizontal, mdiBookMultipleOutline, mdiBookOpenVariantOutline, mdiCheckboxBlankOutline, mdiCheckboxMarked, mdiChevronRight, mdiClose, mdiCog, mdiEmoticon, mdiEqual, mdiFlag, mdiFormatListCheckbox, mdiFormatListChecks, mdiFormatListGroup, mdiFormatText, mdiGreaterThan, mdiGreaterThanOrEqual, mdiHome, mdiImageArea, mdiLessThan, mdiLessThanOrEqual, mdiMapSearch, mdiMinus, mdiMusic, mdiNotEqualVariant, mdiPercent, mdiPlus, mdiPlusBox, mdiPound, mdiPoundBox, mdiSignatureText, mdiSlashForward, mdiSquareOutline, mdiTextBoxOutline, mdiTrashCan, mdiVariable, mdiVolumeHigh } from '@mdi/js'
+import { mdiAccount, mdiAccountMinus, mdiAccountPlus, mdiAlert, mdiApplicationVariable, mdiArchive, mdiArchiveEdit, mdiArchivePlus, mdiArrowExpandHorizontal, mdiBookMultipleOutline, mdiBookOpenVariantOutline, mdiCheckboxBlankOutline, mdiCheckboxMarked, mdiChevronRight, mdiClose, mdiCog, mdiEmoticon, mdiEqual, mdiFlag, mdiFormatListCheckbox, mdiFormatListChecks, mdiFormatListGroup, mdiFormatListText, mdiFormatText, mdiFunctionVariant, mdiGreaterThan, mdiGreaterThanOrEqual, mdiHome, mdiImageArea, mdiLessThan, mdiLessThanOrEqual, mdiMapSearch, mdiMinus, mdiMusic, mdiNotEqualVariant, mdiPercent, mdiPlus, mdiPlusBox, mdiPound, mdiPoundBox, mdiScriptText, mdiScriptTextPlay, mdiSignatureText, mdiSlashForward, mdiSourceBranch, mdiSquareOutline, mdiText, mdiTextBoxOutline, mdiTrashCan, mdiVariable, mdiVolumeHigh } from '@mdi/js'
 import { ExprPrimitiveValueType, ExprType } from "../../types/expressions"
 import { ProjectEditorTab } from '../editors/ProjectEditor'
+import { StepType } from '../../types/steps'
 
 export const COMMON_ICONS = {
     warning: mdiAlert,
@@ -45,6 +46,7 @@ export const EXPR_ICONS: Record<ExprType, string> = {
     greaterThanOrEqual: mdiGreaterThanOrEqual,
     pick: mdiFormatListChecks,
     switch: mdiFormatListCheckbox,
+    macro: mdiScriptText,
 }
 
 export const EXPR_VALUE_ICONS: Record<ExprPrimitiveValueType, string> = {
@@ -62,6 +64,7 @@ export const EXPR_VALUE_ICONS: Record<ExprPrimitiveValueType, string> = {
     song: EXPR_ICONS['song'],
     sound: EXPR_ICONS['sound'],
     location: EXPR_ICONS['location'],
+    macro: EXPR_ICONS['macro'],
 }
 
 export const PROJECT_TAB_ICONS: Record<ProjectEditorTab, string> = {
@@ -78,4 +81,20 @@ export const PROJECT_TAB_ICONS: Record<ProjectEditorTab, string> = {
     songs: EXPR_ICONS['song'],
     sounds: EXPR_ICONS['sound'],
     variables: EXPR_ICONS['variable'],
+    macros: EXPR_ICONS['macro'],
+}
+
+export const STEP_ICONS: Record<StepType, string> = {
+    text: mdiText,
+    backdrop: EXPR_ICONS['backdrop'],
+    enter: mdiAccountPlus,
+    exit: mdiAccountMinus,
+    move: mdiArrowExpandHorizontal,
+    portrait: EXPR_ICONS['portrait'],
+    music: EXPR_ICONS['song'],
+    sound: EXPR_ICONS['sound'],
+    decision: mdiFormatListText,
+    branch: mdiSourceBranch,
+    set: mdiApplicationVariable,
+    macro: mdiScriptTextPlay,
 }

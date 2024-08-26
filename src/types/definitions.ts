@@ -1,6 +1,7 @@
 import { RandState } from "../utils/rand"
 import { Branded, hintTypeTuple } from "../utils/types"
 import { BooleanExpr, ChapterExpr, CharacterExpr, IntegerExpr, ListExpr, NumberExpr, PortraitExpr, SceneExpr, StringExpr, ValueExpr } from "./expressions"
+import { AnyStep } from "./steps"
 
 type EntityID<T extends EntityType> = Branded<string, T>
 
@@ -19,6 +20,7 @@ type EntityTypeMap = {
     song: SongDefinition
     sound: SoundDefinition
     variable: AnyVariableDefinition
+    macro: MacroDefinition
 }
 
 export type EntityType = keyof EntityTypeMap
@@ -40,6 +42,7 @@ export interface ProjectDefinition {
     songs: SongDefinition[]
     sounds: SoundDefinition[]
     variables: AnyVariableDefinition[]
+    macros: MacroDefinition[]
 }
 
 type ProjectKeyByTypeMap = {
@@ -60,6 +63,7 @@ const PROJECT_KEY_BY_TYPE_MAP: ProjectKeyByTypeMap = {
     song: 'songs',
     sound: 'sounds',
     variable: 'variables',
+    macro: 'macros',
 }
 
 type TypeByProjectKeyMap = { [K in keyof ProjectKeyByTypeMap as ProjectKeyByTypeMap[K]]: K }
@@ -142,6 +146,7 @@ export type SceneID = EntityID<'scene'>
 
 export interface SceneDefinition extends EntityDefinition<SceneID> {
     chapterID: ChapterID
+    steps: AnyStep[]
 }
 
 export type CharacterID = EntityID<'character'>
@@ -189,6 +194,8 @@ type VariableScopeMap = {
     allCharacters: { }
     character: { id: CharacterID }
     characters: { ids: CharacterID[] }
+    macro: { id: MacroID }
+    macros: { ids: MacroID[] }
 }
 
 export type VariableScopeType = keyof VariableScopeMap
@@ -247,3 +254,9 @@ export type VariableDefinitionOfType<T extends VariableDefinitionType> = T exten
     scope: AnyVariableScope
 } & VariableDefinitionMap[T] : never
 export type AnyVariableDefinition = VariableDefinitionOfType<VariableDefinitionType>
+
+export type MacroID = EntityID<'macro'>
+
+export interface MacroDefinition extends EntityDefinition<MacroID> {
+    steps: AnyStep[]
+}
