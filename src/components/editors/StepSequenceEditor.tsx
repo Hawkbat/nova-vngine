@@ -50,8 +50,8 @@ const StepEditor = ({ step, setStep, ctx }: { step: AnyStep, setStep: (setter: (
             <ExpressionField label="Value" value={step.value} setValue={expr => setStep(s => isStepType(s, 'set') ? immSet(s, 'value', expr) : s)} paramTypes={null} ctx={ctx} />
         </> : step.type === 'macro' ? <>
             <ExpressionField label="Macro" value={step.macro} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'macro', expr) : s)} paramTypes={['macro']} ctx={ctx} />
-            {step.inputs.map((input, i) => <ExpressionField label={`Input ${i}`} value={input} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'inputs', immReplaceAt(s.inputs, i, expr)) : s)} paramTypes={null} ctx={ctx} />)}
-            {step.outputs.map((output, i) => <ExpressionField label={`Output ${i}`} value={output} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'outputs', immReplaceAt(s.outputs, i, expr)) : s)} paramTypes={['variable']} ctx={ctx} />)}
+            {step.inputs.map((input, i) => <ExpressionField key={i} label={`Input ${i}`} value={input} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'inputs', immReplaceAt(s.inputs, i, expr)) : s)} paramTypes={null} ctx={ctx} />)}
+            {step.outputs.map((output, i) => <ExpressionField key={i} label={`Output ${i}`} value={output} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'outputs', immReplaceAt(s.outputs, i, expr)) : s)} paramTypes={['variable']} ctx={ctx} />)}
         </> : null}
     </div>
 }
@@ -71,16 +71,11 @@ const StepList = ({ steps, setSteps, selected, setSelected, ctx }: { steps: AnyS
     </div>
 }
 
-const StepBubble = ({ step, setStep, deleteStep, selected, setSelected, ctx }: { step: AnyStep, setStep: (setter: (step: AnyStep) => AnyStep) => void, deleteStep: () => void, selected: StepID, setSelected: (id: StepID) => void, ctx: ExprContext }) => {
+const StepBubble = ({ step, setStep, selected, setSelected, ctx }: { step: AnyStep, setStep: (setter: (step: AnyStep) => AnyStep) => void, deleteStep: () => void, selected: StepID, setSelected: (id: StepID) => void, ctx: ExprContext }) => {
 
     const onSelect = (e: React.MouseEvent) => {
         e.stopPropagation()
         setSelected(step.id)
-    }
-
-    const onDelete = (e: React.MouseEvent) => {
-        e.stopPropagation()
-        deleteStep()
     }
 
     return step.type === 'decision' || step.type === 'branch' ? <div className={styles.bubble}>
@@ -134,7 +129,7 @@ export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setS
         return [null, null, null]
     }, [])
 
-    const [selectedStep, setSelectedStep, deleteSelectedStep] = useMemo(() => getSelectedStep(selectedStepID, steps, setSteps), [selectedStepID, steps, setSteps])
+    const [selectedStep, setSelectedStep, deleteSelectedStep] = useMemo(() => getSelectedStep(selectedStepID, steps, setSteps), [getSelectedStep, selectedStepID, steps, setSteps])
 
     return <div className={styles.sequenceEditor}>
         {selectedStep && setSelectedStep ? <div className={styles.fields}>

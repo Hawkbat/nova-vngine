@@ -20,11 +20,12 @@ export function immReplaceBy<T, K>(arr: T[], getKey: (value: T) => K, value: T):
     return arr.map(v => getKey(v) === key ? value : v)
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function immSet<T extends Record<string, any>, K extends keyof T>(obj: T, key: K, value: T[K]): T {
     return { ...obj, [key]: value }
 }
 
-export function deepDiff<T>(a: T, b: T, path: string, diffs: [path: string, before: any, after: any][] = []) {
+export function deepDiff<T>(a: T, b: T, path: string, diffs: [path: string, before: unknown, after: unknown][] = []) {
     if (a !== b) {
         diffs.push([path, a, b])
     }

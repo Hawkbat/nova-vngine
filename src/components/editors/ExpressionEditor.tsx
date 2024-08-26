@@ -1,8 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { AnyExpr, EXPR_DEFINITION_MAP, EXPR_DEFINITIONS, ExprContext, ExprDefinition, ExprPrimitiveRawValueOfType, ExprPrimitiveValueType, ExprType, ExprValueType, createDefaultExpr, guessExprReturnType, createDefaultExprChild, exprValueTypeAssignableTo, validateExpr } from "../../types/expressions"
 import styles from './ExpressionEditor.module.css'
 import { Fragment, useState } from "react"
 import { DropdownMenu, DropdownMenuItem } from "../common/DropdownMenu"
-import { inlineThrow } from "../../utils/types"
 import { immAppend, immRemoveAt, immReplaceAt, immSet } from "../../utils/imm"
 import { EditorIcon } from "../common/EditorIcon"
 import { COMMON_ICONS, EXPR_ICONS } from "../common/Icons"
@@ -91,7 +91,7 @@ const BooleanArgEditor = ({ value, setValue, label }: ArgSubEditorProps<'boolean
 }
 
 const ParamEditor = ({ label, types, expr, setExpr, ctx }: { label: string, types: ExprValueType[] | null, expr: AnyExpr, setExpr: (value: AnyExpr) => void, ctx: ExprContext }) => {
-    return <div className={styles.param}>
+    return <div className={styles.param} title={label}>
         <label>
             <ExpressionEditor expr={expr} setExpr={setExpr} paramTypes={types} ctx={ctx} />
         </label>

@@ -34,7 +34,7 @@ export function useViewStateTab() {
     const [tab, setViewState] = useSelector(viewStateStore, s => s.currentTab)
     const setTab = useCallback((tab: ProjectEditorTab) => {
         setViewState(s => immSet(s, 'currentTab', tab))
-    }, [])
+    }, [setViewState])
     return hintTypeTuple(tab, setTab)
 }
 
@@ -52,7 +52,7 @@ export function useViewStateScope<T extends EntityType>(type: T | null) {
         const hierarchy = getEntityHierarchy(type, id)
         const scopeValues = Object.fromEntries(hierarchy.map(h => hintTypeTuple(h.type, h.entity.id)))
         setViewState(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues } }))
-    }, [type])
+    }, [setViewState, type])
     return hintTypeTuple(scope, setScope)
 }
 

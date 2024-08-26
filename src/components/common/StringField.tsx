@@ -50,7 +50,7 @@ export const StringField = ({ label, value, setValue, validate }: { label: strin
         const validate = getLatestValidate()
         if (validate) return validate(getLatestTempValue())
         return ''
-    }, [])
+    }, [getLatestTempValue, getLatestValidate])
 
     const attemptCommit = useCallback(() => {
         if (!errorCheck() && setValue) {
@@ -62,7 +62,7 @@ export const StringField = ({ label, value, setValue, validate }: { label: strin
             return true
         }
         return false
-    }, [setValue])
+    }, [errorCheck, getLatestTempValue, getLatestValue, setValue])
 
     useEffect(() => {
         setTempValue(value)
@@ -72,9 +72,9 @@ export const StringField = ({ label, value, setValue, validate }: { label: strin
         return () => {
             attemptCommit()
         }
-    }, [])
+    }, [attemptCommit])
 
-    useDebounce(1000, useCallback(() => attemptCommit(), [tempValue]))
+    useDebounce(1000, useCallback(() => attemptCommit(), [attemptCommit]))
 
     const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setTempValue(e.target.value)

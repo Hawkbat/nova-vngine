@@ -39,7 +39,7 @@ const Breadcrumb = <T extends EntityType>({ type }: { type: T }) => {
     </>
 }
 
-const Breadcrumbs = ({} : {}) => {
+const Breadcrumbs = () => {
     const [projectName] = useSelector(projectStore, s => s.name)
     const [projectIsLoaded] = useSelector(viewStateStore, s => s.loadedProject !== null)
     const [, setCurrentTab] = useViewStateTab()

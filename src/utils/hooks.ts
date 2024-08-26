@@ -23,5 +23,5 @@ export function useDebounce(ms: number, callback: () => void) {
         return () => {
             clearTimeout(handle)
         }
-    }, [callback])
+    }, [callback, ms])
 }

@@ -1,7 +1,7 @@
 import { Fragment } from "react/jsx-dev-runtime"
 import { projectStore } from "../../store/project"
 import { useViewStateScope } from "../../store/viewstate"
-import { EntityIDOf, EntityOfType, EntityParentIDOf, EntityType, getEntityParentID, getEntityParentType, getProjectEntityKey, ProjectDefinition } from "../../types/definitions"
+import { EntityIDOf, EntityOfType, EntityParentIDOf, EntityType, getEntityParentID, getEntityParentType, getProjectEntityKey, ProjectDefinition, ProjectEntityKeyOf } from "../../types/definitions"
 import { prettyPrintIdentifier } from "../../utils/display"
 import { immReplaceBy, immSet } from "../../utils/imm"
 import { useSelector } from "../../utils/store"
@@ -28,7 +28,7 @@ export const EntityWorkspace = <T extends EntityType>({ type, immCreate, childre
     const onNewItem = (parentID?: EntityParentIDOf<T> | undefined) => {
         if (parentType) {
             if (!parentID) return
-            const [project, item] = immCreate(projectStore.getSnapshot(), parentID as any)
+            const [project, item] = immCreate(projectStore.getSnapshot(), parentID as EntityParentIDOf<T>)
             setProject(() => project)
             setScope(item.id as EntityIDOf<T>)
         } else {
@@ -49,7 +49,7 @@ export const EntityWorkspace = <T extends EntityType>({ type, immCreate, childre
 
     return <div className={styles.workspace}>
         {item ? <>
-            <StringField label={`${prettyPrintIdentifier(type)} Name`} value={item.name} setValue={name => setProject(project => immSet(project, projectKey, immReplaceBy(project[projectKey] as EntityOfType<T>[], s => s.id, immSet(item, 'name', name)) as any))} validate={s => s ? '' : 'Name must be filled out'} />
+            <StringField label={`${prettyPrintIdentifier(type)} Name`} value={item.name} setValue={name => setProject(project => immSet(project, projectKey, immReplaceBy(project[projectKey] as EntityOfType<T>[], s => s.id, immSet(item, 'name', name)) as ProjectDefinition[ProjectEntityKeyOf<T>]))} validate={s => s ? '' : 'Name must be filled out'} />
             <StringField label={`${prettyPrintIdentifier(type)} ID`} value={item.id} />
             {children(item)}
         </> : <>

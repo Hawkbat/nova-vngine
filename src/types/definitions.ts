@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 import { RandState } from "../utils/rand"
 import { Branded, hintTypeTuple } from "../utils/types"
 import { BooleanExpr, ChapterExpr, CharacterExpr, IntegerExpr, ListExpr, NumberExpr, PortraitExpr, SceneExpr, StringExpr, ValueExpr } from "./expressions"
@@ -125,6 +126,7 @@ const ENTITY_PARENT_GETTERS = {
 
 export function getEntityParentID<T extends EntityType>(type: T, entity: EntityOfType<T>): EntityParentIDOf<T> | null {
     if (type in ENTITY_PARENT_GETTERS) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (ENTITY_PARENT_GETTERS as any)[type](entity)
     }
     return null

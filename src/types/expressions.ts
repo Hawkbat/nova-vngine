@@ -246,6 +246,7 @@ export function resolveExpr(expr: AnyExpr, ctx: ExprContext): AnyExprValue {
             if (!isPrimitiveValueType(subType)) {
                 throw new Error(`Could not resolve expression containing a list of lists: ${JSON.stringify(expr)}`)
             }
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return { type: `list:${subType}`, values: values.map(v => castExprValue(v, subType, ctx)) as any }
         }
         case 'string': return { type: 'string', value: expr.args[0] }
@@ -292,7 +293,8 @@ export function validateExpr(expr: AnyExpr, ctx: ExprContext): string[] {
 
 export function createDefaultExpr<T extends ExprType>(type: T, ctx: ExprContext): ExprOfType<T> {
     const def = EXPR_DEFINITION_MAP[type]
-    let expr: ExprOfType<T> = { type } as any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const expr: ExprOfType<T> = { type } as any
     if (def.args) {
         expr.args = def.args.map(a => getContextualDefaultPrimitiveValue(a.type, ctx)) as ExprOfType<T>['args']
     }
@@ -328,11 +330,12 @@ export function guessExprReturnType(expr: AnyExpr, ctx: ExprContext): ExprValueT
         case 'subtract':
         case 'multiply':
         case 'divide':
-        case 'modulo':
+        case 'modulo': {
             const leftType = guessExprReturnType(expr.params[0], ctx)
             const rightType = guessExprReturnType(expr.params[1], ctx)
             if (leftType === 'integer' && rightType === 'integer') return 'integer'
             else return 'number'
+        }
         case 'pick':
             return guessExprReturnType(expr.params[1], ctx)
         case 'switch':
@@ -363,6 +366,7 @@ export function castExprValue<T extends ExprValueType>(expr: AnyExprValue, type:
                 case 'sound': return { type: 'string', value: throwIfNull(ctx.resolvers.sound(expr.value)).name } as ExprValueOfType<T>
                 case 'macro': return { type: 'string', value: throwIfNull(ctx.resolvers.macro(expr.value)).name } as ExprValueOfType<T>
             }
+            break
         }
         case 'number': {
             switch (expr.type) {
@@ -395,22 +399,22 @@ export function exprValuesEqual(left: AnyExprValue, right: AnyExprValue): boolea
 export function prettyPrintExpr(expr: AnyExpr): string {
     const def = EXPR_DEFINITION_MAP[expr.type]
     let out = `${expr.type}(`
-    if (expr.args) {
-        for (const a of expr.args) {
-            out += `${JSON.stringify(a)}, `
+    if (def.args && expr.args) {
+        for (let i = 0; i < def.args.length; i++) {
+            out += `${def.args[i].label}: ${JSON.stringify(expr.args[i])}`
         }
     }
-    if (expr.params) {
-        for (const p of expr.params) {
-            out += `${prettyPrintExpr(p)}, `
+    if (def.params && expr.params) {
+        for (let i = 0; i < def.params.length; i++) {
+            out += `${def.params[i].label}: ${prettyPrintExpr(expr.params[i])}`
         }
     }
-    if (expr.children) {
+    if (def.children && expr.children) {
         out += '['
         for (const c of expr.children) {
             out += '('
-            for (const v of c) {
-                out += `${prettyPrintExpr(v)}, `
+            for (let i = 0; i < def.children.length; i++) {
+                out += `${def.children[i].label}: ${prettyPrintExpr(c[i])}`
             }
             if (out.endsWith(', ')) out = out.substring(0, out.length - 2)
             out += '), '

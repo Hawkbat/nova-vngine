@@ -63,25 +63,21 @@ async function readFile(path: string): Promise<string | null> {
 
 async function writeFile(path: string, data: string): Promise<void> {
     if (!initialized) await initPromise.promise
+    const pathInfo = await nFS.getPathParts(path)
     try {
-        const pathInfo = await nFS.getPathParts(path)
-        try {
-            const parentStats = await nFS.getStats(pathInfo.parentPath)
-            if (!parentStats.isDirectory) throw new Error(`Parent path is a file, not a directory`)
-        } catch (err) {
-            if (isNeutralinoError(err) && err.code === 'NE_FS_NOPATHE') {
-                await nFS.createDirectory(pathInfo.parentPath)
-            } else {
-                throw err
-            }
-        }
-        if (LOG_FILE_WRITES) {
-            console.log('Writing file', path)
-        }
-        await nFS.writeFile(path, data)
+        const parentStats = await nFS.getStats(pathInfo.parentPath)
+        if (!parentStats.isDirectory) throw new Error(`Parent path is a file, not a directory`)
     } catch (err) {
-        throw err
+        if (isNeutralinoError(err) && err.code === 'NE_FS_NOPATHE') {
+            await nFS.createDirectory(pathInfo.parentPath)
+        } else {
+            throw err
+        }
     }
+    if (LOG_FILE_WRITES) {
+        console.log('Writing file', path)
+    }
+    await nFS.writeFile(path, data)
 }
 
 async function readJsonFile<T>(path: string): Promise<T | null> {

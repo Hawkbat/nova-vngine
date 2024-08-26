@@ -53,7 +53,7 @@ async function initializeAll() {
         }
         const recentProject = viewState.recentProjects.find(p => p.id === name)
         if (recentProject && recentProject.name !== name) {
-            let updatedProject = { ...recentProject, name }
+            const updatedProject = { ...recentProject, name }
             viewStateStore.setValue(s => immSet(s, 'recentProjects', immReplaceBy(s.recentProjects, p => p.id, updatedProject)))
         }
     })
