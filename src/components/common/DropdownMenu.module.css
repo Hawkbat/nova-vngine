@@ -19,8 +19,8 @@
 .menu {
     flex: 0 1 auto;
     overflow: auto;
-    background: #222;
-    border: 1px solid #444;
+    background-color: var(--menu-bg-color);
+    border: 1px solid var(--menu-border-color);
     border-radius: 0.25em;
     display: flex;
     flex-flow: column;

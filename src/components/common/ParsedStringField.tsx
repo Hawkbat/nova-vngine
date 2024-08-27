@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react"
-import type { FieldValidateFunc } from "./Field"
+import type { FieldProps } from "./Field"
 import { Field } from "./Field"
 import { useDebounce, useLatest } from "../../utils/hooks"
 import { classes } from "../../utils/display"
@@ -8,7 +8,7 @@ import styles from './ParsedStringField.module.css'
 export type FieldFormatFunc<T> = (value: T) => string
 export type FieldParseFunc<T> = (str: string) => { success: true, value: T } | { success: false, error: string }
 
-export const ParsedStringField = <T,>({ className, label, value, setValue, validate, parse, format }: { className?: string, label?: string, value: T, setValue?: (value: T) => void, validate?: FieldValidateFunc<T>, parse: FieldParseFunc<T>, format: FieldFormatFunc<T>}) => {    
+export const ParsedStringField = <T,>({ className, label, value, setValue, validate, parse, format }: FieldProps<T> & { parse: FieldParseFunc<T>, format: FieldFormatFunc<T>}) => {    
     const [tempValue, setTempValue] = useState(format(value))
     const [hasFocus, setHasFocus] = useState(false)
     const getLatestValue = useLatest(value)

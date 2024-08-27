@@ -33,7 +33,7 @@ const Breadcrumb = <T extends EntityType>({ type }: { type: T }) => {
 
     return <>
         <EditorIcon path={COMMON_ICONS.breadcrumbArrow} />
-        <EditorButton icon={EXPR_VALUE_ICONS[type]} style='outline' onClick={() => setCurrentTab(tab)}>
+        <EditorButton icon={EXPR_VALUE_ICONS[type]} style="text" active={currentTab === tab} onClick={() => setCurrentTab(tab)}>
             <span>{name ? name : `Untitled ${prettyPrintIdentifier(type)}`}</span>
             <EditorIcon path={COMMON_ICONS.cancel} label={`Stop Filtering By ${prettyPrintIdentifier(type)}`} onClick={() => setScope(undefined)} />
         </EditorButton>
@@ -43,9 +43,9 @@ const Breadcrumb = <T extends EntityType>({ type }: { type: T }) => {
 const Breadcrumbs = () => {
     const [projectName] = useSelector(projectStore, s => s.name)
     const [projectIsLoaded] = useSelector(viewStateStore, s => s.loadedProject !== null)
-    const [, setCurrentTab] = useViewStateTab()
+    const [currentTab, setCurrentTab] = useViewStateTab()
     return projectIsLoaded ? <div className={styles.breadcrumbs}>
-        <EditorButton icon={PROJECT_TAB_ICONS.project} style='outline' onClick={() => setCurrentTab('project')}>{projectName}</EditorButton>
+        <EditorButton icon={PROJECT_TAB_ICONS.project} style="text" active={currentTab === 'project'} onClick={() => setCurrentTab('project')}>{projectName}</EditorButton>
         {ENTITY_TYPES.map(e => <Breadcrumb key={e} type={e} />)}
     </div> : null
 }
@@ -85,7 +85,7 @@ export const ProjectEditor = () => {
     return <div className={styles.editor}>
         <Sidebar />
         <div className={styles.pane}>
-            {isProjectEntityKey(currentTab) ? <Breadcrumbs /> : null}
+            {isProjectEntityKey(currentTab) || currentTab === 'project' ? <Breadcrumbs /> : null}
             <div className={styles.workspace}>
                 {currentTab === 'home' ? <HomeWorkspace /> : null}
                 {currentTab === 'project' ? <ProjectWorkspace /> : null}

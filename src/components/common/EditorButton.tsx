@@ -17,10 +17,11 @@ export const EditorButtonGroup = ({ children }: { children: React.ReactNode }) =
     </div>
 }
 
-export const EditorButton = ({ className, icon, style, children, onClick }: {
+export const EditorButton = ({ className, icon, style, active, children, onClick }: {
     className?: string
     icon?: string
     style?: EditorButtonStyle
+    active?: boolean
     children: React.ReactNode
     onClick: (e: React.MouseEvent) => void
 }) => {
@@ -31,7 +32,7 @@ export const EditorButton = ({ className, icon, style, children, onClick }: {
         onClick(e)
     }, [onClick])
     
-    return <div className={classes(styles.button, BUTTON_STYLES[style ?? 'solid'], className)} onClick={actualOnClick}>
+    return <div className={classes(styles.button, BUTTON_STYLES[style ?? 'solid'], { [styles.active]: active !== undefined ? active : false, [styles.inactive]: active !== undefined ? !active : false }, className)} onClick={actualOnClick}>
         {icon ? <EditorIcon path={icon} /> : null}
         {children}
     </div>

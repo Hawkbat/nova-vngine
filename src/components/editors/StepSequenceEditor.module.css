@@ -19,6 +19,7 @@
 .stepEditor {
     display: flex;
     flex-direction: column;
+    gap: 0.5em;
 }
 
 .bubble {
@@ -59,8 +60,14 @@
     opacity: 0.8;
 }
 
-.simpleBubble.active, .simpleBubble:hover {
+.simpleBubble:hover {
     opacity: 1.0;
+}
+
+.simpleBubble.active {
+    opacity: 1;
+    background-color: var(--primary-color);
+    color: var(--bg-color);
 }
 
 .outlineBubble {

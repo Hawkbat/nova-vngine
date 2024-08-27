@@ -56,19 +56,19 @@ const ArgEditor = <T extends ExprPrimitiveValueType>(props: ArgEditorProps<T>) =
 }
 
 const StringArgEditor = ({ value, setValue, label }: ArgSubEditorProps<'string'>) => {
-    return <StringField label={label} value={value} setValue={setValue} />
+    return <StringField value={value} setValue={setValue} />
 }
 
 const NumberArgEditor = ({ value, setValue, label }: ArgSubEditorProps<'number'>) => {
-    return <NumberField label={label} value={value} setValue={setValue} />
+    return <NumberField value={value} setValue={setValue} />
 }
 
 const IntegerArgEditor = ({ value, setValue, label }: ArgSubEditorProps<'integer'>) => {
-    return <NumberField label={label} value={value} setValue={setValue} />
+    return <NumberField value={value} setValue={setValue} />
 }
 
 const BooleanArgEditor = ({ value, setValue, label }: ArgSubEditorProps<'boolean'>) => {
-    return <BooleanField label={label} value={value} setValue={setValue} />
+    return <BooleanField value={value} setValue={setValue} />
 }
 
 const EntityArgEditor = <T extends EntityType>({ type, value, setValue, label }: ArgSubEditorProps<T>) => {

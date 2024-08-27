@@ -1,15 +1,9 @@
 import { useCallback } from "react"
-import type { FieldValidateFunc } from "./Field"
+import type { FieldProps } from "./Field"
 import type { FieldParseFunc, FieldFormatFunc } from "./ParsedStringField"
 import { ParsedStringField } from "./ParsedStringField"
 
-export const StringField = ({ className, label, value, setValue, validate }: {
-    className?: string
-    label?: string
-    value: string
-    setValue?: (value: string) => void
-    validate?: FieldValidateFunc<string>
-}) => {
+export const StringField = ({ className, label, value, setValue, validate }: FieldProps<string>) => {
     const parse: FieldParseFunc<string> = useCallback(str => {
         return { success: true, value: str }
     }, [])

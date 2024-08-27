@@ -1,15 +1,9 @@
 import { useCallback } from "react"
-import type { FieldValidateFunc } from "./Field"
+import type { FieldProps } from "./Field"
 import type { FieldParseFunc, FieldFormatFunc } from "./ParsedStringField"
 import { ParsedStringField } from "./ParsedStringField"
 
-export const NumberField = ({ className, label, value, setValue, validate }: {
-    className?: string
-    label?: string
-    value: number
-    setValue?: (value: number) => void
-    validate?: FieldValidateFunc<number>
-}) => {
+export const NumberField = ({ className, label, value, setValue, validate }: FieldProps<number>) => {
     const parse: FieldParseFunc<number> = useCallback((str: string) => {
         const n = parseFloat(str)
         if (Number.isNaN(n)) return { success: false, error: `Value is not a number` }

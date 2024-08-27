@@ -12,6 +12,7 @@ import { EditorButton, EditorButtonGroup } from "./EditorButton"
 export interface DialogChoice {
     content: React.ReactNode
     icon?: string
+    primary?: boolean
 }
 
 interface DialogState {
@@ -40,7 +41,7 @@ export function openCustomDialog<T extends string>(title: React.ReactNode, conte
 }
 
 export function openDialog<T extends string>(title: string, message: string, choices: Record<T, string>): Promise<T> {
-    return openCustomDialog(<><EditorIcon path={mdiAlert} label={title} /> {title}</>, <>{message}</>, Object.fromEntries(Object.entries(choices).map(([k, v]) => hintTypeTuple(k, { content: <>{v}</> }))) as Record<T, DialogChoice>)
+    return openCustomDialog(<><EditorIcon path={mdiAlert} label={title} /> {title}</>, <>{message}</>, Object.fromEntries(Object.entries(choices).map(([k, v], i, arr) => hintTypeTuple(k, { content: <>{v}</>, primary: i === arr.length - 1 ? true : undefined }))) as Record<T, DialogChoice>)
 }
 
 export function useIsDialogOpen() {
@@ -67,10 +68,10 @@ export const Dialog = () => {
                     {currentState.content}
                 </div>
                 <EditorButtonGroup>
-                    {Object.entries(currentState.choices).map(([k, v]) => <EditorButton key={k} onClick={() => onChoiceClicked(k)}>
+                    {Object.entries(currentState.choices).map(([k, v]) => <EditorButton key={k} active={v.primary} onClick={() => onChoiceClicked(k)}>
                         {v.icon ? <EditorIcon path={v.icon} /> : null}
                         {v.content}
-                    </EditorButton>)}                    
+                    </EditorButton>)}
                 </EditorButtonGroup>
             </div>
         </div>, document.body) : null}

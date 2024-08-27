@@ -1,16 +1,10 @@
 import { useCallback } from "react"
-import type { FieldValidateFunc } from "./Field"
+import type { FieldProps } from "./Field"
 import { Field } from "./Field"
 import { EditorIcon } from "./EditorIcon"
 import { COMMON_ICONS } from "./Icons"
 
-export const BooleanField = ({ className, label, value, setValue, validate }: {
-    className?: string
-    label?: string
-    value: boolean
-    setValue?: (value: boolean) => void
-    validate?: FieldValidateFunc<boolean>
-}) => {
+export const BooleanField = ({ className, label, value, setValue, validate }: FieldProps<boolean>) => {
     
     const errorCheck = useCallback(() => {
         if (validate) return validate(value)

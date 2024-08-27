@@ -4,6 +4,8 @@
     --text-color: white;
     --primary-color: #FA5;
     --error-color: #f66;
+    --menu-bg-color: #222;
+    --menu-border-color: #444;
     background: var(--bg-color);
     color: var(--text-color);
     font-family: sans-serif;

@@ -10,8 +10,13 @@ import { StringField } from "../common/StringField"
 import { classes, prettyPrintIdentifier } from "../../utils/display"
 import type { ExprContext } from "../../types/expressions"
 import { getProjectExprContext } from "../../store/operations"
+import { EditorButton, EditorButtonGroup } from "../common/EditorButton"
 
-const StepEditor = ({ step, setStep, ctx }: { step: AnyStep, setStep: (setter: (step: AnyStep) => AnyStep) => void, deleteStep: () => void, ctx: ExprContext }) => {
+const StepEditor = ({ step, setStep, deleteStep, ctx }: { step: AnyStep, setStep: (setter: (step: AnyStep) => AnyStep) => void, deleteStep: () => void, ctx: ExprContext }) => {
+    const onDeleteStep = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        deleteStep()
+    }
     return <div className={styles.stepEditor}>
         <StringField label="Step ID" value={step.id} />
         <StringField label="Step Type" value={prettyPrintIdentifier(step.type)} />
@@ -54,6 +59,9 @@ const StepEditor = ({ step, setStep, ctx }: { step: AnyStep, setStep: (setter: (
             {step.inputs.map((input, i) => <ExpressionField key={i} label={`Input ${i}`} value={input} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'inputs', immReplaceAt(s.inputs, i, expr)) : s)} paramTypes={null} ctx={ctx} />)}
             {step.outputs.map((output, i) => <ExpressionField key={i} label={`Output ${i}`} value={output} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'outputs', immReplaceAt(s.outputs, i, expr)) : s)} paramTypes={['variable']} ctx={ctx} />)}
         </> : null}
+        <EditorButtonGroup>
+            <EditorButton onClick={onDeleteStep}>Delete Step</EditorButton>
+        </EditorButtonGroup>
     </div>
 }
 
@@ -133,11 +141,11 @@ export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setS
     const [selectedStep, setSelectedStep, deleteSelectedStep] = useMemo(() => getSelectedStep(selectedStepID, steps, setSteps), [getSelectedStep, selectedStepID, steps, setSteps])
 
     return <div className={styles.sequenceEditor}>
-        {selectedStep && setSelectedStep ? <div className={styles.fields}>
-            <StepEditor step={selectedStep} setStep={setSelectedStep} deleteStep={deleteSelectedStep} ctx={ctx} />
-        </div> : null}
         <div className={styles.timeline}>
             <StepList steps={steps} setSteps={setSteps} selected={selectedStepID} setSelected={setSelectedStepID} ctx={ctx} />
         </div>
+        {selectedStep && setSelectedStep ? <div className={styles.fields}>
+            <StepEditor step={selectedStep} setStep={setSelectedStep} deleteStep={deleteSelectedStep} ctx={ctx} />
+        </div> : null}
     </div>
 }

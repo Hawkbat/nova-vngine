@@ -3,7 +3,7 @@
   "name": "Example Project",
   "editorRandState": [
     "xorshift32",
-    2052109814
+    1238076713
   ],
   "stories": [
     {
@@ -35,22 +35,24 @@
   "scenes": [
     {
       "id": "X81UH1BT",
-      "name": "",
+      "name": "My New Scene",
       "chapterID": "213RCRAR",
       "steps": [
         {
-          "id": "MZODX8B9",
+          "id": "ZM3Q1283",
           "type": "text",
           "text": {
-            "type": "location",
+            "type": "string",
             "args": [
-              0.5
+              "Some Text"
             ]
           },
           "speaker": {
             "type": "character",
             "args": [
-              "1U58I1SC"
+              [
+                "1U58I1SC"
+              ]
             ]
           }
         }

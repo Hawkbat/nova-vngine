@@ -40,8 +40,13 @@
     opacity: 1;
 }
 
-.icon.text.active, .icon.outline.active {
+.icon.text.active {
     color: var(--primary-color);
+}
+
+.icon.outline.active {
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
 }
 
 .icon.solid.active {

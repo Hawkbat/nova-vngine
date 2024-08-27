@@ -2,14 +2,14 @@
 .workspace {
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 0.25em;
     justify-content: center;
     align-items: center;
     min-width: 100%;
     min-height: 100%;
     box-sizing: border-box;
-    padding: 10px;
-    font-size: 4em;
+    padding: 0.25em;
+    font-size: 3em;
 }
 
 .logo {
@@ -33,5 +33,5 @@
     flex-flow: row wrap;
     justify-content: center;
     align-items: center;
-    gap: 10px;
+    gap: 0.25em;
 }
