@@ -1,5 +1,5 @@
-import { ViewState } from "../../store/viewstate"
-import { ProjectDefinition } from "../../types/definitions"
+import type { ViewState } from "../../store/viewstate"
+import type { ProjectDefinition } from "../../types/definitions"
 
 export interface PlatformFilesystemEntry {
     path: string

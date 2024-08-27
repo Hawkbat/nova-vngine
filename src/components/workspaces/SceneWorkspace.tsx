@@ -1,5 +1,6 @@
-import { immCreateScene, projectStore } from "../../store/project"
-import { SceneDefinition } from "../../types/definitions"
+import { projectStore } from "../../store/project"
+import { immCreateScene } from "../../store/operations"
+import type { SceneDefinition } from "../../types/definitions"
 import { EntityWorkspace } from "./EntityWorkspace"
 import { StepSequenceEditor } from "../editors/StepSequenceEditor"
 import { useStore } from "../../utils/store"

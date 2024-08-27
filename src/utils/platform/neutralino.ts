@@ -1,11 +1,14 @@
-import { init, events as nEvents, app as nApp, filesystem as nFS, os as nOS, window as nWindow, KnownPath } from '@neutralinojs/lib'
+import type { KnownPath } from '@neutralinojs/lib'
+import { init, events as nEvents, app as nApp, filesystem as nFS, os as nOS, window as nWindow } from '@neutralinojs/lib'
 import faviconUrl from '../../favicon.png'
 import { awaitAllMap, createExposedPromise } from '../async'
 import { LOG_FILE_WRITES } from '../../debug'
-import { createProject } from '../../store/project'
-import { ViewState, viewStateStore } from '../../store/viewstate'
-import { ProjectDefinition } from '../../types/definitions'
-import { Platform, DEFAULT_PROJECT_FILENAME, PlatformFilesystemEntry } from './common'
+import { createProject } from "../../store/project"
+import type { ViewState } from '../../store/viewstate';
+import { viewStateStore } from '../../store/viewstate'
+import type { ProjectDefinition } from '../../types/definitions'
+import type { Platform, PlatformFilesystemEntry } from './common'
+import { DEFAULT_PROJECT_FILENAME } from './common'
 
 const APP_DIR_NAME = '/Nova VNgine'
 
@@ -39,7 +42,7 @@ async function pickFiles({ title, filterName, extensions, multiSelections, defau
     }
 }
 
-async function pickDirectory({ title, defaultPath } : { title: string, defaultPath?: string }) {
+async function pickDirectory({ title, defaultPath }: { title: string, defaultPath?: string }) {
     if (!initialized) await initPromise.promise
     try {
         const path = await nOS.showFolderDialog(title, { defaultPath: defaultPath ?? await nOS.getPath('documents') })
@@ -149,26 +152,26 @@ export const neutralinoPlatform: Platform = {
     async initialize() {
 
         init()
-    
+
         await nEvents.on('windowClose', async (e: CustomEvent<null>) => {
             await nApp.exit()
         })
-        
+
         await nEvents.on('trayMenuItemClicked', (e: CustomEvent<nOS.TrayMenuItem>) => {
             const menuItem = menuItems.find(i => i.id === e.detail.id)
             if (menuItem && menuItem.onClick) menuItem.onClick()
         })
-    
+
         await nWindow.setIcon(`/resources/${faviconUrl.slice(1)}`)
 
         await setTray([
             { id: '', isDisabled: true, text: 'Nova VNgine' },
             { text: '-' },
-            { id: 'checkUpdates', text: 'Check for Updates', onClick: () => {} },
+            { id: 'checkUpdates', text: 'Check for Updates', onClick: () => { } },
             { text: '-' },
             { id: 'exit', text: 'Exit', onClick: () => exitApplication() },
         ])
-        
+
         initialized = true
         initPromise.resolve()
     },

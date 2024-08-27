@@ -1,4 +1,4 @@
-import { immCreatePortrait } from "../../store/project"
+import { immCreatePortrait } from "../../store/operations"
 import { EntityWorkspace } from "./EntityWorkspace"
 import styles from './PortraitWorkspace.module.css'
 

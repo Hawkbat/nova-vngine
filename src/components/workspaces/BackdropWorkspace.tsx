@@ -1,4 +1,4 @@
-import { immCreateBackdrop } from "../../store/project"
+import { immCreateBackdrop } from "../../store/operations"
 import { EntityWorkspace } from "./EntityWorkspace"
 import styles from './BackdropWorkspace.module.css'
 

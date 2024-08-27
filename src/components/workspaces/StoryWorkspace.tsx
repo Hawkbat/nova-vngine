@@ -1,4 +1,4 @@
-import { immCreateStory } from "../../store/project"
+import { immCreateStory } from "../../store/operations"
 import { EntityWorkspace } from "./EntityWorkspace"
 import styles from './StoryWorkspace.module.css'
 

@@ -1,4 +1,5 @@
-import { ENTITY_TYPES, EntityType, getEntityTypeByProjectKey, getEntityTypeHierarchy, getProjectEntityKey, isProjectEntityKey, PROJECT_ENTITY_KEYS, ProjectEntityKeyOf } from "../../types/definitions"
+import type { EntityType } from "../../types/definitions"
+import { ENTITY_TYPES, getEntityTypeByProjectKey, getEntityTypeHierarchy, getProjectEntityKey, isProjectEntityKey, PROJECT_ENTITY_KEYS } from "../../types/definitions"
 import styles from './ProjectEditor.module.css'
 import { EditorIcon } from "../common/EditorIcon"
 import { COMMON_ICONS, EXPR_VALUE_ICONS, PROJECT_TAB_ICONS } from "../common/Icons"
@@ -7,7 +8,9 @@ import { ProjectWorkspace } from "../workspaces/ProjectWorkspace"
 import { SceneWorkspace } from "../workspaces/SceneWorkspace"
 import { HomeWorkspace } from "../workspaces/HomeWorkspace"
 import { projectStore } from "../../store/project"
-import { useViewStateScope, useViewStateTab, viewStateStore } from "../../store/viewstate"
+import type { ProjectEditorTab } from "../../store/viewstate"
+import { viewStateStore } from "../../store/viewstate"
+import { useViewStateScope, useViewStateTab } from "../../store/operations"
 import { useSelector } from "../../utils/store"
 import { StoryWorkspace } from "../workspaces/StoryWorkspace"
 import { ChapterWorkspace } from "../workspaces/ChapterWorkspace"
@@ -19,8 +22,6 @@ import { SongWorkspace } from "../workspaces/SongWorkspace"
 import { SoundWorkspace } from "../workspaces/SoundWorkspace"
 import { VariableWorkspace } from "../workspaces/VariableWorkspace"
 import { platform } from "../../utils/platform/platform"
-
-export type ProjectEditorTab = 'home' | 'manual' | 'settings' | 'project' | ProjectEntityKeyOf<EntityType>
 
 const Breadcrumb = <T extends EntityType>({ type }: { type: T }) => {
     const tab = getProjectEntityKey(type)
@@ -80,7 +81,7 @@ const Footer = () => {
 
 export const ProjectEditor = () => {
     const [currentTab] = useSelector(viewStateStore, s => s.currentTab)
-    
+
     return <div className={styles.editor}>
         <Sidebar />
         <div className={styles.pane}>

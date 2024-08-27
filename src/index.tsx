@@ -1,7 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './components/App'
-import { loadInitialViewState, viewStateStore } from './store/viewstate'
+import { viewStateStore } from './store/viewstate'
+import { loadInitialViewState } from "./store/operations"
 import { projectStore } from './store/project'
 import { wait } from './utils/async'
 import { immSet, immReplaceBy } from './utils/imm'

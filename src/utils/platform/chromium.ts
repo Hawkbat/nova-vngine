@@ -1,9 +1,11 @@
 import { createProject } from "../../store/project"
-import { viewStateStore, ViewState } from "../../store/viewstate"
+import type { ViewState } from "../../store/viewstate"
+import { viewStateStore } from "../../store/viewstate"
 import { randID, randSeedRandom } from "../rand"
-import { Branded } from "../types"
+import type { Branded } from "../types"
 import { get, set, entries, createStore } from 'idb-keyval'
-import { Platform, PlatformError, DEFAULT_PROJECT_FILENAME, PlatformFilesystemEntry } from "./common"
+import type { Platform, PlatformFilesystemEntry } from "./common"
+import { PlatformError, DEFAULT_PROJECT_FILENAME } from "./common"
 
 const idbStore = createStore('chromium-handle-db', 'chromium-handle-store')
 
@@ -111,9 +113,9 @@ export const chromiumPlatform: Platform = {
                 name: result.name,
                 handle: key,
             }
-            
-            const files: PlatformFilesystemEntry[] = (await Array.fromAsync(result.values())).filter(t => t.kind === 'file').map(t => ({type: 'file', name: t.name, path: `${result.name}/${t.name}`, handle: null }))
-            const directories: PlatformFilesystemEntry[] = (await Array.fromAsync(result.values())).filter(t => t.kind === 'directory').map(t => ({type: 'directory', path: `${result.name}/${t.name}`, name: t.name, files: [], directories: [], handle: null }))
+
+            const files: PlatformFilesystemEntry[] = (await Array.fromAsync(result.values())).filter(t => t.kind === 'file').map(t => ({ type: 'file', name: t.name, path: `${result.name}/${t.name}`, handle: null }))
+            const directories: PlatformFilesystemEntry[] = (await Array.fromAsync(result.values())).filter(t => t.kind === 'directory').map(t => ({ type: 'directory', path: `${result.name}/${t.name}`, name: t.name, files: [], directories: [], handle: null }))
             return {
                 directory,
                 files,

@@ -17,7 +17,13 @@ export const EditorButtonGroup = ({ children }: { children: React.ReactNode }) =
     </div>
 }
 
-export const EditorButton = ({ icon, style, children, onClick }: { icon?: string, style?: EditorButtonStyle, children: React.ReactNode, onClick: (e: React.MouseEvent) => void }) => {
+export const EditorButton = ({ className, icon, style, children, onClick }: {
+    className?: string
+    icon?: string
+    style?: EditorButtonStyle
+    children: React.ReactNode
+    onClick: (e: React.MouseEvent) => void
+}) => {
 
     const actualOnClick = useCallback((e: React.MouseEvent) => {
         e.preventDefault()
@@ -25,7 +31,7 @@ export const EditorButton = ({ icon, style, children, onClick }: { icon?: string
         onClick(e)
     }, [onClick])
     
-    return <div className={classes(styles.button, BUTTON_STYLES[style ?? 'solid'])} onClick={actualOnClick}>
+    return <div className={classes(styles.button, BUTTON_STYLES[style ?? 'solid'], className)} onClick={actualOnClick}>
         {icon ? <EditorIcon path={icon} /> : null}
         {children}
     </div>

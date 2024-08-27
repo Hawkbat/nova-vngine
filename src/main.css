@@ -1,7 +1,14 @@
 
 :root {
-    background: black;
-    color: white;
+    --bg-color: #111;
+    --text-color: white;
+    --primary-color: #FA5;
+    --error-color: #f66;
+    background: var(--bg-color);
+    color: var(--text-color);
+    font-family: sans-serif;
+    font-size: 20px;
+    user-select: none;
 }
 
 html, body {
@@ -23,5 +30,5 @@ html, body {
 }
 
 *:hover {
-    scrollbar-color: white transparent;
+    scrollbar-color: var(--text-color) transparent;
 }

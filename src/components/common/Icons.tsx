@@ -1,7 +1,7 @@
-import { mdiAccount, mdiAccountMinus, mdiAccountPlus, mdiAlert, mdiApplicationVariable, mdiArchive, mdiArchiveEdit, mdiArchivePlus, mdiArrowExpandHorizontal, mdiBookMultipleOutline, mdiBookOpenVariantOutline, mdiCheckboxBlankOutline, mdiCheckboxMarked, mdiChevronRight, mdiClose, mdiCog, mdiEmoticon, mdiEqual, mdiFlag, mdiFormatListCheckbox, mdiFormatListChecks, mdiFormatListGroup, mdiFormatListText, mdiFormatText, mdiGreaterThan, mdiGreaterThanOrEqual, mdiHome, mdiImageArea, mdiLessThan, mdiLessThanOrEqual, mdiMapSearch, mdiMinus, mdiMusic, mdiNotEqualVariant, mdiPercent, mdiPlus, mdiPlusBox, mdiPound, mdiPoundBox, mdiScriptText, mdiScriptTextPlay, mdiSignatureText, mdiSlashForward, mdiSourceBranch, mdiSquareOutline, mdiText, mdiTextBoxOutline, mdiTrashCan, mdiVariable, mdiVolumeHigh } from '@mdi/js'
-import { ExprPrimitiveValueType, ExprType } from "../../types/expressions"
-import { ProjectEditorTab } from '../editors/ProjectEditor'
-import { StepType } from '../../types/steps'
+import { mdiAccount, mdiAccountMinus, mdiAccountPlus, mdiAlert, mdiApplicationVariable, mdiArchive, mdiArchiveEdit, mdiArchivePlus, mdiArrowExpandHorizontal, mdiBookMultipleOutline, mdiBookOpenVariantOutline, mdiCheckboxBlankOutline, mdiCheckboxMarked, mdiChevronDown, mdiChevronRight, mdiClose, mdiCog, mdiCreation, mdiEmoticon, mdiEqual, mdiFlag, mdiFormatHorizontalAlignCenter, mdiFormatHorizontalAlignLeft, mdiFormatHorizontalAlignRight, mdiFormatListCheckbox, mdiFormatListChecks, mdiFormatListGroup, mdiFormatListText, mdiFormatText, mdiGreaterThan, mdiGreaterThanOrEqual, mdiHome, mdiImageArea, mdiLessThan, mdiLessThanOrEqual, mdiMapSearch, mdiMinus, mdiMusic, mdiNotEqualVariant, mdiPercent, mdiPlus, mdiPlusBox, mdiPound, mdiPoundBox, mdiScriptText, mdiScriptTextPlay, mdiSignatureText, mdiSlashForward, mdiSourceBranch, mdiSquareOutline, mdiText, mdiTextBoxOutline, mdiTrashCan, mdiVariable, mdiVolumeHigh } from '@mdi/js'
+import type { ExprPrimitiveValueType, ExprType } from "../../types/expressions"
+import type { StepType } from '../../types/steps'
+import type { ProjectEditorTab } from '../../store/viewstate'
 
 export const COMMON_ICONS = {
     warning: mdiAlert,
@@ -13,6 +13,12 @@ export const COMMON_ICONS = {
     addItem: mdiPlusBox,
     deleteItem: mdiTrashCan,
     breadcrumbArrow: mdiChevronRight,
+    dropdownArrow: mdiChevronDown,
+    alignLeft: mdiFormatHorizontalAlignLeft,
+    alignRight: mdiFormatHorizontalAlignRight,
+    alignCenter: mdiFormatHorizontalAlignCenter,
+    alignAuto: mdiCreation,
+    alignCustom: mdiPercent,
 } satisfies Record<string, string>
 
 export const EXPR_ICONS: Record<ExprType, string> = {

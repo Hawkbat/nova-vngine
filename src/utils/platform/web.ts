@@ -1,6 +1,8 @@
-import { viewStateStore, ViewState } from "../../store/viewstate"
-import { ProjectDefinition } from "../../types/definitions"
-import { Platform, DEFAULT_PROJECT_FILENAME, PlatformError } from "./common"
+import type { ViewState } from "../../store/viewstate"
+import { viewStateStore } from "../../store/viewstate"
+import type { ProjectDefinition } from "../../types/definitions"
+import type { Platform } from "./common"
+import { DEFAULT_PROJECT_FILENAME, PlatformError } from "./common"
 
 export const webPlatform: Platform = {
     name: 'Browser (Generic)',

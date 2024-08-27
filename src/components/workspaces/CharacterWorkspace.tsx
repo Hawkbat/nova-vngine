@@ -1,4 +1,4 @@
-import { immCreateCharacter } from "../../store/project"
+import { immCreateCharacter } from "../../store/operations"
 import { EntityWorkspace } from "./EntityWorkspace"
 import styles from './CharacterWorkspace.module.css'
 

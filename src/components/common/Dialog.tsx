@@ -1,4 +1,5 @@
-import { createExposedPromise, ExposedPromise } from "../../utils/async"
+import type { ExposedPromise } from "../../utils/async"
+import { createExposedPromise } from "../../utils/async"
 import { createPortal } from "react-dom"
 import styles from './Dialog.module.css'
 import { EditorIcon } from "./EditorIcon"

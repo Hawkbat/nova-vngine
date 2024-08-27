@@ -1,4 +1,4 @@
-import { immCreateChapter } from "../../store/project"
+import { immCreateChapter } from "../../store/operations"
 import { EntityWorkspace } from "./EntityWorkspace"
 import styles from './ChapterWorkspace.module.css'
 

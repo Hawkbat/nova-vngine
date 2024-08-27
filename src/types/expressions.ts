@@ -1,6 +1,6 @@
 import { throwIfNull } from "../utils/guard"
 import { assertExhaustive } from "../utils/types"
-import { StoryID, ChapterID, SceneID, VariableID, CharacterID, BackdropID, SongID, SoundID, AnyVariableDefinition, CharacterDefinition, BackdropDefinition, ChapterDefinition, SceneDefinition, SongDefinition, SoundDefinition, StoryDefinition, PortraitID, MacroID, MacroDefinition, PortraitDefinition } from "./definitions"
+import type { StoryID, ChapterID, SceneID, VariableID, CharacterID, BackdropID, SongID, SoundID, AnyVariableDefinition, CharacterDefinition, BackdropDefinition, ChapterDefinition, SceneDefinition, SongDefinition, SoundDefinition, StoryDefinition, PortraitID, MacroID, MacroDefinition, PortraitDefinition } from "./definitions"
 
 export type LocationValue = 'auto' | 'left' | 'center' | 'right' | number
 
@@ -50,7 +50,7 @@ const EXPRS = validateExprDefinitions({
     integer: { label: 'Integer', args: [{ label: 'Value', type: 'integer' }], returnTypes: ['integer'] },
     boolean: { label: 'Flag', args: [{ label: 'Value', type: 'boolean' }], returnTypes: ['boolean'] },
     location: { label: 'Location', args: [{ label: 'Value', type: 'location' }], returnTypes: ['location'] },
-    
+
     story: { label: 'Story', args: [{ label: 'Value', type: 'story' }], returnTypes: ['story'] },
     chapter: { label: 'Chapter', args: [{ label: 'Value', type: 'chapter' }], returnTypes: ['chapter'] },
     scene: { label: 'Scene', args: [{ label: 'Value', type: 'scene' }], returnTypes: ['scene'] },
@@ -67,7 +67,7 @@ const EXPRS = validateExprDefinitions({
     multiply: { label: 'Multiply', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
     divide: { label: 'Divide', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
     modulo: { label: 'Remainder', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
-    
+
     format: { label: 'Formatted Text', returnTypes: ['string'], children: [{ label: 'Item', types: ['string'] }] },
 
     equal: { label: 'Equal To', params: [{ label: 'Left', types: null }, { label: 'Right', types: null }], returnTypes: ['boolean'] },

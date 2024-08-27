@@ -42,17 +42,15 @@
           "id": "MZODX8B9",
           "type": "text",
           "text": {
-            "type": "string",
+            "type": "location",
             "args": [
-              ""
+              0.5
             ]
           },
           "speaker": {
             "type": "character",
             "args": [
-              [
-                "1U58I1SC"
-              ]
+              "1U58I1SC"
             ]
           }
         }

@@ -1,12 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AnyExpr, EXPR_DEFINITION_MAP, EXPR_DEFINITIONS, ExprContext, ExprDefinition, ExprPrimitiveRawValueOfType, ExprPrimitiveValueType, ExprType, ExprValueType, createDefaultExpr, guessExprReturnType, createDefaultExprChild, exprValueTypeAssignableTo, validateExpr } from "../../types/expressions"
+import type { AnyExpr, ExprContext, ExprDefinition, ExprPrimitiveRawValueOfType, ExprPrimitiveValueType, ExprType, ExprValueType } from "../../types/expressions"
+import { EXPR_DEFINITION_MAP, EXPR_DEFINITIONS, createDefaultExpr, guessExprReturnType, createDefaultExprChild, exprValueTypeAssignableTo, validateExpr } from "../../types/expressions"
 import styles from './ExpressionEditor.module.css'
-import { Fragment, useState } from "react"
-import { DropdownMenu, DropdownMenuItem } from "../common/DropdownMenu"
+import { Fragment } from "react"
+import { DropdownMenuItem, SearchDropdownMenu, useDropdownMenuState } from "../common/DropdownMenu"
 import { immAppend, immRemoveAt, immReplaceAt, immSet } from "../../utils/imm"
 import { EditorIcon } from "../common/EditorIcon"
 import { COMMON_ICONS, EXPR_ICONS } from "../common/Icons"
 import { Field } from "../common/Field"
+import type { EntityOfType, EntityType } from "../../types/definitions"
+import { getProjectEntityKey } from "../../types/definitions"
+import { EditorButton } from "../common/EditorButton"
+import { projectStore } from "../../store/project"
+import { getEntityByID } from "../../store/operations"
+import { useSelector } from "../../utils/store"
+import { StringField } from "../common/StringField"
+import { NumberField } from "../common/NumberField"
+import { BooleanField } from "../common/BooleanField"
 
 type ArgEditorProps<T extends ExprPrimitiveValueType> = {
     label: string,
@@ -24,77 +34,69 @@ const ArgEditor = <T extends ExprPrimitiveValueType>(props: ArgEditorProps<T>) =
             case 'number': return <NumberArgEditor {...narrowedProps} />
             case 'integer': return <IntegerArgEditor {...narrowedProps} />
             case 'boolean': return <BooleanArgEditor {...narrowedProps} />
+            case 'story':
+            case 'chapter':
+            case 'scene':
+            case 'character':
+            case 'portrait':
+            case 'backdrop':
+            case 'song':
+            case 'sound':
+            case 'variable':
+            case 'macro':
+                return <EntityArgEditor {...narrowedProps} />
+            case 'location':
+                return <LocationArgEditor {...narrowedProps} />
         }
         return <>{props.type}: {props.value}</>
     }
     return <div className={styles.arg}>
-        <label>{subEditor()}</label>
+        {subEditor()}
     </div>
 }
 
 const StringArgEditor = ({ value, setValue, label }: ArgSubEditorProps<'string'>) => {
-    const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setValue(e.target.value)
-    }
-    return <input type='text' placeholder={label} title={label} onChange={onChange} value={value} />
+    return <StringField label={label} value={value} setValue={setValue} />
 }
 
 const NumberArgEditor = ({ value, setValue, label }: ArgSubEditorProps<'number'>) => {
-    const [textValue, setTextValue] = useState('')
-    const [useTempState, setUseTempState] = useState(false)
-
-    const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setTextValue(e.target.value)
-        const num = parseFloat(e.target.value)
-        if (!Number.isNaN(num)) {
-            setValue(num)
-        }
-    }
-    const onFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-        setUseTempState(true)
-        setTextValue(String(value))
-    }
-    const onBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-        setUseTempState(false)
-        setTextValue(String(value))
-    }
-
-    return <input type='text' placeholder={label} title={label} onChange={onChange} onFocus={onFocus} onBlur={onBlur} value={useTempState ? textValue : String(value)} />
+    return <NumberField label={label} value={value} setValue={setValue} />
 }
 
 const IntegerArgEditor = ({ value, setValue, label }: ArgSubEditorProps<'integer'>) => {
-    const [textValue, setTextValue] = useState('')
-    const [useTempState, setUseTempState] = useState(false)
-
-    const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setTextValue(e.target.value)
-        const num = parseInt(e.target.value, 10)
-        if (!Number.isNaN(num)) {
-            setValue(num)
-        }
-    }
-    const onFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-        setUseTempState(true)
-        setTextValue(String(value))
-    }
-    const onBlur = (e: React.FocusEvent<HTMLInputElement>) => {
-        setUseTempState(false)
-        setTextValue(String(value))
-    }
-    
-    return <input type='text' placeholder={label} title={label} onChange={onChange} onFocus={onFocus} onBlur={onBlur} value={useTempState ? textValue : String(value)} />
+    return <NumberField label={label} value={value} setValue={setValue} />
 }
 
 const BooleanArgEditor = ({ value, setValue, label }: ArgSubEditorProps<'boolean'>) => {
-    const onClick = (e: React.MouseEvent) => setValue(!value)
-    return <EditorIcon path={value ? COMMON_ICONS.checkboxChecked : COMMON_ICONS.checkboxUnchecked} label={label} onClick={onClick} />
+    return <BooleanField label={label} value={value} setValue={setValue} />
+}
+
+const EntityArgEditor = <T extends EntityType>({ type, value, setValue, label }: ArgSubEditorProps<T>) => {
+    const entity = getEntityByID(type, value)
+    const [dropdownProps, openDropdown] = useDropdownMenuState()
+    const [items] = useSelector(projectStore, s => s[getProjectEntityKey(type)])
+    return <>
+        <EditorButton className={styles.argButton} style='text' onClick={openDropdown}>
+            {entity ? entity.name ? entity.name : 'Untitled' : 'None'}
+        </EditorButton>
+        <SearchDropdownMenu<EntityOfType<T>> {...dropdownProps} items={items as EntityOfType<T>[]} filter={(e, search) => e.name.toLowerCase().includes(search.toLowerCase())}>{(entity: EntityOfType<T>) => <DropdownMenuItem key={entity.id} onClick={() => (setValue(entity.id as any), dropdownProps.onClose())}>{entity.name ? entity.name : 'Untitled'}</DropdownMenuItem>}</SearchDropdownMenu>
+    </>
+}
+
+const LocationArgEditor = ({ value, setValue, label }: ArgSubEditorProps<'location'>) => {
+    return <>
+        <EditorIcon path={COMMON_ICONS.alignAuto} active={value === 'auto'} label="Auto" style='solid' onClick={() => setValue('auto')} />
+        <EditorIcon path={COMMON_ICONS.alignLeft} active={value === 'left'} label="Left" style='solid' onClick={() => setValue('left')} />
+        <EditorIcon path={COMMON_ICONS.alignCenter} active={value === 'center'} label="Center" style='solid' onClick={() => setValue('center')} />
+        <EditorIcon path={COMMON_ICONS.alignRight} active={value === 'right'} label="Right" style='solid' onClick={() => setValue('right')} />
+        <EditorIcon path={COMMON_ICONS.alignCustom} active={typeof value === 'number'} label="Custom" style='solid' onClick={() => setValue(0.5)} />
+        {typeof value === 'number' ? <NumberField className={styles.argTextInput} value={value} setValue={v => setValue(v)} /> : null}
+    </>
 }
 
 const ParamEditor = ({ label, types, expr, setExpr, ctx }: { label: string, types: ExprValueType[] | null, expr: AnyExpr, setExpr: (value: AnyExpr) => void, ctx: ExprContext }) => {
     return <div className={styles.param} title={label}>
-        <label>
-            <ExpressionEditor expr={expr} setExpr={setExpr} paramTypes={types} ctx={ctx} />
-        </label>
+        <ExpressionEditor expr={expr} setExpr={setExpr} paramTypes={types} ctx={ctx} />
     </div>
 }
 
@@ -107,17 +109,7 @@ const ExpressionIcon = ({ type, size, onClick }: { type: ExprType, size?: number
 export const ExpressionEditor = ({ expr, setExpr, paramTypes, ctx }: { expr: AnyExpr, setExpr: (newExpr: AnyExpr) => void, paramTypes?: ExprValueType[] | null, ctx: ExprContext }) => {
     const def = EXPR_DEFINITION_MAP[expr.type]
 
-    const [exprMenuState, setExprMenuState] = useState({ open: false, x: 0, y: 0 })
-
-    const onIconClick = (e: React.MouseEvent) => {
-        const div = e.target as HTMLDivElement
-        const rect = div.getBoundingClientRect()
-        const x = rect.left + 10
-        const y = rect.bottom - 4
-        setExprMenuState({ open: true, x, y })
-    }
-
-    const closeExprMenu = () => setExprMenuState({ open: false, x: 0, y: 0 })
+    const [exprMenuProps, openExprMenu] = useDropdownMenuState()
 
     const getCompatibilityScore = (d: ExprDefinition) => {
         if (d.type === 'unset') return 10
@@ -148,14 +140,14 @@ export const ExpressionEditor = ({ expr, setExpr, paramTypes, ctx }: { expr: Any
 
     return <>
         <div className={styles.expr}>
-            {infix ? null : <ExpressionIcon type={expr.type} onClick={onIconClick} />}
+            {infix ? null : <ExpressionIcon type={expr.type} onClick={openExprMenu} />}
             {def.args ? <>
                 {def.args.map((a, i) => <ArgEditor key={i} label={a.label} type={a.type} value={expr.args![i]} setValue={v => setExpr({ ...expr, args: immReplaceAt(expr.args!, i, v) as any })} />)}
             </> : null}
             {def.params ? <>
                 {def.params.map((p, i) => <Fragment key={i}>
                     <ParamEditor label={p.label} types={p.types} expr={expr.params![i]} setExpr={v => setExpr({ ...expr, params: immReplaceAt(expr.params!, i, v) as any })} ctx={ctx} />
-                    {infix && i === 0 ? <ExpressionIcon type={expr.type} onClick={onIconClick} /> : null}
+                    {infix && i === 0 ? <ExpressionIcon type={expr.type} onClick={openExprMenu} /> : null}
                 </Fragment>) ?? null}
             </> : null}
             {def.children ? <>
@@ -166,12 +158,10 @@ export const ExpressionEditor = ({ expr, setExpr, paramTypes, ctx }: { expr: Any
                 <EditorIcon path={COMMON_ICONS.addItem} label='Add Item' size={0.75} onClick={() => setExpr(immSet(expr, 'children', immAppend<AnyExpr[]>(expr.children!, createDefaultExprChild(expr.type, ctx)!) as any))} />
             </> : null}
         </div>
-        {exprMenuState.open ? <DropdownMenu x={exprMenuState.x} y={exprMenuState.y} onClose={closeExprMenu}>
-            {EXPR_DEFINITIONS.filter(d => getCompatibilityScore(d)).sort((a, b) => getCompatibilityScore(b) - getCompatibilityScore(a)).map(d => <DropdownMenuItem key={d.type} onClick={() => (replaceWithType(d.type), closeExprMenu())}>
-                <ExpressionIcon type={d.type} />
-                <span>{d.label}</span>
-            </DropdownMenuItem>)}
-        </DropdownMenu> : null}
+        <SearchDropdownMenu {...exprMenuProps} items={EXPR_DEFINITIONS.filter(d => getCompatibilityScore(d)).sort((a, b) => getCompatibilityScore(b) - getCompatibilityScore(a))} filter={(def, search) => def.label.toLowerCase().includes(search.toLowerCase())}>{d => <DropdownMenuItem key={d.type} onClick={e => (replaceWithType(d.type), exprMenuProps.onClose())}>
+            <ExpressionIcon type={d.type} />
+            <span>{d.label}</span>
+        </DropdownMenuItem>}</SearchDropdownMenu>
     </>
 }
 
@@ -189,6 +179,6 @@ export const ExpressionField = ({ label, value, setValue, paramTypes, ctx }: { l
     }
 
     return <Field label={label} error={validate(value)}>
-        <ExpressionEditor expr={value} setExpr={setValue ?? (() => {})} paramTypes={paramTypes} ctx={ctx} />
+        <ExpressionEditor expr={value} setExpr={setValue ?? (() => { })} paramTypes={paramTypes} ctx={ctx} />
     </Field>
 }

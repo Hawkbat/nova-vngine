@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { hintTypeTuple } from "./types"
 
 export function useStateFromProps<T>(value: T) {
@@ -14,7 +14,7 @@ export function useLatest<T>(value: T) {
     if (ref.current !== value) {
         ref.current = value
     }
-    return () => ref.current
+    return useCallback(() => ref.current, [])
 }
 
 export function useDebounce(ms: number, callback: () => void) {

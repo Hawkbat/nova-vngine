@@ -51,15 +51,15 @@
     min-width: 2em;
     height: 2em;
     border-radius: 50%;
-    background: white;
-    color: black;
+    background: var(--text-color);
+    color: var(--bg-color);
     justify-content: center;
     align-items: center;
     cursor: pointer;
     opacity: 0.8;
 }
 
-.simpleBubble:hover {
+.simpleBubble.active, .simpleBubble:hover {
     opacity: 1.0;
 }
 
@@ -68,7 +68,7 @@
     width: 2em;
     height: 2em;
     border-radius: 50%;
-    border: 2px solid white;
+    border: 2px solid var(--text-color);
     justify-content: center;
     align-items: center;
     cursor: pointer;

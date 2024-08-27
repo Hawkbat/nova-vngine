@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
-import { RandState } from "../utils/rand"
-import { Branded, hintTypeTuple } from "../utils/types"
-import { BooleanExpr, ChapterExpr, CharacterExpr, IntegerExpr, ListExpr, NumberExpr, PortraitExpr, SceneExpr, StringExpr, ValueExpr } from "./expressions"
-import { AnyStep } from "./steps"
+import type { RandState } from "../utils/rand"
+import type { Branded } from "../utils/types"
+import { hintTypeTuple } from "../utils/types"
+import type { BooleanExpr, ChapterExpr, CharacterExpr, IntegerExpr, ListExpr, NumberExpr, PortraitExpr, SceneExpr, StringExpr, ValueExpr } from "./expressions"
+import type { AnyStep } from "./steps"
 
 type EntityID<T extends EntityType> = Branded<string, T>
 
@@ -172,28 +173,28 @@ export interface BackdropDefinition extends EntityDefinition<BackdropID> {
 export type SongID = EntityID<'song'>
 
 export interface SongDefinition extends EntityDefinition<SongID> {
-    
+
 }
 
 export type SoundID = EntityID<'sound'>
 
 export interface SoundDefinition extends EntityDefinition<SoundID> {
-    
+
 }
 
 export type VariableID = EntityID<'variable'>
 
 type VariableScopeMap = {
-    allStories: { }
+    allStories: {}
     story: { id: StoryID }
     stories: { ids: StoryID[] }
-    allChapters: { }
+    allChapters: {}
     chapter: { id: ChapterID }
     chapters: { ids: ChapterID[] }
-    allScenes: { }
+    allScenes: {}
     scene: { id: SceneID }
     scenes: { ids: SceneID[] }
-    allCharacters: { }
+    allCharacters: {}
     character: { id: CharacterID }
     characters: { ids: CharacterID[] }
     macro: { id: MacroID }

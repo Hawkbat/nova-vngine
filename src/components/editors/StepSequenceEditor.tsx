@@ -1,14 +1,15 @@
 import { useCallback, useMemo, useState } from "react"
-import { AnyStep, createStep, isStepType, StepID } from "../../types/steps"
+import type { AnyStep, StepID } from "../../types/steps"
+import { createStep, isStepType } from "../../types/steps"
 import { immAppend, immRemoveAt, immReplaceAt, immReplaceBy, immSet } from "../../utils/imm"
 import { EditorIcon } from "../common/EditorIcon"
 import { COMMON_ICONS, STEP_ICONS } from "../common/Icons"
 import { ExpressionEditor, ExpressionField } from "./ExpressionEditor"
 import styles from './StepSequenceEditor.module.css'
 import { StringField } from "../common/StringField"
-import { prettyPrintIdentifier } from "../../utils/display"
-import { ExprContext } from "../../types/expressions"
-import { getProjectExprContext } from "../../store/project"
+import { classes, prettyPrintIdentifier } from "../../utils/display"
+import type { ExprContext } from "../../types/expressions"
+import { getProjectExprContext } from "../../store/operations"
 
 const StepEditor = ({ step, setStep, ctx }: { step: AnyStep, setStep: (setter: (step: AnyStep) => AnyStep) => void, deleteStep: () => void, ctx: ExprContext }) => {
     return <div className={styles.stepEditor}>
@@ -78,7 +79,7 @@ const StepBubble = ({ step, setStep, selected, setSelected, ctx }: { step: AnySt
         setSelected(step.id)
     }
 
-    return step.type === 'decision' || step.type === 'branch' ? <div className={styles.bubble}>
+    return step.type === 'decision' || step.type === 'branch' ? <div className={classes(styles.bubble, { [styles.active]: selected === step.id })}>
         <div className={styles.bubbleFront} onClick={onSelect}>
             <EditorIcon path={STEP_ICONS[step.type]} />
         </div>
@@ -103,7 +104,7 @@ const StepBubble = ({ step, setStep, selected, setSelected, ctx }: { step: AnySt
         <div className={styles.bubbleBack}>
 
         </div>
-    </div> : <div className={styles.simpleBubble} onClick={onSelect}>
+    </div> : <div className={classes(styles.simpleBubble, { [styles.active]: selected === step.id })} onClick={onSelect}>
         <EditorIcon path={STEP_ICONS[step.type]} label={prettyPrintIdentifier(step.type)} />
     </div>
 }

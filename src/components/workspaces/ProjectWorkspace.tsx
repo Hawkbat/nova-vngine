@@ -1,7 +1,8 @@
 import { projectStore } from "../../store/project"
 import { immSet } from "../../utils/imm"
 import { useStore } from "../../utils/store"
-import { NumberField, StringField } from "../common/StringField"
+import { StringField } from "../common/StringField"
+import { NumberField } from "../common/NumberField"
 import styles from './ProjectWorkspace.module.css'
 
 export const ProjectWorkspace = () => {

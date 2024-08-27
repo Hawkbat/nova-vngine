@@ -1,6 +1,9 @@
-import { immGenerateID, projectStore } from "../store/project"
-import { assertExhaustive, Branded } from "../utils/types"
-import { StringExpr, CharacterExpr, BackdropExpr, LocationExpr, SongExpr, SoundExpr, BooleanExpr, VariableExpr, ValueExpr, PortraitExpr, AnyExpr, createDefaultExpr, ExprContext, MacroExpr } from "./expressions"
+import { projectStore } from "../store/project"
+import { immGenerateID } from "../store/operations"
+import type { Branded } from "../utils/types"
+import { assertExhaustive } from "../utils/types"
+import type { StringExpr, CharacterExpr, BackdropExpr, LocationExpr, SongExpr, SoundExpr, BooleanExpr, VariableExpr, ValueExpr, PortraitExpr, AnyExpr, ExprContext, MacroExpr } from "./expressions"
+import { createDefaultExpr } from "./expressions"
 
 export type StepID = Branded<string, 'Step'>
 

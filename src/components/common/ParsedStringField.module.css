@@ -1,5 +1,5 @@
 
-input.field {
+.field {
     display: inline-block;
     background: transparent;
     color: inherit;
@@ -10,11 +10,11 @@ input.field {
     field-sizing: content;
 }
 
-input.field:focus {
+.field:focus {
     outline: 0;
     border: 0;
 }
 
-input.field[readonly] {
+.field[readonly] {
     opacity: 0.7;
 }

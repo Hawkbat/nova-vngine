@@ -1,4 +1,4 @@
-import { immCreateSound } from "../../store/project"
+import { immCreateSound } from "../../store/operations"
 import { EntityWorkspace } from "./EntityWorkspace"
 import styles from './SoundWorkspace.module.css'
 

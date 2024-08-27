@@ -1,0 +1,10 @@
+{
+    "css.lint.emptyRules": "ignore",
+    "explorer.excludeGitIgnore": true,
+    "files.exclude": {
+        "package-lock.json": true
+    },
+    "javascript.format.semicolons": "remove",
+    "typescript.format.semicolons": "remove",
+    "prettier.semi": false
+}

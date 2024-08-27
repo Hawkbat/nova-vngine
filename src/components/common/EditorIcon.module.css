@@ -5,6 +5,7 @@
     justify-content: center;
     align-items: center;
     opacity: 0.8;
+    border-radius: 0.25em;
 }
 
 .icon > span {
@@ -13,12 +14,43 @@
     text-align: center;
 }
 
+.button.solid {
+    background: var(--text-color);
+    color: var(--bg-color);
+    border: 1px solid transparent;
+}
+
+.button.outline {
+    background: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--text-color);
+}
+
+.button.text {
+    background: transparent;
+    color: var(--text-color);
+    border: 1px solid transparent;
+}
+
+.icon.inactive {
+    opacity: 0.8;
+}
+
 .icon.active {
     opacity: 1;
 }
 
+.icon.text.active, .icon.outline.active {
+    color: var(--primary-color);
+}
+
+.icon.solid.active {
+    background: var(--primary-color);
+    color: var(--bg-color);
+}
+
 .icon.clickable:hover {
-    opacity: 0.9;
+    opacity: 1;
 }
 
 .icon.clickable {

@@ -3,8 +3,7 @@
     display: flex;
     flex-flow: row wrap;
     justify-content: flex-end;
-    gap: 5px;
-    padding: 5px;
+    gap: 0.5em;
 }
 
 .button {
@@ -18,20 +17,20 @@
 }
 
 .button.solid {
-    background: white;
-    color: black;
+    background: var(--text-color);
+    color: var(--bg-color);
     border: 1px solid transparent;
 }
 
 .button.outline {
     background: transparent;
-    color: white;
-    border: 1px solid white;
+    color: var(--text-color);
+    border: 1px solid var(--text-color);
 }
 
 .button.text {
     background: transparent;
-    color: white;
+    color: var(--text-color);
     border: 1px solid transparent;
 }
 
