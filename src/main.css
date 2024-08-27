@@ -1,4 +1,16 @@
 
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    src: url(./fonts/Inter-VariableFont_opsz\,wght.ttf);
+}
+
+@font-face {
+    font-family: 'Inter';
+    font-style: italic;
+    src: url(./fonts/Inter-Italic-VariableFont_opsz\,wght.ttf);
+}
+
 :root {
     --bg-color: #111;
     --text-color: white;
@@ -8,7 +20,7 @@
     --menu-border-color: #444;
     background: var(--bg-color);
     color: var(--text-color);
-    font-family: sans-serif;
+    font-family: 'Inter', sans-serif;
     font-size: 20px;
     user-select: none;
 }

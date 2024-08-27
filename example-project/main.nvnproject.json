@@ -44,7 +44,7 @@
           "text": {
             "type": "string",
             "args": [
-              "Some Text"
+              "Some text goes here"
             ]
           },
           "speaker": {

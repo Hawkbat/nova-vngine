@@ -1,6 +1,7 @@
 import esbuild from 'esbuild'
-//import htmlPlugin from '@chialab/esbuild-plugin-html'
 import { htmlPlugin } from '@craftamap/esbuild-plugin-html'
+
+const DEVELOPMENT = true
 
 export const buildContext = await esbuild.context({
     bundle: true,
@@ -8,14 +9,16 @@ export const buildContext = await esbuild.context({
     outdir: './resources',
     assetNames: '[name]-[hash]',
     chunkNames: '[name]-[hash]',
-    sourcemap: 'inline',
-    sourcesContent: true,
+    sourcemap: DEVELOPMENT ? 'inline' : undefined,
+    minify: !DEVELOPMENT,
+    sourcesContent: DEVELOPMENT,
     format: 'esm',
     publicPath: '.',
     metafile: true,
     loader: {
         '.png': 'file',
         '.svg': 'file',
+        '.ttf': 'file',
     },
     plugins: [
         htmlPlugin({ files: [

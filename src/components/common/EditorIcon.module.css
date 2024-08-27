@@ -10,7 +10,7 @@
 
 .icon > span {
     font-size: 0.25em;
-    width: 6em;
+    max-width: 8em;
     text-align: center;
 }
 
