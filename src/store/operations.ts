@@ -2,7 +2,7 @@ import { useCallback } from "react"
 import { type EntityType, type EntityIDOf, getProjectEntityKey, getEntityParentID, getEntityParentType, type EntityOfType, type EntityParentOf, type AnyVariableDefinition, type BackdropDefinition, type BackdropID, type ChapterDefinition, type ChapterID, type CharacterDefinition, type CharacterID, type PortraitDefinition, type PortraitID, type ProjectDefinition, type SceneDefinition, type SceneID, type SongDefinition, type SongID, type SoundDefinition, type SoundID, type StoryDefinition, type StoryID, type VariableID, ENTITY_TYPES, getEntityTypeHierarchy } from "../types/definitions"
 import { type ExprContext, resolveExpr, createDefaultExpr } from "../types/expressions"
 import { immSet, immAppend } from "../utils/imm"
-import type { PlatformFilesystemEntry } from "../types/platform"
+import { isPlatformErrorCode, type PlatformFilesystemEntry } from "../types/platform"
 import { platform } from "../platform/platform"
 import { randID } from "../utils/rand"
 import { useSelector } from "../utils/store"
@@ -31,8 +31,16 @@ export async function loadProjectFromFolder(dir: PlatformFilesystemEntry) {
 export async function loadInitialViewState() {
     const viewState = await platform.loadViewState()
     viewStateStore.setValue(() => viewState)
-    if (viewState.loadedProject && await loadProjectFromFolder(viewState.loadedProject.directory)) {
-        return
+    try {
+        if (viewState.loadedProject && await loadProjectFromFolder(viewState.loadedProject.directory)) {
+            return
+        }
+    } catch (err) {
+        if (isPlatformErrorCode(err, 'bad-project')) {
+            platform.error(`Failed to load previously loaded project`, err)
+        } else {
+            throw err
+        }
     }
     viewStateStore.setValue(s => ({
         ...s,

@@ -20,16 +20,21 @@ export interface Platform {
     setTitle(title: string): Promise<void>
     pickFiles(title: string, fileType: string, extensions: string[], multi: boolean): Promise<PlatformFilesystemEntry[] | null>
     pickDirectory(title: string): Promise<{ directory: PlatformFilesystemEntry, files: PlatformFilesystemEntry[], directories: PlatformFilesystemEntry[] } | null>
+    log(...objs: unknown[]): Promise<void>
+    warn(...objs: unknown[]): Promise<void>
+    error(...objs: unknown[]): Promise<void>
 }
 
 export type PlatformErrorCode = 'not-supported' | 'bad-project'
 
 export class PlatformError extends Error {
     readonly code: PlatformErrorCode
+    readonly message: string
 
     constructor(code: PlatformErrorCode, message: string) {
         super(message)
         this.code = code
+        this.message = message
         this.name = this.constructor.name
     }
 }

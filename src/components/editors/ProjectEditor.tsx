@@ -8,7 +8,6 @@ import { ProjectWorkspace } from "../workspaces/ProjectWorkspace"
 import { SceneWorkspace } from "../workspaces/SceneWorkspace"
 import { HomeWorkspace } from "../workspaces/HomeWorkspace"
 import { projectStore } from "../../store/project"
-import type { ProjectEditorTab } from "../../store/viewstate"
 import { viewStateStore } from "../../store/viewstate"
 import { useViewStateScope, useViewStateTab } from "../../store/operations"
 import { useSelector } from "../../utils/store"
@@ -22,6 +21,8 @@ import { SongWorkspace } from "../workspaces/SongWorkspace"
 import { SoundWorkspace } from "../workspaces/SoundWorkspace"
 import { VariableWorkspace } from "../workspaces/VariableWorkspace"
 import { platform } from "../../platform/platform"
+import { BUILD_COMMIT, BUILD_DATETIME } from "../../injected"
+import type { ProjectEditorTab } from "../../types/viewstate"
 
 const Breadcrumb = <T extends EntityType>({ type }: { type: T }) => {
     const tab = getProjectEntityKey(type)
@@ -74,8 +75,8 @@ const Sidebar = () => {
 
 const Footer = () => {
     return <div className={styles.footer}>
-        <span>Engine ver. 0.1.0</span>
-        <span>{platform.name}</span>
+        <span>Platform: {platform.name}</span>
+        <span>Build: {BUILD_COMMIT.BRANCH}/{BUILD_COMMIT.SHORT_HASH} at {BUILD_DATETIME.toISOString()}</span>
     </div>
 }
 

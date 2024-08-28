@@ -1,5 +1,9 @@
 import esbuild from 'esbuild'
 import { htmlPlugin } from '@craftamap/esbuild-plugin-html'
+import { getLastCommit } from 'git-last-commit'
+
+/** @type {import('git-last-commit').Commit} */
+const commit = await new Promise((resolve, reject) => getLastCommit((err, commit) => err ? reject(err) : resolve(commit)))
 
 const DEVELOPMENT = true
 
@@ -19,6 +23,11 @@ export const buildContext = await esbuild.context({
         '.png': 'file',
         '.svg': 'file',
         '.ttf': 'file',
+    },
+    define: {
+        COMMIT_SHORT_HASH: JSON.stringify(commit.shortHash),
+        COMMIT_BRANCH: JSON.stringify(commit.branch),
+        BUILD_TIMESTAMP: JSON.stringify(Date.now()),
     },
     plugins: [
         htmlPlugin({ files: [

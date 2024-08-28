@@ -13,9 +13,9 @@ export const webPlatform: Platform = {
     async loadViewState() {
         const json = localStorage.getItem('nvn-viewstate')
         const parsed = tryParseJson(json ?? '', 'viewState', parseViewState)
-        if (parsed.ctx.warnings.length) console.warn(parsed.ctx.warnings)
+        if (parsed.ctx.warnings.length) this.warn(parsed.ctx.warnings)
         if (!parsed.success) {
-            console.error(parsed.ctx.errors)
+            this.error('Failed to load viewstate', json, parsed.ctx.errors)
             return viewStateStore.getSnapshot()
         }
         return parsed.value
@@ -31,9 +31,9 @@ export const webPlatform: Platform = {
         }
         const json = await res.text()
         const parsed = tryParseJson(json, 'project', parseProjectDefinition)
-        if (parsed.ctx.warnings.length) console.warn(parsed.ctx.warnings)
+        if (parsed.ctx.warnings.length) this.warn(parsed.ctx.warnings)
         if (!parsed.success) {
-            console.error(parsed.ctx.errors)
+            this.error('Failed to load project', json, parsed.ctx.errors)
             throw new PlatformError('bad-project', `The project file was outdated or corrupted in a manner that has prevented it from loading.`)
         }
         return parsed.value
@@ -52,5 +52,14 @@ export const webPlatform: Platform = {
     },
     async pickDirectory(title) {
         throw new PlatformError('not-supported', `Folder picking is not supported in your current browser. Please use the desktop app, Chrome, or Edge.`)
+    },
+    async log(...objs) {
+        console.log(...objs)
+    },
+    async warn(...objs) {
+        console.warn(...objs)
+    },
+    async error(...objs) {
+        console.error(...objs)
     },
 }

@@ -1,5 +1,5 @@
-import type { KnownPath } from '@neutralinojs/lib'
-import { init, events as nEvents, app as nApp, filesystem as nFS, os as nOS, window as nWindow } from '@neutralinojs/lib'
+import type { KnownPath, LoggerType } from '@neutralinojs/lib'
+import { init, events as nEvents, app as nApp, filesystem as nFS, os as nOS, window as nWindow, debug as nDebug } from '@neutralinojs/lib'
 import faviconUrl from '../favicon.png'
 import { awaitAllMap, createExposedPromise } from '../utils/async'
 import { LOG_FILE_WRITES } from '../debug'
@@ -79,7 +79,7 @@ async function writeFile(path: string, data: string): Promise<void> {
         }
     }
     if (LOG_FILE_WRITES) {
-        console.log('Writing file', path)
+        neutralinoPlatform.log('Writing file', path)
     }
     await nFS.writeFile(path, data)
 }
@@ -154,6 +154,9 @@ export const neutralinoPlatform: Platform = {
 
         init()
 
+        initialized = true
+        initPromise.resolve()
+
         await nEvents.on('windowClose', async (e: CustomEvent<null>) => {
             await nApp.exit()
         })
@@ -172,17 +175,14 @@ export const neutralinoPlatform: Platform = {
             { text: '-' },
             { id: 'exit', text: 'Exit', onClick: () => exitApplication() },
         ])
-
-        initialized = true
-        initPromise.resolve()
     },
     async loadViewState() {
         const path = `${await getConfigFolderPath()}/viewstate.json`
         const json = await readFile(path)
-        const parsed = tryParseJson(json ?? '', 'project', parseViewState)
-        if (parsed.ctx.warnings.length) console.warn(parsed.ctx.warnings)
+        const parsed = tryParseJson(json ?? '', 'viewstate', parseViewState)
+        if (parsed.ctx.warnings.length) this.warn(parsed.ctx.warnings)
         if (!parsed.success) {
-            console.error(parsed.ctx.errors)
+            this.error('Failed to load viewstate', json, parsed.ctx.errors)
             return viewStateStore.getSnapshot()
         }
         return parsed.value
@@ -195,9 +195,9 @@ export const neutralinoPlatform: Platform = {
         const path = `${dir.handle}/${DEFAULT_PROJECT_FILENAME}`
         const json = await readFile(path)
         const parsed = tryParseJson(json ?? '', 'project', parseProjectDefinition)
-        if (parsed.ctx.warnings.length) console.warn(parsed.ctx.warnings)
+        if (parsed.ctx.warnings.length) this.warn(parsed.ctx.warnings)
         if (!parsed.success) {
-            console.error(parsed.ctx.errors)
+            this.error('Failed to load project', json, parsed.ctx.errors)
             throw new PlatformError('bad-project', `The project file was outdated or corrupted in a manner that has prevented it from loading.`)
         }
         return parsed.value
@@ -241,5 +241,17 @@ export const neutralinoPlatform: Platform = {
             files,
             directories,
         }
+    },
+    async log(...objs) {
+        console.log(...objs)
+        await nDebug.log(objs.map(o => JSON.stringify(o)).join(' '), 'INFO' as LoggerType)
+    },
+    async warn(...objs) {
+        console.warn(...objs)
+        await nDebug.log(objs.map(o => JSON.stringify(o)).join(' '), 'WARNING' as LoggerType)
+    },
+    async error(...objs) {
+        console.error(...objs)
+        await nDebug.log(objs.map(o => JSON.stringify(o)).join(' '), 'ERROR' as LoggerType)
     },
 }
