@@ -1,14 +1,15 @@
 import type { KnownPath } from '@neutralinojs/lib'
 import { init, events as nEvents, app as nApp, filesystem as nFS, os as nOS, window as nWindow } from '@neutralinojs/lib'
-import faviconUrl from '../../favicon.png'
-import { awaitAllMap, createExposedPromise } from '../async'
-import { LOG_FILE_WRITES } from '../../debug'
-import { createProject } from "../../store/project"
-import type { ViewState } from '../../store/viewstate';
-import { viewStateStore } from '../../store/viewstate'
-import type { ProjectDefinition } from '../../types/definitions'
-import type { Platform, PlatformFilesystemEntry } from './common'
-import { DEFAULT_PROJECT_FILENAME } from './common'
+import faviconUrl from '../favicon.png'
+import { awaitAllMap, createExposedPromise } from '../utils/async'
+import { LOG_FILE_WRITES } from '../debug'
+import { createProject } from "../store/project"
+import { parseViewState } from '../types/viewstate'
+import { viewStateStore } from '../store/viewstate'
+import { parseProjectDefinition } from '../types/definitions'
+import type { Platform, PlatformFilesystemEntry } from '../types/platform'
+import { DEFAULT_PROJECT_FILENAME, PlatformError } from '../types/platform'
+import { tryParseJson } from '../utils/guard'
 
 const APP_DIR_NAME = '/Nova VNgine'
 
@@ -177,19 +178,32 @@ export const neutralinoPlatform: Platform = {
     },
     async loadViewState() {
         const path = `${await getConfigFolderPath()}/viewstate.json`
-        let viewState = await readJsonFile<ViewState>(path)
-        if (!viewState) viewState = viewStateStore.getSnapshot()
-        return viewState
+        const json = await readFile(path)
+        const parsed = tryParseJson(json ?? '', 'project', parseViewState)
+        if (parsed.ctx.warnings.length) console.warn(parsed.ctx.warnings)
+        if (!parsed.success) {
+            console.error(parsed.ctx.errors)
+            return viewStateStore.getSnapshot()
+        }
+        return parsed.value
     },
     async saveViewState(viewState) {
         const path = `${await getConfigFolderPath()}/viewstate.json`
         await writeJsonFile(path, viewState)
     },
     async loadProject(dir) {
-        return await readJsonFile<ProjectDefinition>(`${dir.path}/${DEFAULT_PROJECT_FILENAME}`)
+        const path = `${dir.handle}/${DEFAULT_PROJECT_FILENAME}`
+        const json = await readFile(path)
+        const parsed = tryParseJson(json ?? '', 'project', parseProjectDefinition)
+        if (parsed.ctx.warnings.length) console.warn(parsed.ctx.warnings)
+        if (!parsed.success) {
+            console.error(parsed.ctx.errors)
+            throw new PlatformError('bad-project', `The project file was outdated or corrupted in a manner that has prevented it from loading.`)
+        }
+        return parsed.value
     },
     async saveProject(dir, project) {
-        await writeJsonFile(`${dir.path}/${DEFAULT_PROJECT_FILENAME}`, project)
+        await writeJsonFile(`${dir.handle}/${DEFAULT_PROJECT_FILENAME}`, project)
     },
     async createProject(dir) {
         const project = createProject()
@@ -202,7 +216,7 @@ export const neutralinoPlatform: Platform = {
     async pickFiles(title, fileType, extensions, multi) {
         const entries = await pickFiles({ title, filterName: fileType, extensions, multiSelections: multi })
         if (!entries || !entries.paths.length) return null
-        return entries.entries.map(e => ({ type: 'file', name: e.entry, path: e.path, handle: null }))
+        return entries.entries.map(e => ({ type: 'file', name: e.entry, path: e.path, handle: e.path }))
     },
     async pickDirectory(title) {
         const dir = await pickDirectory({ title })
@@ -210,17 +224,17 @@ export const neutralinoPlatform: Platform = {
         const directory: PlatformFilesystemEntry = {
             path: dir.path,
             name: dir.path.substring(dir.path.lastIndexOf('/') + 1),
-            handle: null,
+            handle: dir.path,
         }
         const files: PlatformFilesystemEntry[] = dir.entries.filter(e => e.type === 'FILE').map(e => ({
             path: e.path,
             name: e.entry,
-            handle: null,
+            handle: e.path,
         }))
         const directories: PlatformFilesystemEntry[] = dir.entries.filter(e => e.type === 'DIRECTORY').map(e => ({
             path: e.path,
             name: e.entry,
-            handle: null,
+            handle: e.path,
         }))
         return {
             directory,

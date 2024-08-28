@@ -2,14 +2,13 @@ import { useCallback } from "react"
 import { type EntityType, type EntityIDOf, getProjectEntityKey, getEntityParentID, getEntityParentType, type EntityOfType, type EntityParentOf, type AnyVariableDefinition, type BackdropDefinition, type BackdropID, type ChapterDefinition, type ChapterID, type CharacterDefinition, type CharacterID, type PortraitDefinition, type PortraitID, type ProjectDefinition, type SceneDefinition, type SceneID, type SongDefinition, type SongID, type SoundDefinition, type SoundID, type StoryDefinition, type StoryID, type VariableID, ENTITY_TYPES, getEntityTypeHierarchy } from "../types/definitions"
 import { type ExprContext, resolveExpr, createDefaultExpr } from "../types/expressions"
 import { immSet, immAppend } from "../utils/imm"
-import type { PlatformFilesystemEntry } from "../utils/platform/common"
-import { platform } from "../utils/platform/platform"
+import type { PlatformFilesystemEntry } from "../types/platform"
+import { platform } from "../platform/platform"
 import { randID } from "../utils/rand"
 import { useSelector } from "../utils/store"
-import { hintTypeTuple } from "../utils/types"
-import type { EntityPair } from "./project"
+import { hintTuple } from "../utils/types"
 import { projectStore } from "./project"
-import type { ProjectEditorTab, ProjectMetaData } from "./viewstate"
+import type { ProjectEditorTab, ProjectMetaData } from "../types/viewstate"
 import { viewStateStore } from "./viewstate"
 
 export async function loadProjectFromFolder(dir: PlatformFilesystemEntry) {
@@ -87,6 +86,8 @@ export function getProjectExprContext(): ExprContext {
     return ctx
 }
 
+export type EntityPair<T extends EntityType> = { type: T, entity: EntityOfType<T> }
+
 export function getEntityHierarchy<T extends EntityType>(type: T, id: EntityIDOf<T>): EntityPair<EntityType>[] {
     const entity = getEntityByID(type, id)
     if (!entity) return []
@@ -117,7 +118,7 @@ export function getEntityByID<T extends EntityType>(type: T, id: EntityIDOf<T>):
 
 export function immGenerateID<T extends string>(project: ProjectDefinition): [ProjectDefinition, T] {
     const [editorRandState, id] = randID(project.editorRandState)
-    return hintTypeTuple(immSet(project, 'editorRandState', editorRandState), id as T)
+    return hintTuple(immSet(project, 'editorRandState', editorRandState), id as T)
 }
 
 export function immCreateStory(project: ProjectDefinition): [ProjectDefinition, StoryDefinition] {
@@ -129,7 +130,7 @@ export function immCreateStory(project: ProjectDefinition): [ProjectDefinition, 
         name: '',
     }
 
-    return hintTypeTuple(immSet(project, 'stories', immAppend(project.stories, story)), story)
+    return hintTuple(immSet(project, 'stories', immAppend(project.stories, story)), story)
 }
 
 export function immCreateChapter(project: ProjectDefinition, storyID: StoryID): [ProjectDefinition, ChapterDefinition] {
@@ -142,7 +143,7 @@ export function immCreateChapter(project: ProjectDefinition, storyID: StoryID): 
         storyID,
     }
 
-    return hintTypeTuple(immSet(project, 'chapters', immAppend(project.chapters, chapter)), chapter)
+    return hintTuple(immSet(project, 'chapters', immAppend(project.chapters, chapter)), chapter)
 }
 
 export function immCreateScene(project: ProjectDefinition, chapterID: ChapterID): [ProjectDefinition, SceneDefinition] {
@@ -156,7 +157,7 @@ export function immCreateScene(project: ProjectDefinition, chapterID: ChapterID)
         steps: [],
     }
 
-    return hintTypeTuple(immSet(project, 'scenes', immAppend(project.scenes, scene)), scene)
+    return hintTuple(immSet(project, 'scenes', immAppend(project.scenes, scene)), scene)
 }
 
 export function immCreateCharacter(project: ProjectDefinition): [ProjectDefinition, CharacterDefinition] {
@@ -168,7 +169,7 @@ export function immCreateCharacter(project: ProjectDefinition): [ProjectDefiniti
         name: '',
     }
 
-    return hintTypeTuple(immSet(project, 'characters', immAppend(project.characters, character)), character)
+    return hintTuple(immSet(project, 'characters', immAppend(project.characters, character)), character)
 }
 
 export function immCreatePortrait(project: ProjectDefinition, characterID: CharacterID): [ProjectDefinition, PortraitDefinition] {
@@ -181,7 +182,7 @@ export function immCreatePortrait(project: ProjectDefinition, characterID: Chara
         characterID,
     }
 
-    return hintTypeTuple(immSet(project, 'portraits', immAppend(project.portraits, portrait)), portrait)
+    return hintTuple(immSet(project, 'portraits', immAppend(project.portraits, portrait)), portrait)
 }
 
 export function immCreateBackdrop(project: ProjectDefinition): [ProjectDefinition, BackdropDefinition] {
@@ -193,7 +194,7 @@ export function immCreateBackdrop(project: ProjectDefinition): [ProjectDefinitio
         name: '',
     }
 
-    return hintTypeTuple(immSet(project, 'backdrops', immAppend(project.backdrops, backdrop)), backdrop)
+    return hintTuple(immSet(project, 'backdrops', immAppend(project.backdrops, backdrop)), backdrop)
 }
 
 export function immCreateSong(project: ProjectDefinition): [ProjectDefinition, SongDefinition] {
@@ -205,7 +206,7 @@ export function immCreateSong(project: ProjectDefinition): [ProjectDefinition, S
         name: '',
     }
 
-    return hintTypeTuple(immSet(project, 'songs', immAppend(project.songs, song)), song)
+    return hintTuple(immSet(project, 'songs', immAppend(project.songs, song)), song)
 }
 
 export function immCreateSound(project: ProjectDefinition): [ProjectDefinition, SoundDefinition] {
@@ -217,7 +218,7 @@ export function immCreateSound(project: ProjectDefinition): [ProjectDefinition, 
         name: '',
     }
 
-    return hintTypeTuple(immSet(project, 'sounds', immAppend(project.sounds, sound)), sound)
+    return hintTuple(immSet(project, 'sounds', immAppend(project.sounds, sound)), sound)
 }
 
 export function immCreateVariable(project: ProjectDefinition): [ProjectDefinition, AnyVariableDefinition] {
@@ -236,7 +237,7 @@ export function immCreateVariable(project: ProjectDefinition): [ProjectDefinitio
         unsetValueLabel: createDefaultExpr('unset', ctx),
     }
 
-    return hintTypeTuple(immSet(project, 'variables', immAppend(project.variables, variable)), variable)
+    return hintTuple(immSet(project, 'variables', immAppend(project.variables, variable)), variable)
 }
 
 export function useViewStateTab() {
@@ -244,7 +245,7 @@ export function useViewStateTab() {
     const setTab = useCallback((tab: ProjectEditorTab) => {
         setViewState(s => immSet(s, 'currentTab', tab))
     }, [setViewState])
-    return hintTypeTuple(tab, setTab)
+    return hintTuple(tab, setTab)
 }
 
 export function useViewStateScope<T extends EntityType>(type: T | null) {
@@ -254,13 +255,13 @@ export function useViewStateScope<T extends EntityType>(type: T | null) {
         if (!type) return
         if (!id) {
             const subTypes = ENTITY_TYPES.filter(e => getEntityTypeHierarchy(e).includes(type))
-            const scopeValues = Object.fromEntries(subTypes.map(t => hintTypeTuple(t, undefined)))
+            const scopeValues = Object.fromEntries(subTypes.map(t => hintTuple(t, undefined)))
             setViewState(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues } }))
             return
         }
         const hierarchy = getEntityHierarchy(type, id)
-        const scopeValues = Object.fromEntries(hierarchy.map(h => hintTypeTuple(h.type, h.entity.id)))
+        const scopeValues = Object.fromEntries(hierarchy.map(h => hintTuple(h.type, h.entity.id)))
         setViewState(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues } }))
     }, [setViewState, type])
-    return hintTypeTuple(scope, setScope)
+    return hintTuple(scope, setScope)
 }

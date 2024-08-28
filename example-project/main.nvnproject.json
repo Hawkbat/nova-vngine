@@ -39,20 +39,18 @@
       "chapterID": "213RCRAR",
       "steps": [
         {
-          "id": "ZM3Q1283",
           "type": "text",
+          "id": "ZM3Q1283",
+          "speaker": {
+            "type": "character",
+            "args": [
+              "1U58I1SC"
+            ]
+          },
           "text": {
             "type": "string",
             "args": [
               "Some text goes here"
-            ]
-          },
-          "speaker": {
-            "type": "character",
-            "args": [
-              [
-                "1U58I1SC"
-              ]
             ]
           }
         }
@@ -92,9 +90,9 @@
   ],
   "variables": [
     {
+      "type": "flag",
       "id": "4BTATXCJ",
       "name": "Test",
-      "type": "flag",
       "scope": {
         "type": "allStories"
       },

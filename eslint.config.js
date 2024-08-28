@@ -31,7 +31,7 @@ export default tseslint.config(
     rules: {
       "@typescript-eslint/consistent-type-imports": ["error"],
       "import-x/no-cycle": ["error", { maxDepth: 5 }],
-      "@typescript-eslint/no-unused-vars": ["warn", { args: "none" }],
+      "@typescript-eslint/no-unused-vars": ["warn", { args: "none", varsIgnorePattern: "^_|^styles$" }],
       "import-x/no-unused-modules": ["warn"],
     }
   },

@@ -1,27 +1,23 @@
-import type { EntityOfType, EntityType, ProjectEntityKeyOf } from "../types/definitions"
+import type { ViewState } from "../types/viewstate"
 import { createSimpleStore } from "../utils/store"
-import type { PlatformFilesystemEntry } from "../utils/platform/common"
-
-export type ProjectEditorTab = 'home' | 'manual' | 'settings' | 'project' | ProjectEntityKeyOf<EntityType>
-
-export interface ProjectMetaData {
-    id: string
-    name: string
-    directory: PlatformFilesystemEntry
-}
-
-export interface ViewState {
-    loaded: boolean
-    currentTab: ProjectEditorTab
-    loadedProject: ProjectMetaData | null
-    recentProjects: ProjectMetaData[]
-    scopes: { [K in EntityType]?: EntityOfType<K>['id'] }
-}
 
 export const viewStateStore = createSimpleStore<ViewState>({
     loaded: false,
     currentTab: 'home',
     loadedProject: null,
     recentProjects: [],
-    scopes: {},
+    scopes: {
+        story: null,
+        chapter: null,
+        scene: null,
+        character: null,
+        portrait: null,
+        backdrop: null,
+        song: null,
+        sound: null,
+        variable: null,
+        macro: null,
+    },
 })
+
+

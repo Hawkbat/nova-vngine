@@ -1,9 +1,11 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
+import type { ParseFunc } from "../utils/guard"
+import { defineParser, parsers as $ } from "../utils/guard"
 import type { RandState } from "../utils/rand"
 import type { Branded } from "../utils/types"
-import { hintTypeTuple } from "../utils/types"
-import type { BooleanExpr, ChapterExpr, CharacterExpr, IntegerExpr, ListExpr, NumberExpr, PortraitExpr, SceneExpr, StringExpr, ValueExpr } from "./expressions"
-import type { AnyStep } from "./steps"
+import { hintTuple } from "../utils/types"
+import { parseAnyExpr, type BooleanExpr, type ChapterExpr, type CharacterExpr, type IntegerExpr, type ListExpr, type NumberExpr, type PortraitExpr, type SceneExpr, type StringExpr, type ValueExpr } from "./expressions"
+import { parseAnyStep, type AnyStep } from "./steps"
 
 type EntityID<T extends EntityType> = Branded<string, T>
 
@@ -70,7 +72,7 @@ const PROJECT_KEY_BY_TYPE_MAP: ProjectKeyByTypeMap = {
 
 type TypeByProjectKeyMap = { [K in keyof ProjectKeyByTypeMap as ProjectKeyByTypeMap[K]]: K }
 
-const TYPE_BY_PROJECT_KEY_MAP = Object.fromEntries(Object.entries(PROJECT_KEY_BY_TYPE_MAP).map(([k, v]) => hintTypeTuple(v, k))) as TypeByProjectKeyMap
+const TYPE_BY_PROJECT_KEY_MAP = Object.fromEntries(Object.entries(PROJECT_KEY_BY_TYPE_MAP).map(([k, v]) => hintTuple(v, k))) as TypeByProjectKeyMap
 
 export const ENTITY_TYPES = Object.keys(PROJECT_KEY_BY_TYPE_MAP) as EntityType[]
 export const PROJECT_ENTITY_KEYS = Object.values(PROJECT_KEY_BY_TYPE_MAP) as ProjectEntityKey[]
@@ -241,15 +243,18 @@ type VariableDefinitionMap = {
         default: PortraitExpr
     }
     list: {
-        elements: Omit<AnyVariableDefinition, 'id' | 'default' | 'name' | 'scope'>
+        elements: AnyPartialVariableDefinition
         default: ValueExpr
     }
     lookup: {
-        keys: Omit<AnyVariableDefinition, 'id' | 'default' | 'name' | 'scope'>
-        elements: Omit<AnyVariableDefinition, 'id' | 'default' | 'name' | 'scope'>
+        keys: AnyPartialVariableDefinition
+        elements: AnyPartialVariableDefinition
         default: ValueExpr
     }
 }
+
+type PartialVariableDefinitionOfType<T extends VariableDefinitionType> = T extends VariableDefinitionType ? Omit<VariableDefinitionOfType<T>, 'id' | 'default' | 'name' | 'scope'> : never
+type AnyPartialVariableDefinition = PartialVariableDefinitionOfType<VariableDefinitionType>
 
 export type VariableDefinitionType = keyof VariableDefinitionMap
 export type VariableDefinitionOfType<T extends VariableDefinitionType> = T extends VariableDefinitionType ? EntityDefinition<VariableID> & {
@@ -263,3 +268,119 @@ export type MacroID = EntityID<'macro'>
 export interface MacroDefinition extends EntityDefinition<MacroID> {
     steps: AnyStep[]
 }
+
+const parseStoryDefinition: ParseFunc<StoryDefinition> = defineParser<StoryDefinition>((c, v, d) => $.object(c, v, {
+    id: $.id,
+    name: $.string,
+}, d))
+
+const parseChapterDefinition: ParseFunc<ChapterDefinition> = defineParser<ChapterDefinition>((c, v, d) => $.object(c, v, {
+    id: $.id,
+    name: $.string,
+    storyID: $.id,
+}, d))
+
+const parseSceneDefinition: ParseFunc<SceneDefinition> = defineParser<SceneDefinition>((c, v, d) => $.object(c, v, {
+    id: $.id,
+    name: $.string,
+    chapterID: $.id,
+    steps: (c, v, d) => $.array(c, v, parseAnyStep, d),
+}, d))
+
+const parseCharacterDefinition: ParseFunc<CharacterDefinition> = defineParser<CharacterDefinition>((c, v, d) => $.object(c, v, {
+    id: $.id,
+    name: $.string,
+}, d))
+
+const parsePortraitDefinition: ParseFunc<PortraitDefinition> = defineParser<PortraitDefinition>((c, v, d) => $.object(c, v, {
+    id: $.id,
+    name: $.string,
+    characterID: $.id,
+}, d))
+
+const parseBackdropDefinition: ParseFunc<BackdropDefinition> = defineParser<BackdropDefinition>((c, v, d) => $.object(c, v, {
+    id: $.id,
+    name: $.string,
+}, d))
+
+const parseSongDefinition: ParseFunc<SongDefinition> = defineParser<SongDefinition>((c, v, d) => $.object(c, v, {
+    id: $.id,
+    name: $.string,
+}, d))
+
+const parseSoundDefinition: ParseFunc<SoundDefinition> = defineParser<SoundDefinition>((c, v, d) => $.object(c, v, {
+    id: $.id,
+    name: $.string,
+}, d))
+
+const parseAnyPartialVariableDefinition: ParseFunc<AnyPartialVariableDefinition> = defineParser<AnyPartialVariableDefinition>((c, v, d) => $.typed(c, v, {}, {
+    flag: { setValueLabel: parseAnyExpr, unsetValueLabel: parseAnyExpr },
+    integer: { },
+    number: { },
+    text: { },
+    singleChoice: { options: parseAnyExpr, },
+    multipleChoice: { options: parseAnyExpr, },
+    chapter: { },
+    scene: { },
+    character: { },
+    portrait: { },
+    list: { elements: parseAnyPartialVariableDefinition, },
+    lookup: { elements: parseAnyPartialVariableDefinition, keys: parseAnyPartialVariableDefinition },
+}, d))
+
+const parseAnyVariableDefinition: ParseFunc<AnyVariableDefinition> = defineParser<AnyVariableDefinition>((c, v, d) => $.typed(c, v, {
+    id: $.id,
+    name: $.string,
+    scope: (c, v, d) => $.typed(c, v, {}, {
+        allStories: {},
+        story: { id: $.id },
+        stories: { ids: (c, v, d) => $.array(c, v, $.id, d) },
+        allChapters: {},
+        chapter: { id: $.id },
+        chapters: { ids: (c, v, d) => $.array(c, v, $.id, d) },
+        allScenes: {},
+        scene: { id: $.id },
+        scenes: { ids: (c, v, d) => $.array(c, v, $.id, d) },
+        allCharacters: {},
+        character: { id: $.id },
+        characters: { ids: (c, v, d) => $.array(c, v, $.id, d) },
+        macro: { id: $.id },
+        macros: { ids: (c, v, d) => $.array(c, v, $.id, d) },
+    }, d),
+    default: parseAnyExpr,
+}, {
+    flag: { setValueLabel: parseAnyExpr, unsetValueLabel: parseAnyExpr },
+    integer: { },
+    number: { },
+    text: { },
+    singleChoice: { options: parseAnyExpr },
+    multipleChoice: { options: parseAnyExpr },
+    chapter: { },
+    scene: { },
+    character: { },
+    portrait: { },
+    list: { elements: parseAnyPartialVariableDefinition },
+    lookup: { elements: parseAnyPartialVariableDefinition, keys: parseAnyPartialVariableDefinition },
+}, d))
+
+const parseMacroDefinition: ParseFunc<MacroDefinition> = defineParser<MacroDefinition>((c, v, d) => $.object(c, v, {
+    id: $.id,
+    name: $.string,
+    steps: (c, v, d) => $.array(c, v, parseAnyStep, d),
+}, d))
+
+export const parseProjectDefinition: ParseFunc<ProjectDefinition> = defineParser<ProjectDefinition>((c, v, d) => $.object(c, v, {
+    id: $.id,
+    name: $.string,
+    editorRandState: (c, v, d) => $.tuple(c, v, hintTuple(defineParser<'xorshift32'>((c, v, d) => $.enum(c, v, ['xorshift32'], d)), $.integer), d),
+    stories: (c, v, d) => $.array(c, v, parseStoryDefinition, d),
+    chapters: (c, v, d) => $.array(c, v, parseChapterDefinition, d),
+    scenes: (c, v, d) => $.array(c, v, parseSceneDefinition, d),
+    characters: (c, v, d) => $.array(c, v, parseCharacterDefinition, d),
+    portraits: (c, v, d) => $.array(c, v, parsePortraitDefinition, d),
+    backdrops: (c, v, d) => $.array(c, v, parseBackdropDefinition, d),
+    songs: (c, v, d) => $.array(c, v, parseSongDefinition, d),
+    sounds: (c, v, d) => $.array(c, v, parseSoundDefinition, d),
+    variables: (c, v, d) => $.array(c, v, parseAnyVariableDefinition, d),
+    macros: (c, v, d) => $.array(c, v, parseMacroDefinition, d),
+}, d))

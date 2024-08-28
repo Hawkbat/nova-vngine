@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { createPortal } from "react-dom"
 import styles from './DropdownMenu.module.css'
-import { hintTypeTuple } from "../../utils/types"
+import { hintTuple } from "../../utils/types"
 
 export const useDropdownMenuState = () => {
     const [menuState, setMenuState] = useState({ open: false, x: 0, y: 0 })
@@ -21,7 +21,7 @@ export const useDropdownMenuState = () => {
 
     const props = useMemo(() => ({ ...menuState, onClose }), [menuState, onClose])
 
-    return hintTypeTuple(props, onClick)
+    return hintTuple(props, onClick)
 }
 
 export const DropdownMenu = ({ open, x, y, children, onClose }: {

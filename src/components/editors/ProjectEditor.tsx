@@ -21,7 +21,7 @@ import { BackdropWorkspace } from "../workspaces/BackdropWorkspace"
 import { SongWorkspace } from "../workspaces/SongWorkspace"
 import { SoundWorkspace } from "../workspaces/SoundWorkspace"
 import { VariableWorkspace } from "../workspaces/VariableWorkspace"
-import { platform } from "../../utils/platform/platform"
+import { platform } from "../../platform/platform"
 
 const Breadcrumb = <T extends EntityType>({ type }: { type: T }) => {
     const tab = getProjectEntityKey(type)

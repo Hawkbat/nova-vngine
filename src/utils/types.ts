@@ -1,5 +1,9 @@
 
-export type Branded<T, U> = T & { [Symbol.species]: U }
+export type Branded<T extends string | number | boolean, B extends string> = T & { $brand: B }
+
+export type Unbranded<T extends string | number | boolean> = T extends Branded<infer V, infer _B> ? Omit<V, '$brand'> : never
+
+export type Brand<T extends Branded<string | number | boolean, string>> = T extends Branded<infer _, infer B> ? B : never
 
 export type Widen<T> =
     T extends string ? string :
@@ -11,19 +15,21 @@ export type DeepReadonly<T> = { readonly [P in keyof T]: DeepReadonly<T[P]> }
 export type Writable<T> = { -readonly [P in keyof T]: T[P] }
 export type DeepWriteable<T> = { -readonly [P in keyof T]: DeepWriteable<T[P]> }
 
-export function hintTypeTuple<T extends unknown[]>(...args: T): T {
+export type OmitUndefined<T> = { [K in keyof T as undefined extends T[K] ? never : K]: T[K] }
+
+export function hintTuple<T extends unknown[]>(...args: T): T {
     return args
 }
 
-export function hintTypeWide<T>(value: T): Widen<T> {
+export function hintWide<T>(value: T): Widen<T> {
     return value as Widen<T>
 }
 
-export function hintTypeDeepReadonly<T>(value: T): DeepReadonly<T> {
+export function hintDeepReadonly<T>(value: T): DeepReadonly<T> {
     return value as DeepReadonly<T>
 }
 
-export function hintTypeDeepWritable<T>(value: T): DeepWriteable<T> {
+export function hintDeepWritable<T>(value: T): DeepWriteable<T> {
     return value as DeepWriteable<T>
 }
 

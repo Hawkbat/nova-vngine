@@ -1,11 +1,13 @@
-import { createProject } from "../../store/project"
-import type { ViewState } from "../../store/viewstate"
-import { viewStateStore } from "../../store/viewstate"
-import { randID, randSeedRandom } from "../rand"
-import type { Branded } from "../types"
+import { createProject } from "../store/project"
+import { parseViewState } from "../types/viewstate"
+import { viewStateStore } from "../store/viewstate"
+import { randID, randSeedRandom } from "../utils/rand"
+import type { Branded } from "../utils/types"
 import { get, set, entries, createStore } from 'idb-keyval'
-import type { Platform, PlatformFilesystemEntry } from "./common"
-import { PlatformError, DEFAULT_PROJECT_FILENAME } from "./common"
+import type { Platform, PlatformFilesystemEntry } from "../types/platform"
+import { PlatformError, DEFAULT_PROJECT_FILENAME } from "../types/platform"
+import { tryParseJson } from "../utils/guard"
+import { parseProjectDefinition } from "../types/definitions"
 
 const idbStore = createStore('chromium-handle-db', 'chromium-handle-store')
 
@@ -50,9 +52,13 @@ export const chromiumPlatform: Platform = {
     },
     async loadViewState() {
         const json = localStorage.getItem('nvn-viewstate')
-        if (!json) return viewStateStore.getSnapshot()
-        const viewState = JSON.parse(json) as ViewState
-        return viewState
+        const parsed = tryParseJson(json ?? '', 'viewState', parseViewState)
+        if (parsed.ctx.warnings.length) console.warn(parsed.ctx.warnings)
+        if (!parsed.success) {
+            console.error(parsed.ctx.errors)
+            return viewStateStore.getSnapshot()
+        }
+        return parsed.value
     },
     async saveViewState(viewState) {
         localStorage.setItem('nvn-viewstate', JSON.stringify(viewState))
@@ -64,8 +70,13 @@ export const chromiumPlatform: Platform = {
         const name = DEFAULT_PROJECT_FILENAME
         const handle = await dirHandle.getFileHandle(name)
         const json = await (await handle.getFile()).text()
-        const project = JSON.parse(json)
-        return project
+        const parsed = tryParseJson(json, 'project', parseProjectDefinition)
+        if (parsed.ctx.warnings.length) console.warn(parsed.ctx.warnings)
+        if (!parsed.success) {
+            console.error(parsed.ctx.errors)
+            throw new PlatformError('bad-project', `The project file was outdated or corrupted in a manner that has prevented it from loading.`)
+        }
+        return parsed.value
     },
     async saveProject(dir, project) {
         const key = dir.handle as ChromiumHandleKey
@@ -114,8 +125,8 @@ export const chromiumPlatform: Platform = {
                 handle: key,
             }
 
-            const files: PlatformFilesystemEntry[] = (await Array.fromAsync(result.values())).filter(t => t.kind === 'file').map(t => ({ type: 'file', name: t.name, path: `${result.name}/${t.name}`, handle: null }))
-            const directories: PlatformFilesystemEntry[] = (await Array.fromAsync(result.values())).filter(t => t.kind === 'directory').map(t => ({ type: 'directory', path: `${result.name}/${t.name}`, name: t.name, files: [], directories: [], handle: null }))
+            const files: PlatformFilesystemEntry[] = (await Array.fromAsync(result.values())).filter(t => t.kind === 'file').map(t => ({ type: 'file', name: t.name, path: `${result.name}/${t.name}`, handle: '' }))
+            const directories: PlatformFilesystemEntry[] = (await Array.fromAsync(result.values())).filter(t => t.kind === 'directory').map(t => ({ type: 'directory', path: `${result.name}/${t.name}`, name: t.name, files: [], directories: [], handle: '' }))
             return {
                 directory,
                 files,

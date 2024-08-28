@@ -1,6 +1,3 @@
 
-Rework steps to use generic args/param/children system like expressions
-
-ParsedStringField fails when the stringified real value doesn't match the temp value but the parsing is still successful
-Simplest fix is to only pass parsing on exact match between String(parseFloat(s)) and s
-More complicated fix is to pass temp string ref back up to ParsedStringField to make sure it matches
+Rework steps to use generic args/params/children definitions like expressions use
+Handle deferred store updates by using setter functions exclusively instead of direct values. Apply each setter immediately but queue up store notifications until the end of the current frame using `setTimeout(cb, 0)`.

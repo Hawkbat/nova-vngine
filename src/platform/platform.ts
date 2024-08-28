@@ -1,6 +1,6 @@
-import { PLATFORM_FORCE_CHROMIUM, PLATFORM_FORCE_WEB } from "../../debug"
+import { PLATFORM_FORCE_CHROMIUM, PLATFORM_FORCE_WEB } from "../debug"
 import { chromiumPlatform } from "./chromium"
-import type { Platform } from "./common"
+import type { Platform } from "../types/platform"
 import { neutralinoPlatform } from "./neutralino"
 import { webPlatform } from "./web"
 

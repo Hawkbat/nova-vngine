@@ -1,8 +1,9 @@
-import type { ViewState } from "../../store/viewstate"
-import { viewStateStore } from "../../store/viewstate"
-import type { ProjectDefinition } from "../../types/definitions"
-import type { Platform } from "./common"
-import { DEFAULT_PROJECT_FILENAME, PlatformError } from "./common"
+import { parseViewState } from "../types/viewstate"
+import { viewStateStore } from "../store/viewstate"
+import { parseProjectDefinition } from "../types/definitions"
+import type { Platform } from "../types/platform"
+import { DEFAULT_PROJECT_FILENAME, PlatformError } from "../types/platform"
+import { tryParseJson } from "../utils/guard"
 
 export const webPlatform: Platform = {
     name: 'Browser (Generic)',
@@ -11,9 +12,13 @@ export const webPlatform: Platform = {
     },
     async loadViewState() {
         const json = localStorage.getItem('nvn-viewstate')
-        if (!json) return viewStateStore.getSnapshot()
-        const viewState = JSON.parse(json) as ViewState
-        return viewState
+        const parsed = tryParseJson(json ?? '', 'viewState', parseViewState)
+        if (parsed.ctx.warnings.length) console.warn(parsed.ctx.warnings)
+        if (!parsed.success) {
+            console.error(parsed.ctx.errors)
+            return viewStateStore.getSnapshot()
+        }
+        return parsed.value
     },
     async saveViewState(viewState) {
         localStorage.setItem('nvn-viewstate', JSON.stringify(viewState))
@@ -24,8 +29,14 @@ export const webPlatform: Platform = {
             if (res.status === 404) return null
             throw new PlatformError('bad-project', `Could not load project at ${dir.path}: ${res.status} ${res.statusText}`)
         }
-        const project = await res.json() as ProjectDefinition
-        return project
+        const json = await res.text()
+        const parsed = tryParseJson(json, 'project', parseProjectDefinition)
+        if (parsed.ctx.warnings.length) console.warn(parsed.ctx.warnings)
+        if (!parsed.success) {
+            console.error(parsed.ctx.errors)
+            throw new PlatformError('bad-project', `The project file was outdated or corrupted in a manner that has prevented it from loading.`)
+        }
+        return parsed.value
     },
     async saveProject(dir, project) {
         throw new PlatformError('not-supported', `Project saving is not supported in your current browser. Please use the desktop app, Chrome, or Edge.`)

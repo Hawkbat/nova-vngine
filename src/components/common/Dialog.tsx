@@ -6,7 +6,7 @@ import { EditorIcon } from "./EditorIcon"
 import { createSimpleStore, useSelector, useStore } from "../../utils/store"
 import { immAppend, immRemoveAt, immSet } from "../../utils/imm"
 import { mdiAlert } from "@mdi/js"
-import { hintTypeTuple } from "../../utils/types"
+import { hintTuple } from "../../utils/types"
 import { EditorButton, EditorButtonGroup } from "./EditorButton"
 
 export interface DialogChoice {
@@ -41,7 +41,7 @@ export function openCustomDialog<T extends string>(title: React.ReactNode, conte
 }
 
 export function openDialog<T extends string>(title: string, message: string, choices: Record<T, string>): Promise<T> {
-    return openCustomDialog(<><EditorIcon path={mdiAlert} label={title} /> {title}</>, <>{message}</>, Object.fromEntries(Object.entries(choices).map(([k, v], i, arr) => hintTypeTuple(k, { content: <>{v}</>, primary: i === arr.length - 1 ? true : undefined }))) as Record<T, DialogChoice>)
+    return openCustomDialog(<><EditorIcon path={mdiAlert} label={title} /> {title}</>, <>{message}</>, Object.fromEntries(Object.entries(choices).map(([k, v], i, arr) => hintTuple(k, { content: <>{v}</>, primary: i === arr.length - 1 ? true : undefined }))) as Record<T, DialogChoice>)
 }
 
 export function useIsDialogOpen() {

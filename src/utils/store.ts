@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react"
-import { hintTypeTuple } from "./types"
+import { hintTuple } from "./types"
 import { deepDiff, immSet } from "./imm"
 import { LOG_STORE_DIFFS } from "../debug"
 
@@ -129,22 +129,22 @@ export type TrackedStore<T> = ReturnType<typeof createTrackedStore<T>>
 
 export function useStore<T>(store: SimpleStore<T>) {
     const state = useSyncExternalStore(store.subscribe, store.getSnapshot)
-    return hintTypeTuple(state, store.setValue)
+    return hintTuple(state, store.setValue)
 }
 
 export function useMetaStore<T>(store: TrackedStore<T>) {
     const state = useSyncExternalStore(store.meta.subscribe, store.meta.getSnapshot)
-    return hintTypeTuple(state, store.meta.setValue)
+    return hintTuple(state, store.meta.setValue)
 }
 
 export function useSelector<T, U>(store: SimpleStore<T>, selector: (value: T) => U) {
     const state = useSyncExternalStore(store.subscribe, () => selector(store.getSnapshot()))
-    return hintTypeTuple(state, store.setValue)
+    return hintTuple(state, store.setValue)
 }
 
 export function useMetaSelector<T, U>(store: TrackedStore<T>, selector: (value: StoreMetaState<T>) => U) {
     const state = useSyncExternalStore(store.meta.subscribe, () => selector(store.meta.getSnapshot()))
-    return hintTypeTuple(state, store.meta.setValue)
+    return hintTuple(state, store.meta.setValue)
 }
 
 export function subscribeToStore<T>(store: SimpleStore<T>, callback: (newState: T, oldState: T) => void) {

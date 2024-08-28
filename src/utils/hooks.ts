@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react"
-import { hintTypeTuple } from "./types"
+import { hintTuple } from "./types"
 
 export function useStateFromProps<T>(value: T) {
     const [state, setState] = useState(value)
     useEffect(() => {
         setState(value)
     }, [value])
-    return hintTypeTuple(state, setState)
+    return hintTuple(state, setState)
 }
 
 export function useLatest<T>(value: T) {

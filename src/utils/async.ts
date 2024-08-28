@@ -1,4 +1,4 @@
-import { hintTypeTuple } from "./types"
+import { hintTuple } from "./types"
 
 export function wait(ms: number) {
     return new Promise<void>((resolve) => {
@@ -7,7 +7,7 @@ export function wait(ms: number) {
 }
 
 export async function awaitAllMap<T extends Record<string, Promise<unknown>>>(map: T) {
-    return Object.fromEntries(await Promise.all(Object.entries(map).map(async ([k, v]) => hintTypeTuple(k, await v)))) as { [K in keyof T]: Awaited<T[K]> }
+    return Object.fromEntries(await Promise.all(Object.entries(map).map(async ([k, v]) => hintTuple(k, await v)))) as { [K in keyof T]: Awaited<T[K]> }
 }
 
 export interface ExposedPromise<T> {

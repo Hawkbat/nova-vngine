@@ -8,7 +8,7 @@ import { wait } from './utils/async'
 import { immSet, immReplaceBy } from './utils/imm'
 import { subscribeToStoreAsync, subscribeToSelector } from './utils/store'
 import { LoadingApp } from './components/LoadingApp'
-import { platform } from './utils/platform/platform'
+import { platform } from './platform/platform'
 
 const appContainer = document.createElement('div')
 appContainer.id = 'appContainer'

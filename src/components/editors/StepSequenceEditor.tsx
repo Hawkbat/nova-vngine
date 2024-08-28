@@ -9,8 +9,9 @@ import styles from './StepSequenceEditor.module.css'
 import { StringField } from "../common/StringField"
 import { classes, prettyPrintIdentifier } from "../../utils/display"
 import type { ExprContext } from "../../types/expressions"
-import { getProjectExprContext } from "../../store/operations"
+import { getProjectExprContext, immGenerateID } from "../../store/operations"
 import { EditorButton, EditorButtonGroup } from "../common/EditorButton"
+import { projectStore } from "../../store/project"
 
 const StepEditor = ({ step, setStep, deleteStep, ctx }: { step: AnyStep, setStep: (setter: (step: AnyStep) => AnyStep) => void, deleteStep: () => void, ctx: ExprContext }) => {
     const onDeleteStep = (e: React.MouseEvent) => {
@@ -69,7 +70,9 @@ const StepList = ({ steps, setSteps, selected, setSelected, ctx }: { steps: AnyS
 
     const onAddStep = (e: React.MouseEvent) => {
         e.stopPropagation()
-        setSteps(steps => immAppend(steps, createStep('text', ctx)))
+        const [project, id] = immGenerateID<StepID>(projectStore.getSnapshot())
+        projectStore.setValue(() => project)
+        setSteps(steps => immAppend(steps, createStep(id, 'text', ctx)))
     }
 
     return <div className={styles.timeline}>

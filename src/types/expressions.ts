@@ -1,5 +1,7 @@
-import { throwIfNull } from "../utils/guard"
-import { assertExhaustive } from "../utils/types"
+import type { ParseFunc } from "../utils/guard"
+import { throwIfNull, defineParser, parsers as $ } from "../utils/guard"
+import type { OmitUndefined } from "../utils/types"
+import { assertExhaustive, hintTuple } from "../utils/types"
 import type { StoryID, ChapterID, SceneID, VariableID, CharacterID, BackdropID, SongID, SoundID, AnyVariableDefinition, CharacterDefinition, BackdropDefinition, ChapterDefinition, SceneDefinition, SongDefinition, SoundDefinition, StoryDefinition, PortraitID, MacroID, MacroDefinition, PortraitDefinition } from "./definitions"
 
 export type LocationValue = 'auto' | 'left' | 'center' | 'right' | number
@@ -91,12 +93,12 @@ type ArgValues<T extends [...ExprArgDefinition[]]> = T extends [...ExprArgDefini
 type ParamValues<T extends [...ExprParamDefinition[]]> = T extends [...ExprParamDefinition[]] ? { [I in keyof T]: AnyExpr } & { length: T['length'] } : undefined
 type ChildValues<T extends [...ExprChildParamDefinition[]]> = T extends [...ExprChildParamDefinition[]] ? ({ [I in keyof T]: AnyExpr } & { length: T['length'] })[] : undefined
 
-type ExprOfTypeFromDef<T extends ExprType, D extends PartialExprDefinition> = {
+type ExprOfTypeFromDef<T extends ExprType, D extends PartialExprDefinition> = OmitUndefined<{
     type: T
     args: D['args'] extends undefined ? undefined : ArgValues<Exclude<D['args'], undefined>>
     params: D['params'] extends undefined ? undefined : ParamValues<Exclude<D['params'], undefined>>
     children: D['children'] extends undefined ? undefined : ChildValues<Exclude<D['children'], undefined>>
-}
+}>
 
 export type ExprType = keyof ExprMap
 export type ExprOfType<T extends ExprType> = T extends ExprType ? ExprOfTypeFromDef<T, ExprMap[T]> : never
@@ -294,12 +296,12 @@ export function validateExpr(expr: AnyExpr, ctx: ExprContext): string[] {
 export function createDefaultExpr<T extends ExprType>(type: T, ctx: ExprContext): ExprOfType<T> {
     const def = EXPR_DEFINITION_MAP[type]
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const expr: ExprOfType<T> = { type } as any
+    const expr = { type } as any
     if (def.args) {
-        expr.args = def.args.map(a => getContextualDefaultPrimitiveValue(a.type, ctx)) as ExprOfType<T>['args']
+        expr.args = def.args.map(a => getContextualDefaultPrimitiveValue(a.type, ctx))
     }
     if (def.params) {
-        expr.params = def.params.map(p => createDefaultExpr('unset', ctx)) as ExprOfType<T>['params']
+        expr.params = def.params.map(p => createDefaultExpr('unset', ctx))
     }
     if (def.children) {
         expr.children = []
@@ -399,17 +401,17 @@ export function exprValuesEqual(left: AnyExprValue, right: AnyExprValue): boolea
 export function prettyPrintExpr(expr: AnyExpr): string {
     const def = EXPR_DEFINITION_MAP[expr.type]
     let out = `${expr.type}(`
-    if (def.args && expr.args) {
+    if (def.args && 'args' in expr && expr.args) {
         for (let i = 0; i < def.args.length; i++) {
             out += `${def.args[i].label}: ${JSON.stringify(expr.args[i])}`
         }
     }
-    if (def.params && expr.params) {
+    if (def.params && 'params' in expr && expr.params) {
         for (let i = 0; i < def.params.length; i++) {
             out += `${def.params[i].label}: ${prettyPrintExpr(expr.params[i])}`
         }
     }
-    if (def.children && expr.children) {
+    if (def.children && 'children' in expr && expr.children) {
         out += '['
         for (const c of expr.children) {
             out += '('
@@ -426,3 +428,49 @@ export function prettyPrintExpr(expr: AnyExpr): string {
     out += ')'
     return out
 }
+
+const parseSingleExprTuple = defineParser<[AnyExpr]>((c, v, d) => $.tuple(c, v, hintTuple(parseAnyExpr), d))
+const parseDualExprTuple = defineParser<[AnyExpr, AnyExpr]>((c, v, d) => $.tuple(c, v, hintTuple(parseAnyExpr, parseAnyExpr), d))
+const parseTripleExprTuple = defineParser<[AnyExpr, AnyExpr, AnyExpr]>((c, v, d) => $.tuple(c, v, hintTuple(parseAnyExpr, parseAnyExpr, parseAnyExpr), d))
+const parseLocation = defineParser<LocationValue>((c, v, d) => $.either(c, v, (c, v, d) => $.enum<Extract<LocationValue, string>>(c, v, ['auto', 'left', 'center', 'right'], typeof d === 'string' ? d : undefined), $.number, d))
+
+export const parseAnyExpr: ParseFunc<AnyExpr> = defineParser<AnyExpr>((c, v, d) => $.typed(c, v, {}, {
+    unset: {},
+
+    list: { children: (c, v, d) => $.array(c, v, parseSingleExprTuple, d) },
+
+    string: { args: (c, v, d) => $.tuple(c, v, hintTuple($.string), d) },
+    number: { args: (c, v, d) => $.tuple(c, v, hintTuple($.number), d) },
+    integer: { args: (c, v, d) => $.tuple(c, v, hintTuple($.integer), d) },
+    boolean: { args: (c, v, d) => $.tuple(c, v, hintTuple($.boolean), d) },
+    location: { args: (c, v, d) => $.tuple(c, v, hintTuple(parseLocation), d) },
+
+    story: { args: (c, v, d) => $.tuple(c, v, hintTuple($.id), d) },
+    chapter: { args: (c, v, d) => $.tuple(c, v, hintTuple($.id), d) },
+    scene: { args: (c, v, d) => $.tuple(c, v, hintTuple($.id), d) },
+    character: { args: (c, v, d) => $.tuple(c, v, hintTuple($.id), d) },
+    portrait: { args: (c, v, d) => $.tuple(c, v, hintTuple($.id), d) },
+    backdrop: { args: (c, v, d) => $.tuple(c, v, hintTuple($.id), d) },
+    song: { args: (c, v, d) => $.tuple(c, v, hintTuple($.id), d) },
+    sound: { args: (c, v, d) => $.tuple(c, v, hintTuple($.id), d) },
+    variable: { args: (c, v, d) => $.tuple(c, v, hintTuple($.id), d) },
+    macro: { args: (c, v, d) => $.tuple(c, v, hintTuple($.id), d) },
+
+    add: { params: parseDualExprTuple },
+    subtract: { params: parseDualExprTuple },
+    multiply: { params: parseDualExprTuple },
+    divide: { params: parseDualExprTuple },
+    modulo: { params: parseDualExprTuple },
+
+    format: { children: (c, v, d) => $.array(c, v, parseSingleExprTuple, d) },
+
+    equal: { params: parseDualExprTuple },
+    notEqual: { params: parseDualExprTuple },
+    lessThan: { params: parseDualExprTuple },
+    lessThanOrEqual: { params: parseDualExprTuple },
+    greaterThan: { params: parseDualExprTuple },
+    greaterThanOrEqual: { params: parseDualExprTuple },
+
+    pick: { params: parseTripleExprTuple },
+    switch: { params: parseSingleExprTuple, children: (c, v, d) => $.array(c, v, parseDualExprTuple, d) },
+}, d))
