@@ -1,6 +1,6 @@
-import { immCreateVariable } from "../../store/operations"
-import type { AnyVariableDefinition } from "../../types/definitions"
-import { EntityWorkspace } from "./EntityWorkspace"
+import { immCreateVariable } from '../../store/operations'
+import type { AnyVariableDefinition } from '../../types/definitions'
+import { EntityWorkspace } from './EntityWorkspace'
 import styles from './VariableWorkspace.module.css'
 
 const VariableEditor = ({ variable }: { variable: AnyVariableDefinition }) => {

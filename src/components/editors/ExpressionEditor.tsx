@@ -1,27 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { AnyExpr, ExprContext, ExprDefinition, ExprPrimitiveRawValueOfType, ExprPrimitiveValueType, ExprType, ExprValueType } from "../../types/expressions"
-import { EXPR_DEFINITION_MAP, EXPR_DEFINITIONS, createDefaultExpr, guessExprReturnType, createDefaultExprChild, exprValueTypeAssignableTo, validateExpr } from "../../types/expressions"
+import type { AnyExpr, ExprContext, ExprDefinition, ExprPrimitiveRawValueOfType, ExprPrimitiveValueType, ExprType, ExprValueType } from '../../types/expressions'
+import { EXPR_DEFINITION_MAP, EXPR_DEFINITIONS, createDefaultExpr, guessExprReturnType, createDefaultExprChild, exprValueTypeAssignableTo, validateExpr } from '../../types/expressions'
 import styles from './ExpressionEditor.module.css'
-import { Fragment } from "react"
-import { DropdownMenuItem, SearchDropdownMenu, useDropdownMenuState } from "../common/DropdownMenu"
-import { immAppend, immRemoveAt, immReplaceAt, immSet } from "../../utils/imm"
-import { EditorIcon } from "../common/EditorIcon"
-import { COMMON_ICONS, EXPR_ICONS } from "../common/Icons"
-import { Field } from "../common/Field"
-import type { EntityOfType, EntityType } from "../../types/definitions"
-import { getProjectEntityKey } from "../../types/definitions"
-import { EditorButton } from "../common/EditorButton"
-import { projectStore } from "../../store/project"
-import { getEntityByID } from "../../store/operations"
-import { useSelector } from "../../utils/store"
-import { StringField } from "../common/StringField"
-import { NumberField } from "../common/NumberField"
-import { BooleanField } from "../common/BooleanField"
+import { Fragment } from 'react'
+import { DropdownMenuItem, SearchDropdownMenu, useDropdownMenuState } from '../common/DropdownMenu'
+import { immAppend, immRemoveAt, immReplaceAt, immSet } from '../../utils/imm'
+import { EditorIcon } from '../common/EditorIcon'
+import { COMMON_ICONS, EXPR_ICONS } from '../common/Icons'
+import { Field } from '../common/Field'
+import type { EntityOfType, EntityType } from '../../types/definitions'
+import { getProjectEntityKey } from '../../types/definitions'
+import { EditorButton } from '../common/EditorButton'
+import { projectStore } from '../../store/project'
+import { getEntityByID } from '../../store/operations'
+import { useSelector } from '../../utils/store'
+import { StringField } from '../common/StringField'
+import { NumberField } from '../common/NumberField'
+import { BooleanField } from '../common/BooleanField'
 
 type ArgEditorProps<T extends ExprPrimitiveValueType> = {
-    label: string,
-    type: T,
-    value: ExprPrimitiveRawValueOfType<T>,
+    label: string
+    type: T
+    value: ExprPrimitiveRawValueOfType<T>
     setValue: (value: ExprPrimitiveRawValueOfType<T>) => void
 }
 type ArgSubEditorProps<T extends ExprPrimitiveValueType> = T extends ExprPrimitiveValueType ? ArgEditorProps<T> : never
@@ -85,11 +85,11 @@ const EntityArgEditor = <T extends EntityType>({ type, value, setValue, label }:
 
 const LocationArgEditor = ({ value, setValue, label }: ArgSubEditorProps<'location'>) => {
     return <>
-        <EditorIcon path={COMMON_ICONS.alignAuto} active={value === 'auto'} label="Auto" style='solid' onClick={() => setValue('auto')} />
-        <EditorIcon path={COMMON_ICONS.alignLeft} active={value === 'left'} label="Left" style='solid' onClick={() => setValue('left')} />
-        <EditorIcon path={COMMON_ICONS.alignCenter} active={value === 'center'} label="Center" style='solid' onClick={() => setValue('center')} />
-        <EditorIcon path={COMMON_ICONS.alignRight} active={value === 'right'} label="Right" style='solid' onClick={() => setValue('right')} />
-        <EditorIcon path={COMMON_ICONS.alignCustom} active={typeof value === 'number'} label="Custom" style='solid' onClick={() => setValue(0.5)} />
+        <EditorIcon path={COMMON_ICONS.alignAuto} active={value === 'auto'} label='Auto' style='solid' onClick={() => setValue('auto')} />
+        <EditorIcon path={COMMON_ICONS.alignLeft} active={value === 'left'} label='Left' style='solid' onClick={() => setValue('left')} />
+        <EditorIcon path={COMMON_ICONS.alignCenter} active={value === 'center'} label='Center' style='solid' onClick={() => setValue('center')} />
+        <EditorIcon path={COMMON_ICONS.alignRight} active={value === 'right'} label='Right' style='solid' onClick={() => setValue('right')} />
+        <EditorIcon path={COMMON_ICONS.alignCustom} active={typeof value === 'number'} label='Custom' style='solid' onClick={() => setValue(0.5)} />
         {typeof value === 'number' ? <NumberField className={styles.argTextInput} value={value} setValue={v => setValue(v)} /> : null}
     </>
 }

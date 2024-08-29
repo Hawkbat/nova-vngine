@@ -21,7 +21,7 @@ export const EditorIcon = ({ path, label, style, size, active, showLabel, classN
     className?: string
     onClick?: (e: React.MouseEvent) => void
 }) => {
-    
+
     const actualOnClick = useCallback((e: React.MouseEvent) => {
         if (onClick) {
             e.stopPropagation()

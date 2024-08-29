@@ -1,15 +1,15 @@
-import { useCallback } from "react"
-import { type EntityType, type EntityIDOf, getProjectEntityKey, getEntityParentID, getEntityParentType, type EntityOfType, type EntityParentOf, type AnyVariableDefinition, type BackdropDefinition, type BackdropID, type ChapterDefinition, type ChapterID, type CharacterDefinition, type CharacterID, type PortraitDefinition, type PortraitID, type ProjectDefinition, type SceneDefinition, type SceneID, type SongDefinition, type SongID, type SoundDefinition, type SoundID, type StoryDefinition, type StoryID, type VariableID, ENTITY_TYPES, getEntityTypeHierarchy } from "../types/definitions"
-import { type ExprContext, resolveExpr, createDefaultExpr } from "../types/expressions"
-import { immSet, immAppend } from "../utils/imm"
-import { isPlatformErrorCode, type PlatformFilesystemEntry } from "../types/platform"
-import { platform } from "../platform/platform"
-import { randID } from "../utils/rand"
-import { useSelector } from "../utils/store"
-import { hintTuple } from "../utils/types"
-import { projectStore } from "./project"
-import type { ProjectEditorTab, ProjectMetaData } from "../types/viewstate"
-import { viewStateStore } from "./viewstate"
+import { useCallback } from 'react'
+import { type EntityType, type EntityIDOf, getProjectEntityKey, getEntityParentID, getEntityParentType, type EntityOfType, type EntityParentOf, type AnyVariableDefinition, type BackdropDefinition, type BackdropID, type ChapterDefinition, type ChapterID, type CharacterDefinition, type CharacterID, type PortraitDefinition, type PortraitID, type ProjectDefinition, type SceneDefinition, type SceneID, type SongDefinition, type SongID, type SoundDefinition, type SoundID, type StoryDefinition, type StoryID, type VariableID, ENTITY_TYPES, getEntityTypeHierarchy } from '../types/definitions'
+import { type ExprContext, resolveExpr, createDefaultExpr } from '../types/expressions'
+import { immSet, immAppend } from '../utils/imm'
+import { isPlatformErrorCode, type PlatformFilesystemEntry } from '../types/platform'
+import { platform } from '../platform/platform'
+import { randID } from '../utils/rand'
+import { useSelector } from '../utils/store'
+import { hintTuple } from '../utils/types'
+import { projectStore } from './project'
+import type { ProjectEditorTab, ProjectMetaData } from '../types/viewstate'
+import { viewStateStore } from './viewstate'
 
 export async function loadProjectFromFolder(dir: PlatformFilesystemEntry) {
     const project = await platform.loadProject(dir)
@@ -37,7 +37,7 @@ export async function loadInitialViewState() {
         }
     } catch (err) {
         if (isPlatformErrorCode(err, 'bad-project')) {
-            platform.error(`Failed to load previously loaded project`, err)
+            platform.error('Failed to load previously loaded project', err)
         } else {
             throw err
         }

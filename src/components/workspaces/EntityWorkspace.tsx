@@ -1,15 +1,15 @@
-import { Fragment } from "react/jsx-dev-runtime"
-import { projectStore } from "../../store/project"
-import { useViewStateScope } from "../../store/operations"
-import type { EntityIDOf, EntityOfType, EntityParentIDOf, EntityType, ProjectDefinition, ProjectEntityKeyOf } from "../../types/definitions"
-import { getEntityParentID, getEntityParentType, getProjectEntityKey } from "../../types/definitions"
-import { prettyPrintIdentifier } from "../../utils/display"
-import { immReplaceBy, immSet } from "../../utils/imm"
-import { useSelector } from "../../utils/store"
-import { EditorButton } from "../common/EditorButton"
-import { EditorIcon } from "../common/EditorIcon"
-import { COMMON_ICONS, EXPR_VALUE_ICONS } from "../common/Icons"
-import { StringField } from "../common/StringField"
+import { Fragment } from 'react/jsx-dev-runtime'
+import { projectStore } from '../../store/project'
+import { useViewStateScope } from '../../store/operations'
+import type { EntityIDOf, EntityOfType, EntityParentIDOf, EntityType, ProjectDefinition, ProjectEntityKeyOf } from '../../types/definitions'
+import { getEntityParentID, getEntityParentType, getProjectEntityKey } from '../../types/definitions'
+import { prettyPrintIdentifier } from '../../utils/display'
+import { immReplaceBy, immSet } from '../../utils/imm'
+import { useSelector } from '../../utils/store'
+import { EditorButton } from '../common/EditorButton'
+import { EditorIcon } from '../common/EditorIcon'
+import { COMMON_ICONS, EXPR_VALUE_ICONS } from '../common/Icons'
+import { StringField } from '../common/StringField'
 import styles from './EntityWorkspace.module.css'
 
 export const EntityWorkspace = <T extends EntityType>({ type, immCreate, children }: {

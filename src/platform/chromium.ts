@@ -1,13 +1,13 @@
-import { createProject } from "../store/project"
-import { parseViewState } from "../types/viewstate"
-import { viewStateStore } from "../store/viewstate"
-import { randID, randSeedRandom } from "../utils/rand"
-import type { Branded } from "../utils/types"
+import { createProject } from '../store/project'
+import { parseViewState } from '../types/viewstate'
+import { viewStateStore } from '../store/viewstate'
+import { randID, randSeedRandom } from '../utils/rand'
+import type { Branded } from '../utils/types'
 import { get, set, entries, createStore } from 'idb-keyval'
-import type { Platform, PlatformFilesystemEntry } from "../types/platform"
-import { PlatformError, DEFAULT_PROJECT_FILENAME } from "../types/platform"
-import { tryParseJson } from "../utils/guard"
-import { parseProjectDefinition } from "../types/definitions"
+import type { Platform, PlatformFilesystemEntry } from '../types/platform'
+import { PlatformError, DEFAULT_PROJECT_FILENAME } from '../types/platform'
+import { tryParseJson } from '../utils/guard'
+import { parseProjectDefinition } from '../types/definitions'
 
 const idbStore = createStore('chromium-handle-db', 'chromium-handle-store')
 
@@ -66,7 +66,7 @@ export const chromiumPlatform: Platform = {
     async loadProject(dir) {
         const key = dir.handle as ChromiumHandleKey
         const dirHandle = await retrieveChromiumDirectoryHandle(key)
-        if (!dirHandle) throw new PlatformError('bad-project', `Could not get access to the project folder. It may have been changed, moved, or deleted.`)
+        if (!dirHandle) throw new PlatformError('bad-project', 'Could not get access to the project folder. It may have been changed, moved, or deleted.')
         const name = DEFAULT_PROJECT_FILENAME
         const handle = await dirHandle.getFileHandle(name)
         const json = await (await handle.getFile()).text()
@@ -74,14 +74,14 @@ export const chromiumPlatform: Platform = {
         if (parsed.ctx.warnings.length) this.warn(parsed.ctx.warnings)
         if (!parsed.success) {
             this.error('Failed to parse project', json, parsed.ctx.errors)
-            throw new PlatformError('bad-project', `The project file was outdated or corrupted in a manner that has prevented it from loading.`)
+            throw new PlatformError('bad-project', 'The project file was outdated or corrupted in a manner that has prevented it from loading.')
         }
         return parsed.value
     },
     async saveProject(dir, project) {
         const key = dir.handle as ChromiumHandleKey
         const dirHandle = await retrieveChromiumDirectoryHandle(key)
-        if (!dirHandle) throw new PlatformError('bad-project', `Could not get access to the project folder. It may have been changed, moved, or deleted.`)
+        if (!dirHandle) throw new PlatformError('bad-project', 'Could not get access to the project folder. It may have been changed, moved, or deleted.')
         const name = DEFAULT_PROJECT_FILENAME
         const handle = await dirHandle.getFileHandle(name, { create: true })
         const stream = await handle.createWritable()
@@ -91,7 +91,7 @@ export const chromiumPlatform: Platform = {
     async createProject(dir) {
         const key = dir.handle as ChromiumHandleKey
         const dirHandle = await retrieveChromiumDirectoryHandle(key)
-        if (!dirHandle) throw new PlatformError('bad-project', `Could not get access to the project folder. Unable to create project.`)
+        if (!dirHandle) throw new PlatformError('bad-project', 'Could not get access to the project folder. Unable to create project.')
         const project = createProject()
         await this.saveProject(dir, project)
         return project

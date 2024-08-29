@@ -1,14 +1,14 @@
-import { useSyncExternalStore } from "react"
-import { hintTuple } from "./types"
-import { deepDiff, immSet } from "./imm"
-import { LOG_STORE_DIFFS } from "../debug"
+import { useSyncExternalStore } from 'react'
+import { hintTuple } from './types'
+import { deepDiff, immSet } from './imm'
+import { LOG_STORE_DIFFS } from '../debug'
 
 export type StoreValueSetter<T> = (oldValue: T) => T
 
 export function createSimpleStore<T>(defaultValue: T) {
     const listeners = new Set<() => void>()
     let value = defaultValue
-    
+
     const subscribe = (listener: () => void) => {
         listeners.add(listener)
         return () => {

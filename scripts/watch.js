@@ -1,4 +1,4 @@
-import { buildContext } from "./build-base.js"
+import { buildContext } from './build-base.js'
 
 await buildContext.watch()
-console.log(`Watching for changes`)
+console.log('Watching for changes')

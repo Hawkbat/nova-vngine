@@ -1,6 +1,6 @@
-import type { ProjectDefinition, ProjectID } from "../types/definitions"
-import { randID, randSeedRandom } from "../utils/rand"
-import { createTrackedStore } from "../utils/store"
+import type { ProjectDefinition, ProjectID } from '../types/definitions'
+import { randID, randSeedRandom } from '../utils/rand'
+import { createTrackedStore } from '../utils/store'
 
 export const projectStore = createTrackedStore(createProject())
 

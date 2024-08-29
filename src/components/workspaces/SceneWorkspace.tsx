@@ -1,11 +1,11 @@
-import { projectStore } from "../../store/project"
-import { immCreateScene } from "../../store/operations"
-import type { SceneDefinition } from "../../types/definitions"
-import { EntityWorkspace } from "./EntityWorkspace"
-import { StepSequenceEditor } from "../editors/StepSequenceEditor"
-import { useStore } from "../../utils/store"
-import { immReplaceBy, immSet } from "../../utils/imm"
-import styles from "./SceneWorkspace.module.css"
+import { projectStore } from '../../store/project'
+import { immCreateScene } from '../../store/operations'
+import type { SceneDefinition } from '../../types/definitions'
+import { EntityWorkspace } from './EntityWorkspace'
+import { StepSequenceEditor } from '../editors/StepSequenceEditor'
+import { useStore } from '../../utils/store'
+import { immReplaceBy, immSet } from '../../utils/imm'
+import styles from './SceneWorkspace.module.css'
 
 const SceneEditor = ({ scene }: { scene: SceneDefinition }) => {
     const [, setProject] = useStore(projectStore)

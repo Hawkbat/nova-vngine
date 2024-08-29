@@ -1,16 +1,16 @@
-import { projectStore } from "../../store/project"
-import { useMetaSelector, useSelector } from "../../utils/store"
-import { EditorIcon } from "../common/EditorIcon"
-import { COMMON_ICONS, PROJECT_TAB_ICONS } from "../common/Icons"
-import { viewStateStore } from "../../store/viewstate"
-import { useViewStateTab, loadProjectFromFolder } from "../../store/operations"
-import { openDialog } from "../common/Dialog"
-import type { PlatformFilesystemEntry } from "../../types/platform"
-import { isPlatformErrorCode, isProjectFile } from "../../types/platform"
-import { platform } from "../../platform/platform"
+import { projectStore } from '../../store/project'
+import { useMetaSelector, useSelector } from '../../utils/store'
+import { EditorIcon } from '../common/EditorIcon'
+import { COMMON_ICONS, PROJECT_TAB_ICONS } from '../common/Icons'
+import { viewStateStore } from '../../store/viewstate'
+import { useViewStateTab, loadProjectFromFolder } from '../../store/operations'
+import { openDialog } from '../common/Dialog'
+import type { PlatformFilesystemEntry } from '../../types/platform'
+import { isPlatformErrorCode, isProjectFile } from '../../types/platform'
+import { platform } from '../../platform/platform'
 import faviconSvgUrl from '../../favicon.svg'
 import styles from './HomeWorkspace.module.css'
-import type { ProjectMetaData } from "../../types/viewstate"
+import type { ProjectMetaData } from '../../types/viewstate'
 
 export const HomeWorkspace = () => {
     const [, setCurrentTab] = useViewStateTab()

@@ -1,4 +1,4 @@
-import { hintTuple } from "./types"
+import { hintTuple } from './types'
 
 export function wait(ms: number) {
     return new Promise<void>((resolve) => {

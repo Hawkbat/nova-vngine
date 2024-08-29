@@ -1,13 +1,13 @@
-import type { ExposedPromise } from "../../utils/async"
-import { createExposedPromise } from "../../utils/async"
-import { createPortal } from "react-dom"
+import type { ExposedPromise } from '../../utils/async'
+import { createExposedPromise } from '../../utils/async'
+import { createPortal } from 'react-dom'
 import styles from './Dialog.module.css'
-import { EditorIcon } from "./EditorIcon"
-import { createSimpleStore, useSelector, useStore } from "../../utils/store"
-import { immAppend, immRemoveAt, immSet } from "../../utils/imm"
-import { mdiAlert } from "@mdi/js"
-import { hintTuple } from "../../utils/types"
-import { EditorButton, EditorButtonGroup } from "./EditorButton"
+import { EditorIcon } from './EditorIcon'
+import { createSimpleStore, useSelector, useStore } from '../../utils/store'
+import { immAppend, immRemoveAt, immSet } from '../../utils/imm'
+import { mdiAlert } from '@mdi/js'
+import { hintTuple } from '../../utils/types'
+import { EditorButton, EditorButtonGroup } from './EditorButton'
 
 export interface DialogChoice {
     content: React.ReactNode

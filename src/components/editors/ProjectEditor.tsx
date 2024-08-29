@@ -1,28 +1,28 @@
-import type { EntityType } from "../../types/definitions"
-import { ENTITY_TYPES, getEntityTypeByProjectKey, getEntityTypeHierarchy, getProjectEntityKey, isProjectEntityKey, PROJECT_ENTITY_KEYS } from "../../types/definitions"
+import type { EntityType } from '../../types/definitions'
+import { ENTITY_TYPES, getEntityTypeByProjectKey, getEntityTypeHierarchy, getProjectEntityKey, isProjectEntityKey, PROJECT_ENTITY_KEYS } from '../../types/definitions'
 import styles from './ProjectEditor.module.css'
-import { EditorIcon } from "../common/EditorIcon"
-import { COMMON_ICONS, EXPR_VALUE_ICONS, PROJECT_TAB_ICONS } from "../common/Icons"
-import { prettyPrintIdentifier } from "../../utils/display"
-import { ProjectWorkspace } from "../workspaces/ProjectWorkspace"
-import { SceneWorkspace } from "../workspaces/SceneWorkspace"
-import { HomeWorkspace } from "../workspaces/HomeWorkspace"
-import { projectStore } from "../../store/project"
-import { viewStateStore } from "../../store/viewstate"
-import { useViewStateScope, useViewStateTab } from "../../store/operations"
-import { useSelector } from "../../utils/store"
-import { StoryWorkspace } from "../workspaces/StoryWorkspace"
-import { ChapterWorkspace } from "../workspaces/ChapterWorkspace"
-import { EditorButton } from "../common/EditorButton"
-import { CharacterWorkspace } from "../workspaces/CharacterWorkspace"
-import { PortraitWorkspace } from "../workspaces/PortraitWorkspace"
-import { BackdropWorkspace } from "../workspaces/BackdropWorkspace"
-import { SongWorkspace } from "../workspaces/SongWorkspace"
-import { SoundWorkspace } from "../workspaces/SoundWorkspace"
-import { VariableWorkspace } from "../workspaces/VariableWorkspace"
-import { platform } from "../../platform/platform"
-import { BUILD_COMMIT, BUILD_DATETIME } from "../../injected"
-import type { ProjectEditorTab } from "../../types/viewstate"
+import { EditorIcon } from '../common/EditorIcon'
+import { COMMON_ICONS, EXPR_VALUE_ICONS, PROJECT_TAB_ICONS } from '../common/Icons'
+import { prettyPrintIdentifier } from '../../utils/display'
+import { ProjectWorkspace } from '../workspaces/ProjectWorkspace'
+import { SceneWorkspace } from '../workspaces/SceneWorkspace'
+import { HomeWorkspace } from '../workspaces/HomeWorkspace'
+import { projectStore } from '../../store/project'
+import { viewStateStore } from '../../store/viewstate'
+import { useViewStateScope, useViewStateTab } from '../../store/operations'
+import { useSelector } from '../../utils/store'
+import { StoryWorkspace } from '../workspaces/StoryWorkspace'
+import { ChapterWorkspace } from '../workspaces/ChapterWorkspace'
+import { EditorButton } from '../common/EditorButton'
+import { CharacterWorkspace } from '../workspaces/CharacterWorkspace'
+import { PortraitWorkspace } from '../workspaces/PortraitWorkspace'
+import { BackdropWorkspace } from '../workspaces/BackdropWorkspace'
+import { SongWorkspace } from '../workspaces/SongWorkspace'
+import { SoundWorkspace } from '../workspaces/SoundWorkspace'
+import { VariableWorkspace } from '../workspaces/VariableWorkspace'
+import { platform } from '../../platform/platform'
+import { BUILD_COMMIT, BUILD_DATETIME } from '../../injected'
+import type { ProjectEditorTab } from '../../types/viewstate'
 
 const Breadcrumb = <T extends EntityType>({ type }: { type: T }) => {
     const tab = getProjectEntityKey(type)
@@ -34,7 +34,7 @@ const Breadcrumb = <T extends EntityType>({ type }: { type: T }) => {
 
     return <>
         <EditorIcon path={COMMON_ICONS.breadcrumbArrow} />
-        <EditorButton icon={EXPR_VALUE_ICONS[type]} style="text" active={currentTab === tab} onClick={() => setCurrentTab(tab)}>
+        <EditorButton icon={EXPR_VALUE_ICONS[type]} style='text' active={currentTab === tab} onClick={() => setCurrentTab(tab)}>
             <span>{name ? name : `Untitled ${prettyPrintIdentifier(type)}`}</span>
             <EditorIcon path={COMMON_ICONS.cancel} label={`Stop Filtering By ${prettyPrintIdentifier(type)}`} onClick={() => setScope(undefined)} />
         </EditorButton>
@@ -46,7 +46,7 @@ const Breadcrumbs = () => {
     const [projectIsLoaded] = useSelector(viewStateStore, s => s.loadedProject !== null)
     const [currentTab, setCurrentTab] = useViewStateTab()
     return projectIsLoaded ? <div className={styles.breadcrumbs}>
-        <EditorButton icon={PROJECT_TAB_ICONS.project} style="text" active={currentTab === 'project'} onClick={() => setCurrentTab('project')}>{projectName}</EditorButton>
+        <EditorButton icon={PROJECT_TAB_ICONS.project} style='text' active={currentTab === 'project'} onClick={() => setCurrentTab('project')}>{projectName}</EditorButton>
         {ENTITY_TYPES.map(e => <Breadcrumb key={e} type={e} />)}
     </div> : null
 }

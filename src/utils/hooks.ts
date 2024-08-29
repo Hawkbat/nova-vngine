@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useRef, useState } from "react"
-import { hintTuple } from "./types"
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { hintTuple } from './types'
 
 export function useStateFromProps<T>(value: T) {
     const [state, setState] = useState(value)

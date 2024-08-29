@@ -1,7 +1,7 @@
-import type { ViewState } from "./viewstate"
-import type { ProjectDefinition } from "./definitions"
-import type { ParseFunc } from "../utils/guard"
-import { defineParser, parsers as $ } from "../utils/guard"
+import type { ViewState } from './viewstate'
+import type { ProjectDefinition } from './definitions'
+import type { ParseFunc } from '../utils/guard'
+import { defineParser, parsers as $ } from '../utils/guard'
 
 export interface PlatformFilesystemEntry {
     path: string

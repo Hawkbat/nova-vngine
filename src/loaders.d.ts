@@ -1,15 +1,15 @@
 
-declare module "*.module.css" {
+declare module '*.module.css' {
     const classNames: Record<string, string>
     export default classNames
 }
 
-declare module "*.png" {
+declare module '*.png' {
     const url: string
     export default url
 }
 
-declare module "*.svg" {
+declare module '*.svg' {
     const url: string
     export default url
 }

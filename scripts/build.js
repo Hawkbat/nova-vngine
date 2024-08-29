@@ -1,4 +1,4 @@
-import { buildContext } from "./build-base.js"
+import { buildContext } from './build-base.js'
 import { rm } from 'fs/promises'
 
 const KB = 1024

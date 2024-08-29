@@ -1,9 +1,9 @@
-import type { BackdropID, ChapterID, CharacterID, MacroID, PortraitID, SceneID, SongID, SoundID, StoryID, VariableID, EntityOfType, EntityType, ProjectEntityKeyOf } from "../types/definitions"
-import { PROJECT_ENTITY_KEYS } from "../types/definitions"
+import type { BackdropID, ChapterID, CharacterID, MacroID, PortraitID, SceneID, SongID, SoundID, StoryID, VariableID, EntityOfType, EntityType, ProjectEntityKeyOf } from '../types/definitions'
+import { PROJECT_ENTITY_KEYS } from '../types/definitions'
 
-import type { ParseFunc } from "../utils/guard"
-import { defineParser, parsers as $ } from "../utils/guard"
-import { parsePlatformFilesystemEntry, type PlatformFilesystemEntry } from "./platform"
+import type { ParseFunc } from '../utils/guard'
+import { defineParser, parsers as $ } from '../utils/guard'
+import { parsePlatformFilesystemEntry, type PlatformFilesystemEntry } from './platform'
 
 export type ProjectEditorTab = 'home' | 'manual' | 'settings' | 'project' | ProjectEntityKeyOf<EntityType>
 

@@ -3,7 +3,7 @@ import { init, events as nEvents, app as nApp, filesystem as nFS, os as nOS, win
 import faviconUrl from '../favicon.png'
 import { awaitAllMap, createExposedPromise } from '../utils/async'
 import { LOG_FILE_WRITES } from '../debug'
-import { createProject } from "../store/project"
+import { createProject } from '../store/project'
 import { parseViewState } from '../types/viewstate'
 import { viewStateStore } from '../store/viewstate'
 import { parseProjectDefinition } from '../types/definitions'
@@ -70,7 +70,7 @@ async function writeFile(path: string, data: string): Promise<void> {
     const pathInfo = await nFS.getPathParts(path)
     try {
         const parentStats = await nFS.getStats(pathInfo.parentPath)
-        if (!parentStats.isDirectory) throw new Error(`Parent path is a file, not a directory`)
+        if (!parentStats.isDirectory) throw new Error('Parent path is a file, not a directory')
     } catch (err) {
         if (isNeutralinoError(err) && err.code === 'NE_FS_NOPATHE') {
             await nFS.createDirectory(pathInfo.parentPath)
@@ -198,7 +198,7 @@ export const neutralinoPlatform: Platform = {
         if (parsed.ctx.warnings.length) this.warn(parsed.ctx.warnings)
         if (!parsed.success) {
             this.error('Failed to load project', json, parsed.ctx.errors)
-            throw new PlatformError('bad-project', `The project file was outdated or corrupted in a manner that has prevented it from loading.`)
+            throw new PlatformError('bad-project', 'The project file was outdated or corrupted in a manner that has prevented it from loading.')
         }
         return parsed.value
     },

@@ -31,7 +31,7 @@ export const EditorButton = ({ className, icon, style, active, children, onClick
         e.stopPropagation()
         onClick(e)
     }, [onClick])
-    
+
     return <div className={classes(styles.button, BUTTON_STYLES[style ?? 'solid'], { [styles.active]: active !== undefined ? active : false, [styles.inactive]: active !== undefined ? !active : false }, className)} onClick={actualOnClick}>
         {icon ? <EditorIcon path={icon} /> : null}
         {children}

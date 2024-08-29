@@ -1,14 +1,14 @@
-import { useCallback, useEffect, useState } from "react"
-import type { FieldProps } from "./Field"
-import { Field } from "./Field"
-import { useDebounce, useLatest } from "../../utils/hooks"
-import { classes } from "../../utils/display"
+import { useCallback, useEffect, useState } from 'react'
+import type { FieldProps } from './Field'
+import { Field } from './Field'
+import { useDebounce, useLatest } from '../../utils/hooks'
+import { classes } from '../../utils/display'
 import styles from './ParsedStringField.module.css'
 
 export type FieldFormatFunc<T> = (value: T) => string
 export type FieldParseFunc<T> = (str: string) => { success: true, value: T } | { success: false, error: string }
 
-export const ParsedStringField = <T,>({ className, label, value, setValue, validate, parse, format }: FieldProps<T> & { parse: FieldParseFunc<T>, format: FieldFormatFunc<T>}) => {    
+export const ParsedStringField = <T,>({ className, label, value, setValue, validate, parse, format }: FieldProps<T> & { parse: FieldParseFunc<T>, format: FieldFormatFunc<T>}) => {
     const [tempValue, setTempValue] = useState(format(value))
     const [hasFocus, setHasFocus] = useState(false)
     const getLatestValue = useLatest(value)
@@ -73,6 +73,6 @@ export const ParsedStringField = <T,>({ className, label, value, setValue, valid
     const readonly = !setValue
 
     return <Field label={label} error={errorCheck()}>
-        <input className={classes(styles.field, className)} type="text" readOnly={readonly} placeholder={label} onChange={onChange} onFocus={onFocus} onBlur={onBlur} value={tempValue} />
+        <input className={classes(styles.field, className)} type='text' readOnly={readonly} placeholder={label} onChange={onChange} onFocus={onFocus} onBlur={onBlur} value={tempValue} />
     </Field>
 }

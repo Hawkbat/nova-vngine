@@ -1,5 +1,5 @@
-import type { ViewState } from "../types/viewstate"
-import { createSimpleStore } from "../utils/store"
+import type { ViewState } from '../types/viewstate'
+import { createSimpleStore } from '../utils/store'
 
 export const viewStateStore = createSimpleStore<ViewState>({
     loaded: false,

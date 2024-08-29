@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { hintTuple } from "./types"
+import { hintTuple } from './types'
 
 export function throwIfNull<T>(value: T): NonNullable<T> {
-    if (value === null || value === undefined) throw new Error(`Value is not defined`)
+    if (value === null || value === undefined) throw new Error('Value is not defined')
     return value
 }
 

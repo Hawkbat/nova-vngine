@@ -1,8 +1,8 @@
-import type { ParseFunc } from "../utils/guard"
-import { throwIfNull, defineParser, parsers as $ } from "../utils/guard"
-import type { OmitUndefined } from "../utils/types"
-import { assertExhaustive, hintTuple } from "../utils/types"
-import type { StoryID, ChapterID, SceneID, VariableID, CharacterID, BackdropID, SongID, SoundID, AnyVariableDefinition, CharacterDefinition, BackdropDefinition, ChapterDefinition, SceneDefinition, SongDefinition, SoundDefinition, StoryDefinition, PortraitID, MacroID, MacroDefinition, PortraitDefinition } from "./definitions"
+import type { ParseFunc } from '../utils/guard'
+import { throwIfNull, defineParser, parsers as $ } from '../utils/guard'
+import type { OmitUndefined } from '../utils/types'
+import { assertExhaustive, hintTuple } from '../utils/types'
+import type { StoryID, ChapterID, SceneID, VariableID, CharacterID, BackdropID, SongID, SoundID, AnyVariableDefinition, CharacterDefinition, BackdropDefinition, ChapterDefinition, SceneDefinition, SongDefinition, SoundDefinition, StoryDefinition, PortraitID, MacroID, MacroDefinition, PortraitDefinition } from './definitions'
 
 export type LocationValue = 'auto' | 'left' | 'center' | 'right' | number
 
@@ -241,7 +241,7 @@ export function resolveExprAs<T extends ExprValueType>(expr: AnyExpr, type: T, c
 
 export function resolveExpr(expr: AnyExpr, ctx: ExprContext): AnyExprValue {
     switch (expr.type) {
-        case 'unset': throw new Error(`Could not resolve incomplete expression`)
+        case 'unset': throw new Error('Could not resolve incomplete expression')
         case 'list': {
             const values = expr.children.map(([item]) => resolveExpr(item, ctx))
             const subType: ExprValueType = values.length ? values[0].type : 'string'

@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
-import { createPortal } from "react-dom"
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import styles from './DropdownMenu.module.css'
-import { hintTuple } from "../../utils/types"
+import { hintTuple } from '../../utils/types'
 
 export const useDropdownMenuState = () => {
     const [menuState, setMenuState] = useState({ open: false, x: 0, y: 0 })
@@ -70,7 +70,7 @@ export const SearchDropdownMenu = <T,>(props: {
         setSearch('')
     }, [props.open])
     return <DropdownMenu {...dropdownProps}>
-        <input className={styles.searchbox} autoFocus placeholder="Search..." value={search} onChange={e => setSearch(e.target.value)} />
+        <input className={styles.searchbox} autoFocus placeholder='Search...' value={search} onChange={e => setSearch(e.target.value)} />
         {items.filter(c => filter(c, search)).map((c, i) => children(c, i))}
     </DropdownMenu>
 }

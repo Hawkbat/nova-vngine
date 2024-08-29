@@ -1,5 +1,5 @@
-import { immCreateSong } from "../../store/operations"
-import { EntityWorkspace } from "./EntityWorkspace"
+import { immCreateSong } from '../../store/operations'
+import { EntityWorkspace } from './EntityWorkspace'
 import styles from './SongWorkspace.module.css'
 
 export const SongWorkspace = () => {

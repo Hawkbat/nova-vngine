@@ -4,6 +4,7 @@ import tseslint from "typescript-eslint";
 import pluginReact from "eslint-plugin-react";
 import pluginHooks from "eslint-plugin-react-hooks";
 import pluginImportX from "eslint-plugin-import-x";
+import pluginStylistic from "@stylistic/eslint-plugin";
 
 export default tseslint.config(
   {files: ["src/**/*.{js,mjs,cjs,ts,jsx,tsx}"]},
@@ -28,11 +29,23 @@ export default tseslint.config(
     rules: pluginHooks.configs.recommended.rules,
   },
   {
+    plugins: {
+      "@stylistic": pluginStylistic,
+    },
     rules: {
       "@typescript-eslint/consistent-type-imports": ["error"],
       "import-x/no-cycle": ["error", { maxDepth: 5 }],
+      "no-template-curly-in-string": ["error"],
       "@typescript-eslint/no-unused-vars": ["warn", { args: "none", varsIgnorePattern: "^_|^styles$" }],
       "import-x/no-unused-modules": ["warn"],
+
+      "@stylistic/no-tabs": "warn",
+      "@stylistic/no-trailing-spaces": "warn",
+      "@stylistic/quotes": ["warn", "single"],
+      "@stylistic/semi": ["warn", "never"],
+      "@stylistic/member-delimiter-style": ["warn", { multiline: { delimiter: "none", requireLast: false }, singleline: { delimiter: "comma", requireLast: false } }],
+      "@stylistic/jsx-quotes": ["warn", "prefer-single"],
+      "@stylistic/jsx-props-no-multi-spaces": "warn",
     }
   },
 );
