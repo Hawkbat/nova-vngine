@@ -30,7 +30,7 @@ export const EditorIcon = ({ path, label, style, size, active, showLabel, classN
     }, [onClick])
 
     return <div className={classes(styles.icon, ICON_STYLES[style ?? 'text'], { [styles.active]: active !== undefined ? active : false, [styles.inactive]: active !== undefined ? !active : false, [styles.clickable]: !!onClick }, className)} onClick={actualOnClick}>
-        <Icon path={path} title={label} size={`${size ?? 1}em`} />
+        <Icon path={path} title={label} size={`${String(size ?? 1)}em`} />
         {showLabel ? <span>{label}</span> : null}
     </div>
 }

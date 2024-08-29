@@ -15,7 +15,7 @@ export function immRemoveAt<T>(arr: T[], index: number, count: number = 1): T[] 
     return arr.slice(0, index).concat(arr.slice(index + count))
 }
 
-export function immReplaceBy<T, K>(arr: T[], getKey: (value: T) => K, value: T): T[] {
+export function immReplaceBy<T>(arr: T[], getKey: (value: T) => unknown, value: T): T[] {
     const key = getKey(value)
     return arr.map(v => getKey(v) === key ? value : v)
 }
@@ -32,7 +32,7 @@ export function deepDiff<T>(a: T, b: T, path: string, diffs: [path: string, befo
     if (Array.isArray(a) && Array.isArray(b)) {
         deepDiff(a.length, b.length, `${path}.length`, diffs)
         for (let i = 0; i < Math.max(a.length, b.length); i++) {
-            deepDiff(a[i], b[i], `${path}[${i}]`, diffs)
+            deepDiff(a[i], b[i], `${path}[${String(i)}]`, diffs)
         }
     } else if (typeof a === 'object' && typeof b === 'object' && a !== null && b !== null) {
         for (const k in a) {

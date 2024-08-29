@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { hintTuple } from './types'
@@ -90,21 +93,21 @@ function parseBoolean(ctx: ParseContext, value: unknown, defaultValue?: boolean)
 function parseTuple<T extends [...any[]]>(ctx: ParseContext, value: unknown, subParsers: { [I in Exclude<keyof T, keyof any[]>]: ParseFunc<T[I]> } & { length: T['length'] }, defaultValue?: T): T {
     if (Array.isArray(value)) {
         if (value.length > subParsers.length) {
-            ctx.warnings.push(`${ctx.path} has length ${value.length}, not ${subParsers.length}. Excess items will be truncated`)
+            ctx.warnings.push(`${ctx.path} has length ${String(value.length)}, not ${String(subParsers.length)}. Excess items will be truncated`)
         }
-        return (subParsers as ParseFunc<any>[]).map((cb, i) => cb({ ...ctx, path: `${ctx.path}[${i}]` }, value[i], defaultValue?.[i])) as T
+        return (subParsers as ParseFunc<any>[]).map((cb, i) => cb({ ...ctx, path: `${ctx.path}[${String(i)}]` }, value[i], defaultValue?.[i])) as T
     }
     else if (defaultValue !== undefined) {
         ctx.warnings.push(`${ctx.path} is not a tuple; default value of ${JSON.stringify(defaultValue)} will be used`)
         return defaultValue
     }
     ctx.errors.push(`${ctx.path} is not a tuple`)
-    return (subParsers as ParseFunc<any>[]).map((cb, i) => cb({ ...ctx, path: `${ctx.path}[${i}]` }, undefined)) as T
+    return (subParsers as ParseFunc<any>[]).map((cb, i) => cb({ ...ctx, path: `${ctx.path}[${String(i)}]` }, undefined)) as T
 }
 
 function parseArray<T extends any[]>(ctx: ParseContext, value: unknown, subParser: ParseFunc<T[Extract<keyof T, number>]>, defaultValue?: T): T {
     if (Array.isArray(value)) {
-        return value.map((v, i) => subParser({ ...ctx, path: `${ctx.path}[${i}]` }, v, undefined)) as T
+        return value.map((v, i) => subParser({ ...ctx, path: `${ctx.path}[${String(i)}]` }, v, undefined)) as T
     }
     else if (defaultValue !== undefined) {
         ctx.warnings.push(`${ctx.path} is not an array; default value of ${JSON.stringify(defaultValue)} will be used`)
@@ -189,7 +192,7 @@ export function tryParseValue<T>(value: unknown, inputName: string, parser: Pars
     const ctx: ParseContext = { path: inputName, warnings: [], errors: [] }
     const result = parser(ctx, value)
     if (ctx.errors.length) return { success: false, ctx }
-    return { success: true, value: result as T, ctx }
+    return { success: true, value: result, ctx }
 }
 
 export function tryParseJson<T>(json: string, inputName: string, parser: ParseFunc<T>) {

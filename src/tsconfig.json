@@ -7,6 +7,10 @@
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "strict": true,
+    "noImplicitAny": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
     "exactOptionalPropertyTypes": false,
     "jsx": "react-jsxdev"
   }

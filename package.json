@@ -7,6 +7,7 @@
     "esbuild:build": "node scripts/build.js",
     "esbuild:watch": "node scripts/watch.js",
     "esbuild:serve": "node scripts/serve.js",
+    "typescript:build": "tsc -p src/",
     "lint": "npx eslint .",
     "neu:start": "neu run -- --window-enable-inspector",
     "neu:build": "neu build --release"

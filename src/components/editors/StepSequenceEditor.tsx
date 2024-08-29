@@ -14,52 +14,71 @@ import { EditorButton, EditorButtonGroup } from '../common/EditorButton'
 import { projectStore } from '../../store/project'
 
 const StepEditor = ({ step, setStep, deleteStep, ctx }: { step: AnyStep, setStep: (setter: (step: AnyStep) => AnyStep) => void, deleteStep: () => void, ctx: ExprContext }) => {
+
     const onDeleteStep = (e: React.MouseEvent) => {
         e.stopPropagation()
         deleteStep()
     }
+
+    const subEditor = (() => {
+        switch (step.type) {
+            case 'text': return <>
+                <ExpressionField label='Speaker' value={step.speaker} setValue={expr => setStep(s => isStepType(s, 'text') ? immSet(s, 'speaker', expr) : s)} paramTypes={['character']} ctx={ctx} />
+                <ExpressionField label='Text' value={step.text} setValue={expr => setStep(s => isStepType(s, 'text') ? immSet(s, 'text', expr) : s)} paramTypes={['string']} ctx={ctx} />
+            </>
+            case 'backdrop': return <>
+                <ExpressionField label='Backdrop' value={step.backdrop} setValue={expr => setStep(s => isStepType(s, 'backdrop') ? immSet(s, 'backdrop', expr) : s)} paramTypes={['backdrop']} ctx={ctx} />
+            </>
+            case 'enter': return <>
+                <ExpressionField label='Character' value={step.character} setValue={expr => setStep(s => isStepType(s, 'enter') ? immSet(s, 'character', expr) : s)} paramTypes={['character']} ctx={ctx} />
+                <ExpressionField label='Portrait' value={step.portrait} setValue={expr => setStep(s => isStepType(s, 'enter') ? immSet(s, 'portrait', expr) : s)} paramTypes={['portrait']} ctx={ctx} />
+                <ExpressionField label='Location' value={step.location} setValue={expr => setStep(s => isStepType(s, 'enter') ? immSet(s, 'location', expr) : s)} paramTypes={['location']} ctx={ctx} />
+            </>
+            case 'exit': return <>
+                <ExpressionField label='Character' value={step.character} setValue={expr => setStep(s => isStepType(s, 'enter') ? immSet(s, 'character', expr) : s)} paramTypes={['character']} ctx={ctx} />
+                <ExpressionField label='Location' value={step.location} setValue={expr => setStep(s => isStepType(s, 'enter') ? immSet(s, 'location', expr) : s)} paramTypes={['location']} ctx={ctx} />
+            </>
+            case 'move': return <>
+                <ExpressionField label='Character' value={step.character} setValue={expr => setStep(s => isStepType(s, 'move') ? immSet(s, 'character', expr) : s)} paramTypes={['character']} ctx={ctx} />
+                <ExpressionField label='Location' value={step.location} setValue={expr => setStep(s => isStepType(s, 'move') ? immSet(s, 'location', expr) : s)} paramTypes={['location']} ctx={ctx} />
+            </>
+            case 'portrait': return <>
+                <ExpressionField label='Character' value={step.character} setValue={expr => setStep(s => isStepType(s, 'portrait') ? immSet(s, 'character', expr) : s)} paramTypes={['character']} ctx={ctx} />
+                <ExpressionField label='Portrait' value={step.portrait} setValue={expr => setStep(s => isStepType(s, 'portrait') ? immSet(s, 'portrait', expr) : s)} paramTypes={['portrait']} ctx={ctx} />
+            </>
+            case 'music': return <>
+                <ExpressionField label='Song' value={step.song} setValue={expr => setStep(s => isStepType(s, 'music') ? immSet(s, 'song', expr) : s)} paramTypes={['song']} ctx={ctx} />
+            </>
+            case 'sound': return <>
+                <ExpressionField label='Sound' value={step.sound} setValue={expr => setStep(s => isStepType(s, 'sound') ? immSet(s, 'sound', expr) : s)} paramTypes={['sound']} ctx={ctx} />
+            </>
+            case 'decision': return <>
+                {step.options.map((o, i) => <div key={i} className='optionEditor'>
+                    <ExpressionField label='Condition' value={o.condition} setValue={expr => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'condition', expr))) : s)} paramTypes={['boolean']} ctx={ctx} />
+                    <ExpressionField label='Text' value={o.text} setValue={expr => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'text', expr))) : s)} paramTypes={['string']} ctx={ctx} />
+                </div>)}
+            </>
+            case 'branch': return <>
+                {step.options.map((o, i) => <div key={i} className='optionEditor'>
+                    <ExpressionField label='Condition' value={o.condition} setValue={expr => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'condition', expr))) : s)} paramTypes={['boolean']} ctx={ctx} />
+                </div>)}
+            </>
+            case 'set': return <>
+                <ExpressionField label='Variable' value={step.variable} setValue={expr => setStep(s => isStepType(s, 'set') ? immSet(s, 'variable', expr) : s)} paramTypes={['variable']} ctx={ctx} />
+                <ExpressionField label='Value' value={step.value} setValue={expr => setStep(s => isStepType(s, 'set') ? immSet(s, 'value', expr) : s)} paramTypes={null} ctx={ctx} />
+            </>
+            case 'macro': return <>
+                <ExpressionField label='Macro' value={step.macro} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'macro', expr) : s)} paramTypes={['macro']} ctx={ctx} />
+                {step.inputs.map((input, i) => <ExpressionField key={i} label={`Input ${String(i)}`} value={input} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'inputs', immReplaceAt(s.inputs, i, expr)) : s)} paramTypes={null} ctx={ctx} />)}
+                {step.outputs.map((output, i) => <ExpressionField key={i} label={`Output ${String(i)}`} value={output} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'outputs', immReplaceAt(s.outputs, i, expr)) : s)} paramTypes={['variable']} ctx={ctx} />)}
+            </>
+        }
+    })
+
     return <div className={styles.stepEditor}>
         <StringField label='Step ID' value={step.id} />
         <StringField label='Step Type' value={prettyPrintIdentifier(step.type)} />
-        {step.type === 'text' ? <>
-            <ExpressionField label='Speaker' value={step.speaker} setValue={expr => setStep(s => isStepType(s, 'text') ? immSet(s, 'speaker', expr) : s)} paramTypes={['character']} ctx={ctx} />
-            <ExpressionField label='Text' value={step.text} setValue={expr => setStep(s => isStepType(s, 'text') ? immSet(s, 'text', expr) : s)} paramTypes={['string']} ctx={ctx} />
-        </> : step.type === 'backdrop' ? <>
-            <ExpressionField label='Backdrop' value={step.backdrop} setValue={expr => setStep(s => isStepType(s, 'backdrop') ? immSet(s, 'backdrop', expr) : s)} paramTypes={['backdrop']} ctx={ctx} />
-        </> : step.type === 'enter' ? <>
-            <ExpressionField label='Character' value={step.character} setValue={expr => setStep(s => isStepType(s, 'enter') ? immSet(s, 'character', expr) : s)} paramTypes={['character']} ctx={ctx} />
-            <ExpressionField label='Portrait' value={step.portrait} setValue={expr => setStep(s => isStepType(s, 'enter') ? immSet(s, 'portrait', expr) : s)} paramTypes={['portrait']} ctx={ctx} />
-            <ExpressionField label='Location' value={step.location} setValue={expr => setStep(s => isStepType(s, 'enter') ? immSet(s, 'location', expr) : s)} paramTypes={['location']} ctx={ctx} />
-        </> : step.type === 'exit' ? <>
-            <ExpressionField label='Character' value={step.character} setValue={expr => setStep(s => isStepType(s, 'enter') ? immSet(s, 'character', expr) : s)} paramTypes={['character']} ctx={ctx} />
-            <ExpressionField label='Location' value={step.location} setValue={expr => setStep(s => isStepType(s, 'enter') ? immSet(s, 'location', expr) : s)} paramTypes={['location']} ctx={ctx} />
-        </> : step.type === 'move' ? <>
-            <ExpressionField label='Character' value={step.character} setValue={expr => setStep(s => isStepType(s, 'move') ? immSet(s, 'character', expr) : s)} paramTypes={['character']} ctx={ctx} />
-            <ExpressionField label='Location' value={step.location} setValue={expr => setStep(s => isStepType(s, 'move') ? immSet(s, 'location', expr) : s)} paramTypes={['location']} ctx={ctx} />
-        </> : step.type === 'portrait' ? <>
-            <ExpressionField label='Character' value={step.character} setValue={expr => setStep(s => isStepType(s, 'portrait') ? immSet(s, 'character', expr) : s)} paramTypes={['character']} ctx={ctx} />
-            <ExpressionField label='Portrait' value={step.portrait} setValue={expr => setStep(s => isStepType(s, 'portrait') ? immSet(s, 'portrait', expr) : s)} paramTypes={['portrait']} ctx={ctx} />
-        </> : step.type === 'music' ? <>
-            <ExpressionField label='Song' value={step.song} setValue={expr => setStep(s => isStepType(s, 'music') ? immSet(s, 'song', expr) : s)} paramTypes={['song']} ctx={ctx} />
-        </> : step.type === 'sound' ? <>
-            <ExpressionField label='Sound' value={step.sound} setValue={expr => setStep(s => isStepType(s, 'sound') ? immSet(s, 'sound', expr) : s)} paramTypes={['sound']} ctx={ctx} />
-        </> : step.type === 'decision' ? <>
-            {step.options.map((o, i) => <div key={i} className='optionEditor'>
-                <ExpressionField label='Condition' value={o.condition} setValue={expr => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'condition', expr))) : s)} paramTypes={['boolean']} ctx={ctx} />
-                <ExpressionField label='Text' value={o.text} setValue={expr => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'text', expr))) : s)} paramTypes={['string']} ctx={ctx} />
-            </div>)}
-        </> : step.type === 'branch' ? <>
-            {step.options.map((o, i) => <div key={i} className='optionEditor'>
-                <ExpressionField label='Condition' value={o.condition} setValue={expr => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'condition', expr))) : s)} paramTypes={['boolean']} ctx={ctx} />
-            </div>)}
-        </> : step.type === 'set' ? <>
-            <ExpressionField label='Variable' value={step.variable} setValue={expr => setStep(s => isStepType(s, 'set') ? immSet(s, 'variable', expr) : s)} paramTypes={['variable']} ctx={ctx} />
-            <ExpressionField label='Value' value={step.value} setValue={expr => setStep(s => isStepType(s, 'set') ? immSet(s, 'value', expr) : s)} paramTypes={null} ctx={ctx} />
-        </> : step.type === 'macro' ? <>
-            <ExpressionField label='Macro' value={step.macro} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'macro', expr) : s)} paramTypes={['macro']} ctx={ctx} />
-            {step.inputs.map((input, i) => <ExpressionField key={i} label={`Input ${i}`} value={input} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'inputs', immReplaceAt(s.inputs, i, expr)) : s)} paramTypes={null} ctx={ctx} />)}
-            {step.outputs.map((output, i) => <ExpressionField key={i} label={`Output ${i}`} value={output} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'outputs', immReplaceAt(s.outputs, i, expr)) : s)} paramTypes={['variable']} ctx={ctx} />)}
-        </> : null}
+        {subEditor()}
         <EditorButtonGroup>
             <EditorButton onClick={onDeleteStep}>Delete Step</EditorButton>
         </EditorButtonGroup>
@@ -90,34 +109,41 @@ const StepBubble = ({ step, setStep, selected, setSelected, ctx }: { step: AnySt
         setSelected(step.id)
     }
 
-    return step.type === 'decision' || step.type === 'branch' ? <div className={classes(styles.bubble, { [styles.active]: selected === step.id })}>
-        <div className={styles.bubbleFront} onClick={onSelect}>
-            <EditorIcon path={STEP_ICONS[step.type]} />
-        </div>
-        <div className={styles.bubbleBody}>
-            {step.type === 'decision' ? <>
-                {step.options.map((o, i) => <div key={i} className={styles.bubbleBodyRow}>
-                    <div className={styles.option}>
-                        <ExpressionEditor expr={o.condition} setExpr={expr => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'condition', expr))) : s)} paramTypes={['boolean']} ctx={ctx} />
-                        <ExpressionEditor expr={o.text} setExpr={expr => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'text', expr))) : s)} paramTypes={['string']} ctx={ctx} />
-                    </div>
-                    <StepList steps={o.steps} setSteps={setter => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'steps', setter(s.options[i].steps)))) : s)} selected={selected} setSelected={setSelected} ctx={ctx} />
-                </div>)}
-            </> : step.type === 'branch' ? <>
-                {step.options.map((o, i) => <div key={i} className={styles.bubbleBodyRow}>
-                    <div className={styles.option}>
-                        <ExpressionEditor expr={o.condition} setExpr={expr => setStep(s => isStepType(s, 'branch') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'condition', expr))) : s)} ctx={ctx} />
-                    </div>
-                    <StepList steps={o.steps} setSteps={setter => setStep(s => isStepType(s, 'branch') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'steps', setter(s.options[i].steps)))) : s)} selected={selected} setSelected={setSelected} ctx={ctx} />
-                </div>)}
-            </> : null}
-        </div>
-        <div className={styles.bubbleBack}>
+    switch (step.type) {
+        case 'decision':
+        case 'branch':
+            return <div className={classes(styles.bubble, { [styles.active]: selected === step.id })}>
+                <div className={styles.bubbleFront} onClick={onSelect}>
+                    <EditorIcon path={STEP_ICONS[step.type]} />
+                </div>
+                <div className={styles.bubbleBody}>
+                    {step.type === 'decision' ? <>
+                        {step.options.map((o, i) => <div key={i} className={styles.bubbleBodyRow}>
+                            <div className={styles.option}>
+                                <ExpressionEditor expr={o.condition} setExpr={expr => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'condition', expr))) : s)} paramTypes={['boolean']} ctx={ctx} />
+                                <ExpressionEditor expr={o.text} setExpr={expr => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'text', expr))) : s)} paramTypes={['string']} ctx={ctx} />
+                            </div>
+                            <StepList steps={o.steps} setSteps={setter => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'steps', setter(s.options[i].steps)))) : s)} selected={selected} setSelected={setSelected} ctx={ctx} />
+                        </div>)}
+                    </> : null}
+                    {step.type === 'branch' ? <>
+                        {step.options.map((o, i) => <div key={i} className={styles.bubbleBodyRow}>
+                            <div className={styles.option}>
+                                <ExpressionEditor expr={o.condition} setExpr={expr => setStep(s => isStepType(s, 'branch') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'condition', expr))) : s)} ctx={ctx} />
+                            </div>
+                            <StepList steps={o.steps} setSteps={setter => setStep(s => isStepType(s, 'branch') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'steps', setter(s.options[i].steps)))) : s)} selected={selected} setSelected={setSelected} ctx={ctx} />
+                        </div>)}
+                    </> : null}
+                </div>
+                <div className={styles.bubbleBack}>
 
-        </div>
-    </div> : <div className={classes(styles.simpleBubble, { [styles.active]: selected === step.id })} onClick={onSelect}>
-        <EditorIcon path={STEP_ICONS[step.type]} label={prettyPrintIdentifier(step.type)} />
-    </div>
+                </div>
+            </div>
+        default:
+            return <div className={classes(styles.simpleBubble, { [styles.active]: selected === step.id })} onClick={onSelect}>
+                <EditorIcon path={STEP_ICONS[step.type]} label={prettyPrintIdentifier(step.type)} />
+            </div>
+    }
 }
 
 export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void }) => {
@@ -134,7 +160,7 @@ export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setS
             if (s.type === 'decision' || s.type === 'branch') {
                 for (let i = 0; i < s.options.length; i++) {
                     const [step, setStep, deleteStep] = getSelectedStep(stepID, s.options[i].steps, setter => setSteps(steps => immReplaceBy(steps, s => s.id, immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'steps', setter(s.options[i].steps)))))))
-                    if (step && setStep) return [step, setStep, deleteStep]
+                    if (step) return [step, setStep, deleteStep]
                 }
             }
         }
@@ -147,7 +173,7 @@ export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setS
         <div className={styles.timeline}>
             <StepList steps={steps} setSteps={setSteps} selected={selectedStepID} setSelected={setSelectedStepID} ctx={ctx} />
         </div>
-        {selectedStep && setSelectedStep ? <div className={styles.fields}>
+        {selectedStep ? <div className={styles.fields}>
             <StepEditor step={selectedStep} setStep={setSelectedStep} deleteStep={deleteSelectedStep} ctx={ctx} />
         </div> : null}
     </div>

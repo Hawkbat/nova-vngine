@@ -170,7 +170,7 @@ export function subscribeToSelectorAsync<T, U>(store: SimpleStore<T>, selector: 
     let updateInProgress = false
     let pendingUpdate = false
 
-    return subscribeToSelector(store, selector, async (newState, oldState) => {
+    const syncCallback = async (newState: U, oldState: U) => {
         pendingUpdate = true
         while (pendingUpdate && !updateInProgress) {
             pendingUpdate = false
@@ -178,5 +178,7 @@ export function subscribeToSelectorAsync<T, U>(store: SimpleStore<T>, selector: 
             await callback(newState, oldState)
             updateInProgress = false
         }
-    })
+    }
+
+    return subscribeToSelector(store, selector, (newState, oldState) => void syncCallback(newState, oldState))
 }

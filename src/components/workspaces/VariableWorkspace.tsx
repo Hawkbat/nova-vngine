@@ -8,5 +8,5 @@ const VariableEditor = ({ variable }: { variable: AnyVariableDefinition }) => {
 }
 
 export const VariableWorkspace = () => {
-    return <EntityWorkspace type='variable' immCreate={immCreateVariable}>{variable => <VariableEditor variable={variable as AnyVariableDefinition} />}</EntityWorkspace>
+    return <EntityWorkspace type='variable' immCreate={immCreateVariable}>{variable => <VariableEditor variable={variable} />}</EntityWorkspace>
 }

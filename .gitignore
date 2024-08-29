@@ -17,4 +17,5 @@ neutralino.js
 /node_modules/
 
 # Build outputs
+*.tsbuildinfo
 /resources/

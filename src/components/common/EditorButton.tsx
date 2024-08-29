@@ -27,7 +27,6 @@ export const EditorButton = ({ className, icon, style, active, children, onClick
 }) => {
 
     const actualOnClick = useCallback((e: React.MouseEvent) => {
-        e.preventDefault()
         e.stopPropagation()
         onClick(e)
     }, [onClick])

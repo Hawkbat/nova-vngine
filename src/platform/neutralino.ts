@@ -10,10 +10,11 @@ import { parseProjectDefinition } from '../types/definitions'
 import type { Platform, PlatformFilesystemEntry } from '../types/platform'
 import { DEFAULT_PROJECT_FILENAME, PlatformError } from '../types/platform'
 import { tryParseJson } from '../utils/guard'
+import { inlineThrow } from '../utils/types'
 
 const APP_DIR_NAME = '/Nova VNgine'
 
-const initPromise = createExposedPromise<void>()
+const initPromise = createExposedPromise()
 let initialized = false
 
 interface NativeError {
@@ -35,7 +36,7 @@ async function pickFiles({ title, filterName, extensions, multiSelections, defau
     if (!initialized) await initPromise.promise
     try {
         const paths = await nOS.showOpenDialog(title, { defaultPath: defaultPath ?? await nOS.getPath('documents'), filters: [{ name: filterName, extensions }, { name: 'All files', extensions: ['*'] }], multiSelections })
-        const entries = (await Promise.all(paths.map(p => nFS.getPathParts(p)))).map(p => ({ entry: p.filename, path: `${p.parentPath}/${p.filename}`, type: 'FILE' }))
+        const entries = (await Promise.all(paths.map(async p => await nFS.getPathParts(p)))).map(p => ({ entry: p.filename, path: `${p.parentPath}/${p.filename}`, type: 'FILE' }))
         return { paths, entries }
     } catch (err) {
         if (isNeutralinoError(err) && err.code === 'NE_FS_NOPATHE') return null
@@ -79,7 +80,7 @@ async function writeFile(path: string, data: string): Promise<void> {
         }
     }
     if (LOG_FILE_WRITES) {
-        neutralinoPlatform.log('Writing file', path)
+        void neutralinoPlatform.log('Writing file', path)
     }
     await nFS.writeFile(path, data)
 }
@@ -90,7 +91,7 @@ async function readJsonFile<T>(path: string): Promise<T | null> {
     return JSON.parse(text) as T
 }
 
-async function writeJsonFile<T>(path: string, data: T) {
+async function writeJsonFile(path: string, data: unknown) {
     await writeFile(path, JSON.stringify(data, undefined, 2))
 }
 
@@ -104,7 +105,7 @@ async function getSafePath(path: KnownPath) {
 }
 
 async function getConfigFolderPath() {
-    return `${await getSafePath('config') ?? await getSafePath('documents')}${APP_DIR_NAME}`
+    return `${await getSafePath('config') ?? await getSafePath('documents') ?? inlineThrow(new Error('No valid path for saving app configuration files was found.'))}${APP_DIR_NAME}`
 }
 
 async function getStandardPaths() {
@@ -157,8 +158,8 @@ export const neutralinoPlatform: Platform = {
         initialized = true
         initPromise.resolve()
 
-        await nEvents.on('windowClose', async (e: CustomEvent<null>) => {
-            await nApp.exit()
+        await nEvents.on('windowClose', (e: CustomEvent<null>) => {
+            void nApp.exit()
         })
 
         await nEvents.on('trayMenuItemClicked', (e: CustomEvent<nOS.TrayMenuItem>) => {
@@ -173,16 +174,16 @@ export const neutralinoPlatform: Platform = {
             { text: '-' },
             { id: 'checkUpdates', text: 'Check for Updates', onClick: () => { } },
             { text: '-' },
-            { id: 'exit', text: 'Exit', onClick: () => exitApplication() },
+            { id: 'exit', text: 'Exit', onClick: () => void exitApplication() },
         ])
     },
     async loadViewState() {
         const path = `${await getConfigFolderPath()}/viewstate.json`
         const json = await readFile(path)
         const parsed = tryParseJson(json ?? '', 'viewstate', parseViewState)
-        if (parsed.ctx.warnings.length) this.warn(parsed.ctx.warnings)
+        if (parsed.ctx.warnings.length) void this.warn(parsed.ctx.warnings)
         if (!parsed.success) {
-            this.error('Failed to load viewstate', json, parsed.ctx.errors)
+            void this.error('Failed to load viewstate', json, parsed.ctx.errors)
             return viewStateStore.getSnapshot()
         }
         return parsed.value
@@ -195,9 +196,9 @@ export const neutralinoPlatform: Platform = {
         const path = `${dir.handle}/${DEFAULT_PROJECT_FILENAME}`
         const json = await readFile(path)
         const parsed = tryParseJson(json ?? '', 'project', parseProjectDefinition)
-        if (parsed.ctx.warnings.length) this.warn(parsed.ctx.warnings)
+        if (parsed.ctx.warnings.length) void this.warn(parsed.ctx.warnings)
         if (!parsed.success) {
-            this.error('Failed to load project', json, parsed.ctx.errors)
+            void this.error('Failed to load project', json, parsed.ctx.errors)
             throw new PlatformError('bad-project', 'The project file was outdated or corrupted in a manner that has prevented it from loading.')
         }
         return parsed.value

@@ -20,19 +20,20 @@ export const EntityWorkspace = <T extends EntityType>({ type, immCreate, childre
     const parentType = getEntityParentType(type)
     const projectKey = getProjectEntityKey(type)
     const [itemID, setScope] = useViewStateScope(type)
-    const [scopedParentID, setParentScope] = useViewStateScope(parentType ?? null)
+    const [scopedParentID, setParentScope] = useViewStateScope(parentType)
     const [items, setProject] = useSelector(projectStore, s => s[projectKey])
     const [parentItems] = useSelector(projectStore, s => parentType ? s[getProjectEntityKey(parentType)] : null)
 
     const item = (itemID ? items.find(s => s.id === itemID) ?? null : null) as EntityOfType<T> | null
 
-    const onNewItem = (parentID?: EntityParentIDOf<T> | undefined) => {
+    const onNewItem = (parentID?: EntityParentIDOf<T> | null) => {
         if (parentType) {
             if (!parentID) return
-            const [project, item] = immCreate(projectStore.getSnapshot(), parentID as EntityParentIDOf<T>)
+            const [project, item] = immCreate(projectStore.getSnapshot(), parentID)
             setProject(() => project)
             setScope(item.id as EntityIDOf<T>)
         } else {
+            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
             const [project, item] = immCreate(projectStore.getSnapshot(), undefined!)
             setProject(() => project)
             setScope(item.id as EntityIDOf<T>)
@@ -54,7 +55,7 @@ export const EntityWorkspace = <T extends EntityType>({ type, immCreate, childre
             <StringField label={`${prettyPrintIdentifier(type)} ID`} value={item.id} />
             {children(item)}
         </> : <>
-            {parentType && !scopedParentID ? parentItems?.map(p => parentType ? <Fragment key={p.id}>
+            {parentType && !scopedParentID ? parentItems?.map(p => <Fragment key={p.id}>
                 <div className={styles.listHeading}>
                     <EditorButton icon={EXPR_VALUE_ICONS[parentType]} style='text' onClick={() => onSelectParent(p.id as EntityParentIDOf<T>)}>{p.name ? p.name : `Untitled ${prettyPrintIdentifier(parentType)}`}</EditorButton>
                 </div>
@@ -62,10 +63,10 @@ export const EntityWorkspace = <T extends EntityType>({ type, immCreate, childre
                     {items.filter(i => getEntityParentID(type, i as EntityOfType<T>) === p.id).map(item => <EditorIcon key={item.id} path={EXPR_VALUE_ICONS[type]} label={item.name ? item.name : `Untitled ${prettyPrintIdentifier(type)}`} active={false} showLabel onClick={() => onSelectItem(item.id as EntityIDOf<T>)} />)}
                     <EditorIcon path={COMMON_ICONS.addItem} label={`New ${prettyPrintIdentifier(type)}`} showLabel onClick={() => onNewItem(p.id as EntityParentIDOf<T>)} />
                 </div>
-            </Fragment> : null) : <>
+            </Fragment>) : <>
                 <div className={styles.itemList}>
                     {items.map(item => <EditorIcon key={item.id} path={EXPR_VALUE_ICONS[type]} label={item.name ? item.name : `Untitled ${prettyPrintIdentifier(type)}`} active={false} showLabel onClick={() => onSelectItem(item.id as EntityIDOf<T>)} />)}
-                    <EditorIcon path={COMMON_ICONS.addItem} label={`New ${prettyPrintIdentifier(type)}`} showLabel onClick={() => onNewItem(scopedParentID as EntityParentIDOf<T> | undefined)} />
+                    <EditorIcon path={COMMON_ICONS.addItem} label={`New ${prettyPrintIdentifier(type)}`} showLabel onClick={() => onNewItem(scopedParentID as EntityParentIDOf<T> | null)} />
                 </div>
             </>}
         </>}

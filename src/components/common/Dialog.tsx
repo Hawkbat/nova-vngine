@@ -28,7 +28,7 @@ interface DialogStoreState {
 
 const dialogStore = createSimpleStore<DialogStoreState>({ states: [] })
 
-export function openCustomDialog<T extends string>(title: React.ReactNode, content: React.ReactNode, choices: Record<T, DialogChoice>): Promise<T> {
+export async function openCustomDialog<T extends string>(title: React.ReactNode, content: React.ReactNode, choices: Record<T, DialogChoice>): Promise<T> {
     const promise = createExposedPromise<string>()
     const newState: DialogState = {
         title,
@@ -37,11 +37,11 @@ export function openCustomDialog<T extends string>(title: React.ReactNode, conte
         promise,
     }
     dialogStore.setValue(s => immSet(s, 'states', immAppend(s.states, newState)))
-    return promise.promise as Promise<T>
+    return await promise.promise as T
 }
 
-export function openDialog<T extends string>(title: string, message: string, choices: Record<T, string>): Promise<T> {
-    return openCustomDialog(<><EditorIcon path={mdiAlert} label={title} /> {title}</>, <>{message}</>, Object.fromEntries(Object.entries(choices).map(([k, v], i, arr) => hintTuple(k, { content: <>{v}</>, primary: i === arr.length - 1 ? true : undefined }))) as Record<T, DialogChoice>)
+export async function openDialog<T extends string>(title: string, message: string, choices: Record<T, string>): Promise<T> {
+    return await openCustomDialog(<><EditorIcon path={mdiAlert} label={title} /> {title}</>, <>{message}</>, Object.fromEntries(Object.entries(choices).map(([k, v], i, arr) => hintTuple(k, { content: <>{v}</>, primary: i === arr.length - 1 ? true : undefined }))) as Record<T, DialogChoice>)
 }
 
 export function useIsDialogOpen() {

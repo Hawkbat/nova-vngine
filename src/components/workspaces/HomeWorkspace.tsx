@@ -77,25 +77,21 @@ export const HomeWorkspace = () => {
         await tryLoadProject(p.directory)
     }
 
-    const HomeButton = ({ icon, label, active, onClick }: { icon: string, label: string, active?: boolean, onClick: (e: React.MouseEvent) => void }) => {
-        return <EditorIcon path={icon} label={label} showLabel active={active} onClick={onClick} />
-    }
-
     return <div className={styles.workspace}>
         <div className={styles.logo}>
             <img src={faviconSvgUrl} />
             Nova VNgine
         </div>
         <div className={styles.buttonGroup}>
-            <HomeButton label='New Project' icon={COMMON_ICONS.newProject} onClick={onNewProject} />
-            <HomeButton label='Open Project' icon={COMMON_ICONS.openProject} onClick={onOpenProject} />
-            <HomeButton label='Help Manual' icon={PROJECT_TAB_ICONS['manual']} onClick={() => setCurrentTab('manual')} />
-            <HomeButton label='Edit Settings' icon={PROJECT_TAB_ICONS['settings']} onClick={() => setCurrentTab('settings')} />
+            <EditorIcon label='New Project' path={COMMON_ICONS.newProject} showLabel onClick={() => void onNewProject()} />
+            <EditorIcon label='Open Project' path={COMMON_ICONS.openProject} showLabel onClick={() => void onOpenProject()} />
+            <EditorIcon label='Help Manual' path={PROJECT_TAB_ICONS['manual']} showLabel onClick={() => setCurrentTab('manual')} />
+            <EditorIcon label='Edit Settings' path={PROJECT_TAB_ICONS['settings']} showLabel onClick={() => setCurrentTab('settings')} />
         </div>
         {recentProjects.length ? <>
             <span className={styles.heading}>Recent Projects</span>
             <div className={styles.buttonGroup}>
-                {recentProjects.map(p => <HomeButton key={p.id} label={p.name ? p.name : 'Untitled Project'} icon={PROJECT_TAB_ICONS['project']} active={p.id === loadedProject?.id} onClick={() => onOpenRecentProject(p)} />)}
+                {recentProjects.map(p => <EditorIcon key={p.id} label={p.name ? p.name : 'Untitled Project'} path={PROJECT_TAB_ICONS['project']} active={p.id === loadedProject?.id} showLabel onClick={() => void onOpenRecentProject(p)} />)}
             </div>
         </> : null}
     </div>

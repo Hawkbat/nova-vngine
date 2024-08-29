@@ -37,7 +37,7 @@ export async function loadInitialViewState() {
         }
     } catch (err) {
         if (isPlatformErrorCode(err, 'bad-project')) {
-            platform.error('Failed to load previously loaded project', err)
+            void platform.error('Failed to load previously loaded project', err)
         } else {
             throw err
         }

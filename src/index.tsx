@@ -45,12 +45,12 @@ async function initializeAll() {
     subscribeToStoreAsync(viewStateStore, updateTitle)
     subscribeToStoreAsync(projectStore, updateTitle)
     subscribeToStoreAsync(projectStore.meta, updateTitle)
-    updateTitle()
+    await updateTitle()
 
     subscribeToSelector(projectStore, s => s.name, name => {
         const viewState = viewStateStore.getSnapshot()
         if (viewState.loadedProject && viewState.loadedProject.name !== name) {
-            viewStateStore.setValue(s => immSet(s, 'loadedProject', immSet(s.loadedProject!, 'name', name)))
+            viewStateStore.setValue(s => s.loadedProject ? immSet(s, 'loadedProject', immSet(s.loadedProject, 'name', name)) : s)
         }
         const recentProject = viewState.recentProjects.find(p => p.id === name)
         if (recentProject && recentProject.name !== name) {
@@ -64,4 +64,4 @@ async function initializeAll() {
     appRoot.render(<StrictMode><App /></StrictMode>)
 }
 
-initializeAll()
+void initializeAll()

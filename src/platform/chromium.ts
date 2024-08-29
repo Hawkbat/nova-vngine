@@ -8,6 +8,7 @@ import type { Platform, PlatformFilesystemEntry } from '../types/platform'
 import { PlatformError, DEFAULT_PROJECT_FILENAME } from '../types/platform'
 import { tryParseJson } from '../utils/guard'
 import { parseProjectDefinition } from '../types/definitions'
+import { wait } from '../utils/async'
 
 const idbStore = createStore('chromium-handle-db', 'chromium-handle-store')
 
@@ -53,15 +54,17 @@ export const chromiumPlatform: Platform = {
     async loadViewState() {
         const json = localStorage.getItem('nvn-viewstate')
         const parsed = tryParseJson(json ?? '', 'viewState', parseViewState)
-        if (parsed.ctx.warnings.length) this.warn(parsed.ctx.warnings)
+        if (parsed.ctx.warnings.length) void this.warn(parsed.ctx.warnings)
         if (!parsed.success) {
-            this.error('Failed to parse viewstate', json, parsed.ctx.errors)
+            void this.error('Failed to parse viewstate', json, parsed.ctx.errors)
             return viewStateStore.getSnapshot()
         }
+        await wait(0)
         return parsed.value
     },
     async saveViewState(viewState) {
         localStorage.setItem('nvn-viewstate', JSON.stringify(viewState))
+        await wait(0)
     },
     async loadProject(dir) {
         const key = dir.handle as ChromiumHandleKey
@@ -71,9 +74,9 @@ export const chromiumPlatform: Platform = {
         const handle = await dirHandle.getFileHandle(name)
         const json = await (await handle.getFile()).text()
         const parsed = tryParseJson(json, 'project', parseProjectDefinition)
-        if (parsed.ctx.warnings.length) this.warn(parsed.ctx.warnings)
+        if (parsed.ctx.warnings.length) void this.warn(parsed.ctx.warnings)
         if (!parsed.success) {
-            this.error('Failed to parse project', json, parsed.ctx.errors)
+            void this.error('Failed to parse project', json, parsed.ctx.errors)
             throw new PlatformError('bad-project', 'The project file was outdated or corrupted in a manner that has prevented it from loading.')
         }
         return parsed.value
@@ -98,12 +101,13 @@ export const chromiumPlatform: Platform = {
     },
     async setTitle(title) {
         document.title = title
+        await wait(0)
     },
     async pickFiles(title, fileType, extensions, multi) {
         try {
             const results = await window.showOpenFilePicker({ id: 'nvn', types: [{ description: fileType, accept: { 'application/octet-stream': extensions.map(e => e.startsWith('.') ? e : `.${e}`) as `.${string}`[] } }], multiple: multi })
             if (!results.length) return null
-            return Promise.all(results.map(async r => ({
+            return await Promise.all(results.map(async r => ({
                 path: r.name,
                 name: r.name,
                 handle: await storeChromiumFileHandle(r),
@@ -141,11 +145,14 @@ export const chromiumPlatform: Platform = {
     },
     async log(...objs) {
         console.log(...objs)
+        await wait(0)
     },
     async warn(...objs) {
         console.warn(...objs)
+        await wait(0)
     },
     async error(...objs) {
         console.error(...objs)
+        await wait(0)
     },
 }

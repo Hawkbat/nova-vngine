@@ -24,7 +24,7 @@ import { platform } from '../../platform/platform'
 import { BUILD_COMMIT, BUILD_DATETIME } from '../../injected'
 import type { ProjectEditorTab } from '../../types/viewstate'
 
-const Breadcrumb = <T extends EntityType>({ type }: { type: T }) => {
+const Breadcrumb = ({ type }: { type: EntityType }) => {
     const tab = getProjectEntityKey(type)
     const [scope, setScope] = useViewStateScope(type)
     const [name] = useSelector(projectStore, s => s[tab].find(i => i.id === scope)?.name)

@@ -248,7 +248,7 @@ export function resolveExpr(expr: AnyExpr, ctx: ExprContext): AnyExprValue {
             if (!isPrimitiveValueType(subType)) {
                 throw new Error(`Could not resolve expression containing a list of lists: ${JSON.stringify(expr)}`)
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
             return { type: `list:${subType}`, values: values.map(v => castExprValue(v, subType, ctx)) as any }
         }
         case 'string': return { type: 'string', value: expr.args[0] }
@@ -281,7 +281,7 @@ export function resolveExpr(expr: AnyExpr, ctx: ExprContext): AnyExprValue {
         case 'pick': return resolveExprAs(expr.params[0], 'boolean', ctx).value ? resolveExpr(expr.params[1], ctx) : resolveExpr(expr.params[2], ctx)
         case 'switch': {
             for (const c of expr.children) {
-                if (resolveExprAs(c[0], 'boolean', ctx)) return resolveExpr(c[1], ctx)
+                if (resolveExprAs(c[0], 'boolean', ctx).value) return resolveExpr(c[1], ctx)
             }
             return resolveExpr(expr.params[0], ctx)
         }
@@ -295,21 +295,25 @@ export function validateExpr(expr: AnyExpr, ctx: ExprContext): string[] {
 
 export function createDefaultExpr<T extends ExprType>(type: T, ctx: ExprContext): ExprOfType<T> {
     const def = EXPR_DEFINITION_MAP[type]
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
     const expr = { type } as any
     if (def.args) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expr.args = def.args.map(a => getContextualDefaultPrimitiveValue(a.type, ctx))
     }
     if (def.params) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expr.params = def.params.map(p => createDefaultExpr('unset', ctx))
     }
     if (def.children) {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expr.children = []
     }
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-return
     return expr
 }
 
-export function createDefaultExprChild<T extends ExprType>(type: T, ctx: ExprContext) {
+export function createDefaultExprChild(type: ExprType, ctx: ExprContext) {
     const def = EXPR_DEFINITION_MAP[type]
     if (def.children) {
         return def.children.map(() => createDefaultExpr('unset', ctx))
@@ -342,6 +346,8 @@ export function guessExprReturnType(expr: AnyExpr, ctx: ExprContext): ExprValueT
             return guessExprReturnType(expr.params[1], ctx)
         case 'switch':
             return guessExprReturnType(expr.params[0], ctx)
+        default:
+            return null
     }
     return null
 }
@@ -351,7 +357,7 @@ export function castExprValue<T extends ExprValueType>(expr: AnyExprValue, type:
         return expr as ExprValueOfType<T>
     }
     if (expr.type === 'variable') {
-        return castExprValue(throwIfNull(ctx.resolvers.variableValue(expr.value)), type, ctx) as ExprValueOfType<T>
+        return castExprValue(throwIfNull(ctx.resolvers.variableValue(expr.value)), type, ctx)
     }
     switch (type) {
         case 'string': {
@@ -367,14 +373,18 @@ export function castExprValue<T extends ExprValueType>(expr: AnyExprValue, type:
                 case 'song': return { type: 'string', value: throwIfNull(ctx.resolvers.song(expr.value)).name } as ExprValueOfType<T>
                 case 'sound': return { type: 'string', value: throwIfNull(ctx.resolvers.sound(expr.value)).name } as ExprValueOfType<T>
                 case 'macro': return { type: 'string', value: throwIfNull(ctx.resolvers.macro(expr.value)).name } as ExprValueOfType<T>
+                default: break
             }
             break
         }
         case 'number': {
             switch (expr.type) {
                 case 'integer': return { type: 'number', value: expr.value } as ExprValueOfType<T>
+                default: break
             }
+            break
         }
+        default: break
     }
     throw new Error(`Unable to convert expression value ${JSON.stringify(expr)} to ${type}`)
 }
@@ -401,17 +411,17 @@ export function exprValuesEqual(left: AnyExprValue, right: AnyExprValue): boolea
 export function prettyPrintExpr(expr: AnyExpr): string {
     const def = EXPR_DEFINITION_MAP[expr.type]
     let out = `${expr.type}(`
-    if (def.args && 'args' in expr && expr.args) {
+    if (def.args && 'args' in expr) {
         for (let i = 0; i < def.args.length; i++) {
             out += `${def.args[i].label}: ${JSON.stringify(expr.args[i])}`
         }
     }
-    if (def.params && 'params' in expr && expr.params) {
+    if (def.params && 'params' in expr) {
         for (let i = 0; i < def.params.length; i++) {
             out += `${def.params[i].label}: ${prettyPrintExpr(expr.params[i])}`
         }
     }
-    if (def.children && 'children' in expr && expr.children) {
+    if (def.children && 'children' in expr) {
         out += '['
         for (const c of expr.children) {
             out += '('

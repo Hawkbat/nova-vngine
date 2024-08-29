@@ -116,7 +116,7 @@ export function getEntityParentType<T extends EntityType>(type: T): EntityParent
     return null
 }
 
-export function getEntityTypeHierarchy<T extends EntityType>(type: T): EntityType[] {
+export function getEntityTypeHierarchy(type: EntityType): EntityType[] {
     if (type in ENTITY_PARENTS) return [...getEntityTypeHierarchy(ENTITY_PARENTS[type as keyof EntityParentMap]), type]
     return [type]
 }
@@ -129,8 +129,8 @@ const ENTITY_PARENT_GETTERS = {
 
 export function getEntityParentID<T extends EntityType>(type: T, entity: EntityOfType<T>): EntityParentIDOf<T> | null {
     if (type in ENTITY_PARENT_GETTERS) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return (ENTITY_PARENT_GETTERS as any)[type](entity)
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument
+        return ENTITY_PARENT_GETTERS[type as keyof typeof ENTITY_PARENT_GETTERS](entity as any) as EntityParentIDOf<T>
     }
     return null
 }
