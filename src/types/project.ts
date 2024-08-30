@@ -318,13 +318,13 @@ const parseAnyPartialVariableDefinition: ParseFunc<AnyPartialVariableDefinition>
     integer: { },
     number: { },
     text: { },
-    singleChoice: { options: parseAnyExpr, },
-    multipleChoice: { options: parseAnyExpr, },
+    singleChoice: { options: parseAnyExpr },
+    multipleChoice: { options: parseAnyExpr },
     chapter: { },
     scene: { },
     character: { },
     portrait: { },
-    list: { elements: parseAnyPartialVariableDefinition, },
+    list: { elements: parseAnyPartialVariableDefinition },
     lookup: { elements: parseAnyPartialVariableDefinition, keys: parseAnyPartialVariableDefinition },
 }, d))
 

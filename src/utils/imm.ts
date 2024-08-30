@@ -20,6 +20,12 @@ export function immReplaceBy<T>(arr: T[], getKey: (value: T) => unknown, value: 
     return arr.map(v => getKey(v) === key ? value : v)
 }
 
+export function keepWhile<T>(arr: T[], shouldKeep: (value: T, i: number, arr: T[]) => boolean): T[] {
+    const endIndex = arr.findIndex((a, i, arr) => !shouldKeep(a, i, arr))
+    if (endIndex < 0) return arr.slice()
+    return arr.slice(0, endIndex)
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function immSet<T extends Record<string, any>, K extends keyof T>(obj: T, key: K, value: T[K]): T {
     return { ...obj, [key]: value }

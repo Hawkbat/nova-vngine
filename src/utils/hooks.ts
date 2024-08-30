@@ -25,3 +25,25 @@ export function useDebounce(ms: number, callback: () => void) {
         }
     }, [callback, ms])
 }
+
+export function useAnimationLoop(active: boolean, callback: (deltaTime: number, elapsedTime: number) => void) {
+    return useEffect(() => {
+        if (!active) return
+        let previousTime = 0
+        let elapsedTime = 0
+        const tick = (time: number) => {
+            if (previousTime === 0) previousTime = time
+            const deltaTime = (time - previousTime) / 1000
+            previousTime = time
+            elapsedTime += deltaTime
+
+            callback(deltaTime, elapsedTime)
+
+            handle = requestAnimationFrame(tick)
+        }
+        let handle = requestAnimationFrame(tick)
+        return () => {
+            cancelAnimationFrame(handle)
+        }
+    }, [active, callback])
+}

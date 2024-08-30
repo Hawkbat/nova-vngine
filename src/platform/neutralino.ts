@@ -1,16 +1,14 @@
-import type { KnownPath, LoggerType } from '@neutralinojs/lib'
-import { init, events as nEvents, app as nApp, filesystem as nFS, os as nOS, window as nWindow, debug as nDebug } from '@neutralinojs/lib'
+import type { LoggerType, KnownPath } from '@neutralinojs/lib'
+import { init, events as nEvents, app as nApp, os as nOS, filesystem as nFS, window as nWindow, debug as nDebug } from '@neutralinojs/lib'
 import faviconUrl from '../favicon.png'
 import { awaitAllMap, createExposedPromise } from '../utils/async'
-import { LOG_FILE_WRITES } from '../debug'
-import { createProject } from '../store/project'
 import { parseViewState } from '../types/viewstate'
 import { viewStateStore } from '../store/viewstate'
-import { parseProjectDefinition } from '../types/definitions'
-import type { Platform, PlatformFilesystemEntry } from '../types/platform'
-import { DEFAULT_PROJECT_FILENAME, PlatformError } from '../types/platform'
+import type { Platform } from '../types/platform'
 import { tryParseJson } from '../utils/guard'
 import { inlineThrow } from '../utils/types'
+import { StorageError } from '../types/storage'
+import { LOG_FILE_WRITES } from '../debug'
 
 const APP_DIR_NAME = '/Nova VNgine'
 
@@ -22,42 +20,36 @@ interface NativeError {
     message: string
 }
 
-function isNeutralinoError(err: unknown): err is NativeError {
+export async function waitForNeutralinoInit() {
+    if (!initialized) await initPromise.promise
+}
+
+export function isNeutralinoError(err: unknown): err is NativeError {
     return !!err && typeof err === 'object' && 'code' in err && typeof err.code === 'string' && 'message' in err && typeof err.message === 'string'
 }
 
 async function setTitle(title: string) {
     document.title = title
-    if (!initialized) await initPromise.promise
+    await waitForNeutralinoInit()
     await nWindow.setTitle(title)
 }
 
-async function pickFiles({ title, filterName, extensions, multiSelections, defaultPath }: { title: string, filterName: string, extensions: string[], multiSelections?: boolean, defaultPath?: string }) {
-    if (!initialized) await initPromise.promise
+export async function ensureParentDirectories(path: string) {
+    const pathInfo = await nFS.getPathParts(path)
     try {
-        const paths = await nOS.showOpenDialog(title, { defaultPath: defaultPath ?? await nOS.getPath('documents'), filters: [{ name: filterName, extensions }, { name: 'All files', extensions: ['*'] }], multiSelections })
-        const entries = (await Promise.all(paths.map(async p => await nFS.getPathParts(p)))).map(p => ({ entry: p.filename, path: `${p.parentPath}/${p.filename}`, type: 'FILE' }))
-        return { paths, entries }
+        const parentStats = await nFS.getStats(pathInfo.parentPath)
+        if (!parentStats.isDirectory) throw new StorageError('not-found', 'Parent path is a file, not a directory')
     } catch (err) {
-        if (isNeutralinoError(err) && err.code === 'NE_FS_NOPATHE') return null
-        throw err
-    }
-}
-
-async function pickDirectory({ title, defaultPath }: { title: string, defaultPath?: string }) {
-    if (!initialized) await initPromise.promise
-    try {
-        const path = await nOS.showFolderDialog(title, { defaultPath: defaultPath ?? await nOS.getPath('documents') })
-        const entries = (await nFS.readDirectory(path)) as { entry: string, path: string, type: 'FILE' | 'DIRECTORY' }[]
-        return { path, entries }
-    } catch (err) {
-        if (isNeutralinoError(err) && err.code === 'NE_FS_NOPATHE') return null
-        throw err
+        if (isNeutralinoError(err) && err.code === 'NE_FS_NOPATHE') {
+            await nFS.createDirectory(pathInfo.parentPath)
+        } else {
+            throw err
+        }
     }
 }
 
 async function readFile(path: string): Promise<string | null> {
-    if (!initialized) await initPromise.promise
+    await waitForNeutralinoInit()
     try {
         return await nFS.readFile(path)
     } catch (err) {
@@ -66,33 +58,19 @@ async function readFile(path: string): Promise<string | null> {
     }
 }
 
-async function writeFile(path: string, data: string): Promise<void> {
-    if (!initialized) await initPromise.promise
-    const pathInfo = await nFS.getPathParts(path)
-    try {
-        const parentStats = await nFS.getStats(pathInfo.parentPath)
-        if (!parentStats.isDirectory) throw new Error('Parent path is a file, not a directory')
-    } catch (err) {
-        if (isNeutralinoError(err) && err.code === 'NE_FS_NOPATHE') {
-            await nFS.createDirectory(pathInfo.parentPath)
-        } else {
-            throw err
-        }
-    }
+async function writeFile(path: string, text: string): Promise<boolean> {
+    await waitForNeutralinoInit()
+    await ensureParentDirectories(path)
     if (LOG_FILE_WRITES) {
         void neutralinoPlatform.log('Writing file', path)
     }
-    await nFS.writeFile(path, data)
-}
-
-async function readJsonFile<T>(path: string): Promise<T | null> {
-    const text = await readFile(path)
-    if (!text) return null
-    return JSON.parse(text) as T
-}
-
-async function writeJsonFile(path: string, data: unknown) {
-    await writeFile(path, JSON.stringify(data, undefined, 2))
+    try {
+        await nFS.writeFile(path, text)
+        return true
+    } catch (err) {
+        if (isNeutralinoError(err) && err.code === 'NE_FS_FILWRER') return false
+        throw err
+    }
 }
 
 async function getSafePath(path: KnownPath) {
@@ -108,8 +86,8 @@ async function getConfigFolderPath() {
     return `${await getSafePath('config') ?? await getSafePath('documents') ?? inlineThrow(new Error('No valid path for saving app configuration files was found.'))}${APP_DIR_NAME}`
 }
 
-async function getStandardPaths() {
-    if (!initialized) await initPromise.promise
+async function _getStandardPaths() {
+    await waitForNeutralinoInit()
     const paths = await awaitAllMap({
         cache: getSafePath('cache'), // %USER%/AppData/Local
         config: getSafePath('config'), // %USER%/AppData/Roaming
@@ -132,7 +110,7 @@ let menuItems: TrayItem[] = []
 
 async function setTray(newMenuItems: TrayItem[]) {
     menuItems = newMenuItems
-    if (!initialized) await initPromise.promise
+    await waitForNeutralinoInit()
     try {
         await nOS.setTray({
             icon: `/resources/${faviconUrl.slice(1)}`,
@@ -145,14 +123,17 @@ async function setTray(newMenuItems: TrayItem[]) {
 }
 
 async function exitApplication() {
-    if (!initialized) await initPromise.promise
+    await waitForNeutralinoInit()
     await nApp.exit()
 }
 
 export const neutralinoPlatform: Platform = {
-    name: 'Desktop (Neutralino)',
+    type: 'neutralino',
+    name: 'Desktop',
+    isSupported() {
+        return 'NL_APPID' in window
+    },
     async initialize() {
-
         init()
 
         initialized = true
@@ -190,58 +171,13 @@ export const neutralinoPlatform: Platform = {
     },
     async saveViewState(viewState) {
         const path = `${await getConfigFolderPath()}/viewstate.json`
-        await writeJsonFile(path, viewState)
-    },
-    async loadProject(dir) {
-        const path = `${dir.handle}/${DEFAULT_PROJECT_FILENAME}`
-        const json = await readFile(path)
-        const parsed = tryParseJson(json ?? '', 'project', parseProjectDefinition)
-        if (parsed.ctx.warnings.length) void this.warn(parsed.ctx.warnings)
-        if (!parsed.success) {
-            void this.error('Failed to load project', json, parsed.ctx.errors)
-            throw new PlatformError('bad-project', 'The project file was outdated or corrupted in a manner that has prevented it from loading.')
+        const json = JSON.stringify(viewState, undefined, 2)
+        if (!await writeFile(path, json)) {
+            void this.error('Failed to save viewstate', path, json)
         }
-        return parsed.value
-    },
-    async saveProject(dir, project) {
-        await writeJsonFile(`${dir.handle}/${DEFAULT_PROJECT_FILENAME}`, project)
-    },
-    async createProject(dir) {
-        const project = createProject()
-        await this.saveProject(dir, project)
-        return project
     },
     async setTitle(title) {
         await setTitle(title)
-    },
-    async pickFiles(title, fileType, extensions, multi) {
-        const entries = await pickFiles({ title, filterName: fileType, extensions, multiSelections: multi })
-        if (!entries || !entries.paths.length) return null
-        return entries.entries.map(e => ({ type: 'file', name: e.entry, path: e.path, handle: e.path }))
-    },
-    async pickDirectory(title) {
-        const dir = await pickDirectory({ title })
-        if (!dir) return null
-        const directory: PlatformFilesystemEntry = {
-            path: dir.path,
-            name: dir.path.substring(dir.path.lastIndexOf('/') + 1),
-            handle: dir.path,
-        }
-        const files: PlatformFilesystemEntry[] = dir.entries.filter(e => e.type === 'FILE').map(e => ({
-            path: e.path,
-            name: e.entry,
-            handle: e.path,
-        }))
-        const directories: PlatformFilesystemEntry[] = dir.entries.filter(e => e.type === 'DIRECTORY').map(e => ({
-            path: e.path,
-            name: e.entry,
-            handle: e.path,
-        }))
-        return {
-            directory,
-            files,
-            directories,
-        }
     },
     async log(...objs) {
         console.log(...objs)

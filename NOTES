@@ -37,3 +37,26 @@ List (generic array of any other variable type)
 Lookup (generic map of a specific list of keys (e.g. character IDs, scene IDs, fixed list of options, etc.) to any other variable type)
 
 Use a deterministic resumable RNG so the only state that needs to be recorded is how many times it's been used, not what the results were
+
+
+Project storage is divided up into different storage types and providers:
+    Neutralino local filesystem project (for desktop app use)
+        Permissions: Read-Write
+        API: Neutralino Native API
+        Project Metadata: Absolute path
+        Asset Metadata: Relative file path
+    Chromium local filesystem project (for web-app use with guaranteed persistence, Chromium only)
+        Permissions: Read-Write
+        API: showOpenFilePicker() -> File System Access API
+        Project Metadata: Filesystem directory handle
+        Asset Metadata: Relative file path mapped to filesystem file handle
+    Origin-Private File System local browser-managed project (for web-app use with best-effort persistence, cross-browser)
+        Permissions: Read-Write
+        API: navigator.storage.getDirectory() -> File System Access API
+        Project Metadata: Filesystem directory handle
+        Asset Metadata: Relative file path mapped to filesystem file handle
+    Hosted server-side project (for playing web-hosted projects)
+        Permissions: Readonly
+        API: fetch()
+        Project Metadata: Project root URL
+        Asset Metadata: Relative file path

@@ -3,7 +3,7 @@
   "name": "Example Project",
   "editorRandState": [
     "xorshift32",
-    1238076713
+    1512714449
   ],
   "stories": [
     {
@@ -40,7 +40,7 @@
       "steps": [
         {
           "type": "text",
-          "id": "ZM3Q1283",
+          "id": "D7YO9UY4",
           "speaker": {
             "type": "character",
             "args": [
@@ -50,7 +50,7 @@
           "text": {
             "type": "string",
             "args": [
-              "Some text goes here"
+              "Here's some text it never fails"
             ]
           }
         }

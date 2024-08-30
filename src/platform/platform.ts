@@ -1,20 +1,20 @@
-import { PLATFORM_FORCE_CHROMIUM, PLATFORM_FORCE_WEB } from '../debug'
-import { chromiumPlatform } from './chromium'
+import { PLATFORM_FORCE } from '../debug'
 import type { Platform } from '../types/platform'
 import { neutralinoPlatform } from './neutralino'
 import { webPlatform } from './web'
 
-export function determinePlatform(): Platform {
-    if (PLATFORM_FORCE_CHROMIUM) return chromiumPlatform
-    if (PLATFORM_FORCE_WEB) return webPlatform
-
-    if ('NL_APPID' in window) {
-        return neutralinoPlatform
-    }
-    if ('showOpenFilePicker' in window) {
-        return chromiumPlatform
-    }
-    return webPlatform
+export const platforms = {
+    neutralino: neutralinoPlatform,
+    web: webPlatform,
 }
 
-export const platform = determinePlatform()
+export type PlatformType = keyof typeof platforms
+
+function getPlatform(preferred: PlatformType | undefined = PLATFORM_FORCE): Platform {
+    if (preferred && platforms[preferred].isSupported()) return platforms[preferred]
+    if (neutralinoPlatform.isSupported()) return neutralinoPlatform
+    if (webPlatform.isSupported()) return webPlatform
+    throw new Error('No supported platforms')
+}
+
+export const platform = getPlatform()

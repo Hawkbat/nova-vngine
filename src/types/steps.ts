@@ -104,5 +104,5 @@ export const parseAnyStep: ParseFunc<AnyStep> = defineParser<AnyStep>((c, v, d) 
     decision: { options: (c, v, d) => $.array(c, v, (c, v, d) => $.object(c, v, { text: parseAnyExpr, condition: parseAnyExpr, steps: (c, v, d) => $.array(c, v, parseAnyStep, d) }, d), d) },
     branch: { options: (c, v, d) => $.array(c, v, (c, v, d) => $.object(c, v, { condition: parseAnyExpr, steps: (c, v, d) => $.array(c, v, parseAnyStep, d) }, d), d) },
     set: { variable: parseAnyExpr, value: parseAnyExpr },
-    macro: { macro: parseAnyExpr, inputs: (c, v, d) => $.array(c, v, parseAnyExpr,d), outputs: (c, v, d) => $.array(c, v, parseAnyExpr,d) },
+    macro: { macro: parseAnyExpr, inputs: (c, v, d) => $.array(c, v, parseAnyExpr, d), outputs: (c, v, d) => $.array(c, v, parseAnyExpr, d) },
 }, d))

@@ -1,16 +1,14 @@
-import type { ProjectDefinition, ProjectID } from '../types/definitions'
-import { randID, randSeedRandom } from '../utils/rand'
+import type { ProjectDefinition, ProjectID } from '../types/project'
+import { randSeedRandom } from '../utils/rand'
 import { createTrackedStore } from '../utils/store'
 
-export const projectStore = createTrackedStore(createProject())
+export const projectStore = createTrackedStore(createDefaultProject(''))
 
-export function createProject(): ProjectDefinition {
-    const [editorRandState, id] = randID(randSeedRandom())
-
+export function createDefaultProject(id: string): ProjectDefinition {
     const project: ProjectDefinition = {
         id: id as ProjectID,
         name: '',
-        editorRandState,
+        editorRandState: randSeedRandom(),
         stories: [],
         chapters: [],
         scenes: [],

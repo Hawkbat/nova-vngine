@@ -64,3 +64,7 @@ const ID_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
 export function randID(state: RandState): RandResult<string> {
     return randString(state, ID_CHARS, 8)
 }
+
+export function uncheckedRandID(): string {
+    return randID(randSeedRandom())[1]
+}

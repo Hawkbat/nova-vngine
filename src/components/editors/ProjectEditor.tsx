@@ -1,5 +1,5 @@
-import type { EntityType } from '../../types/definitions'
-import { ENTITY_TYPES, getEntityTypeByProjectKey, getEntityTypeHierarchy, getProjectEntityKey, isProjectEntityKey, PROJECT_ENTITY_KEYS } from '../../types/definitions'
+import type { EntityType } from '../../types/project'
+import { ENTITY_TYPES, getEntityTypeByProjectKey, getEntityTypeHierarchy, getProjectEntityKey, isProjectEntityKey, PROJECT_ENTITY_KEYS } from '../../types/project'
 import styles from './ProjectEditor.module.css'
 import { EditorIcon } from '../common/EditorIcon'
 import { COMMON_ICONS, EXPR_VALUE_ICONS, PROJECT_TAB_ICONS } from '../common/Icons'

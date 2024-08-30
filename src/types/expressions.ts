@@ -2,7 +2,7 @@ import type { ParseFunc } from '../utils/guard'
 import { throwIfNull, defineParser, parsers as $ } from '../utils/guard'
 import type { OmitUndefined } from '../utils/types'
 import { assertExhaustive, hintTuple } from '../utils/types'
-import type { StoryID, ChapterID, SceneID, VariableID, CharacterID, BackdropID, SongID, SoundID, AnyVariableDefinition, CharacterDefinition, BackdropDefinition, ChapterDefinition, SceneDefinition, SongDefinition, SoundDefinition, StoryDefinition, PortraitID, MacroID, MacroDefinition, PortraitDefinition } from './definitions'
+import type { StoryID, ChapterID, SceneID, VariableID, CharacterID, BackdropID, SongID, SoundID, AnyVariableDefinition, CharacterDefinition, BackdropDefinition, ChapterDefinition, SceneDefinition, SongDefinition, SoundDefinition, StoryDefinition, PortraitID, MacroID, MacroDefinition, PortraitDefinition } from './project'
 
 export type LocationValue = 'auto' | 'left' | 'center' | 'right' | number
 

@@ -1,14 +1,16 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { mapStackTrace } from 'sourcemapped-stacktrace'
 import { App } from './components/App'
 import { viewStateStore } from './store/viewstate'
-import { loadInitialViewState } from './store/operations'
+import { loadInitialViewState, saveProject } from './store/operations'
 import { projectStore } from './store/project'
 import { wait } from './utils/async'
 import { immSet, immReplaceBy } from './utils/imm'
 import { subscribeToStoreAsync, subscribeToSelector } from './utils/store'
 import { LoadingApp } from './components/LoadingApp'
 import { platform } from './platform/platform'
+import { openDialog } from './components/common/Dialog'
 
 const appContainer = document.createElement('div')
 appContainer.id = 'appContainer'
@@ -16,6 +18,23 @@ document.body.append(appContainer)
 
 const appRoot = createRoot(appContainer)
 appRoot.render(<StrictMode><LoadingApp /></StrictMode>)
+
+async function mapStackTraceAsync(stack: string | undefined) {
+    return await new Promise<string>((resolve, reject) => {
+        try {
+            mapStackTrace(stack, result => resolve(result.join('\n')))
+        } catch (err) {
+            // eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
+            reject(err)
+        }
+    })
+}
+
+window.addEventListener('unhandledrejection', (e) => void (async () => {
+    const msg = e.reason instanceof Error ? `${e.reason.name}: ${e.reason.message}\n${await mapStackTraceAsync(e.reason.stack)}` : String(e.reason)
+    const result = await openDialog('Unexpected Error', `An unexpected error occurred and left the app in an unintended state. To avoid further loss of data, close and re-open the app.\n${msg}`, { cancel: 'Cancel', reload: 'Reload App' })
+    if (result === 'reload') location.reload()
+})())
 
 async function updateTitle() {
     const projectIsLoaded = !!viewStateStore.getSnapshot().loadedProject
@@ -30,8 +49,8 @@ async function initializeAll() {
     subscribeToStoreAsync(projectStore, async state => {
         const viewState = viewStateStore.getSnapshot()
         if (viewState.loadedProject) {
-            const dir = viewState.loadedProject.directory
-            await platform.saveProject(dir, state)
+            const root = viewState.loadedProject.root
+            await saveProject(root, state)
             await wait(1000)
             projectStore.setDirty(false)
         }

@@ -1,16 +1,16 @@
-import type { BackdropID, ChapterID, CharacterID, MacroID, PortraitID, SceneID, SongID, SoundID, StoryID, VariableID, EntityOfType, EntityType, ProjectEntityKeyOf } from '../types/definitions'
-import { PROJECT_ENTITY_KEYS } from '../types/definitions'
+import type { BackdropID, ChapterID, CharacterID, MacroID, PortraitID, SceneID, SongID, SoundID, StoryID, VariableID, EntityOfType, EntityType, ProjectEntityKeyOf } from './project'
+import { PROJECT_ENTITY_KEYS } from './project'
 
 import type { ParseFunc } from '../utils/guard'
 import { defineParser, parsers as $ } from '../utils/guard'
-import { parsePlatformFilesystemEntry, type PlatformFilesystemEntry } from './platform'
+import { parseStorageRootEntry, type StorageRootEntry } from './storage'
 
 export type ProjectEditorTab = 'home' | 'manual' | 'settings' | 'project' | ProjectEntityKeyOf<EntityType>
 
 export interface ProjectMetaData {
     id: string
     name: string
-    directory: PlatformFilesystemEntry
+    root: StorageRootEntry
 }
 
 export interface ViewState {
@@ -24,7 +24,7 @@ export interface ViewState {
 const parseProjectMetaData: ParseFunc<ProjectMetaData> = defineParser<ProjectMetaData>((c, v, d) => $.object(c, v, {
     id: $.string,
     name: $.string,
-    directory: parsePlatformFilesystemEntry,
+    root: parseStorageRootEntry,
 }, d))
 
 export const parseViewState: ParseFunc<ViewState> = defineParser<ViewState>((c, v, d) => $.object(c, v, {

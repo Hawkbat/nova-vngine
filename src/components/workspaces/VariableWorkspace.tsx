@@ -1,5 +1,5 @@
 import { immCreateVariable } from '../../store/operations'
-import type { AnyVariableDefinition } from '../../types/definitions'
+import type { AnyVariableDefinition } from '../../types/project'
 import { EntityWorkspace } from './EntityWorkspace'
 import styles from './VariableWorkspace.module.css'
 

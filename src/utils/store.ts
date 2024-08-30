@@ -8,16 +8,24 @@ export type StoreValueSetter<T> = (oldValue: T) => T
 export function createSimpleStore<T>(defaultValue: T) {
     const listeners = new Set<() => void>()
     let value = defaultValue
+    let disposed = false
 
     const subscribe = (listener: () => void) => {
-        listeners.add(listener)
+        if (!disposed) {
+            listeners.add(listener)
+        }
         return () => {
+            if (disposed) return
             listeners.delete(listener)
         }
     }
     const notify = () => listeners.forEach(l => l())
     const getSnapshot = () => value
     const setValue = (setter: StoreValueSetter<T>) => {
+        if (disposed) {
+            console.warn('setValue called on disposed store', value)
+            return
+        }
         const newValue = setter(value)
         if (newValue !== value) {
             if (LOG_STORE_DIFFS) {
@@ -27,12 +35,20 @@ export function createSimpleStore<T>(defaultValue: T) {
             notify()
         }
     }
+    const dispose = () => {
+        if (disposed) return
+        disposed = true
+        listeners.clear()
+    }
+    const isDisposed = () => disposed
 
     return {
         subscribe,
         notify,
         getSnapshot,
         setValue,
+        isDisposed,
+        dispose,
     }
 }
 

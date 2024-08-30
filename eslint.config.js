@@ -42,6 +42,7 @@ export default pluginTseslint.config(
 
       "@typescript-eslint/no-unused-vars": ["warn", { args: "none", varsIgnorePattern: "^_|^styles$" }],
       "import-x/no-unused-modules": "warn",
+      "no-warning-comments": ["warn", { terms: ['todo'], location: 'start', decoration: ['*'] }],
 
       "@stylistic/no-tabs": "warn",
       "@stylistic/no-trailing-spaces": "warn",
@@ -50,8 +51,14 @@ export default pluginTseslint.config(
       "@stylistic/member-delimiter-style": ["warn", { multiline: { delimiter: "none", requireLast: false }, singleline: { delimiter: "comma", requireLast: false } }],
       "@stylistic/jsx-quotes": ["warn", "prefer-single"],
       "@stylistic/jsx-props-no-multi-spaces": "warn",
+      "@stylistic/object-curly-spacing": ["warn", "always"],
+      "@stylistic/comma-spacing": "warn",
+      "@stylistic/comma-style": "warn",
+      "@stylistic/comma-dangle": ["warn", "always-multiline"],
 
-      "@typescript-eslint/no-confusing-void-expression": "off"
+      "require-await": "off",
+      "@typescript-eslint/require-await": "off",
+      "@typescript-eslint/no-confusing-void-expression": "off",
     }
   },
 );

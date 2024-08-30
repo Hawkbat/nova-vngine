@@ -1,3 +1,8 @@
 
 Rework steps to use generic args/params/children definitions like expressions use
+
 Handle deferred store updates by using setter functions exclusively instead of direct values. Apply each setter immediately but queue up store notifications until the end of the current frame using `setTimeout(cb, 0)`.
+
+Asset handling is tricky. Ideally we want something akin to ref counting where React components request assets via file path/file handle in a hook, automatically rerendering the components when the asset is available (probably via `useSyncExternalStore`), and then the asset can be unloaded when all components using it have expired. We will likely want to delay expiration by a minute or two to avoid thrashing the cache.
+
+We probably don't actually need the Web Audio API for audio; `HTMLAudioElement` is decent, similar to `HTMLImageElement`, and potentially less resource intensive on lower-end devices.

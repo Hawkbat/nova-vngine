@@ -10,6 +10,12 @@ export function throwIfNull<T>(value: T): NonNullable<T> {
     return value
 }
 
+export function isClass<T>(value: unknown, constructor: { new (...args: unknown[]): T }): value is T {
+    return value instanceof constructor
+}
+
+export const getClassFilter = <T>(constructor: { new (...args: unknown[]): T }) => (value: unknown) => isClass(value, constructor)
+
 export interface ParseContext {
     path: string
     warnings: string[]

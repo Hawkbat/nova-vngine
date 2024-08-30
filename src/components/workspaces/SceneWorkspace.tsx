@@ -1,6 +1,6 @@
 import { projectStore } from '../../store/project'
 import { immCreateScene } from '../../store/operations'
-import type { SceneDefinition } from '../../types/definitions'
+import type { SceneDefinition } from '../../types/project'
 import { EntityWorkspace } from './EntityWorkspace'
 import { StepSequenceEditor } from '../editors/StepSequenceEditor'
 import { useStore } from '../../utils/store'

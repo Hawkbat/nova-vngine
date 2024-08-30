@@ -5,9 +5,9 @@ import styles from './Dialog.module.css'
 import { EditorIcon } from './EditorIcon'
 import { createSimpleStore, useSelector, useStore } from '../../utils/store'
 import { immAppend, immRemoveAt, immSet } from '../../utils/imm'
-import { mdiAlert } from '@mdi/js'
 import { hintTuple } from '../../utils/types'
 import { EditorButton, EditorButtonGroup } from './EditorButton'
+import { COMMON_ICONS } from './Icons'
 
 export interface DialogChoice {
     content: React.ReactNode
@@ -41,7 +41,7 @@ export async function openCustomDialog<T extends string>(title: React.ReactNode,
 }
 
 export async function openDialog<T extends string>(title: string, message: string, choices: Record<T, string>): Promise<T> {
-    return await openCustomDialog(<><EditorIcon path={mdiAlert} label={title} /> {title}</>, <>{message}</>, Object.fromEntries(Object.entries(choices).map(([k, v], i, arr) => hintTuple(k, { content: <>{v}</>, primary: i === arr.length - 1 ? true : undefined }))) as Record<T, DialogChoice>)
+    return await openCustomDialog(<><EditorIcon path={COMMON_ICONS.warning} label={title} /> {title}</>, <>{message}</>, Object.fromEntries(Object.entries(choices).map(([k, v], i, arr) => hintTuple(k, { content: <>{v}</>, primary: i === arr.length - 1 ? true : undefined }))) as Record<T, DialogChoice>)
 }
 
 export function useIsDialogOpen() {

@@ -1,26 +1,47 @@
 import { useCallback } from 'react'
-import { type EntityType, type EntityIDOf, getProjectEntityKey, getEntityParentID, getEntityParentType, type EntityOfType, type EntityParentOf, type AnyVariableDefinition, type BackdropDefinition, type BackdropID, type ChapterDefinition, type ChapterID, type CharacterDefinition, type CharacterID, type PortraitDefinition, type PortraitID, type ProjectDefinition, type SceneDefinition, type SceneID, type SongDefinition, type SongID, type SoundDefinition, type SoundID, type StoryDefinition, type StoryID, type VariableID, ENTITY_TYPES, getEntityTypeHierarchy } from '../types/definitions'
+import { type EntityType, type EntityIDOf, getProjectEntityKey, getEntityParentID, getEntityParentType, type EntityOfType, type EntityParentOf, type AnyVariableDefinition, type BackdropDefinition, type BackdropID, type ChapterDefinition, type ChapterID, type CharacterDefinition, type CharacterID, type PortraitDefinition, type PortraitID, type ProjectDefinition, type SceneDefinition, type SceneID, type SongDefinition, type SongID, type SoundDefinition, type SoundID, type StoryDefinition, type StoryID, type VariableID, ENTITY_TYPES, getEntityTypeHierarchy, parseProjectDefinition } from '../types/project'
 import { type ExprContext, resolveExpr, createDefaultExpr } from '../types/expressions'
 import { immSet, immAppend } from '../utils/imm'
-import { isPlatformErrorCode, type PlatformFilesystemEntry } from '../types/platform'
+import { DEFAULT_PROJECT_FILENAME, isPlatformErrorCode } from '../types/platform'
 import { platform } from '../platform/platform'
-import { randID } from '../utils/rand'
+import { randID, uncheckedRandID } from '../utils/rand'
 import { useSelector } from '../utils/store'
 import { hintTuple } from '../utils/types'
-import { projectStore } from './project'
+import { createDefaultProject, projectStore } from './project'
 import type { ProjectEditorTab, ProjectMetaData } from '../types/viewstate'
 import { viewStateStore } from './viewstate'
+import { tryParseJson } from '../utils/guard'
+import type { StorageRootEntry } from '../types/storage'
+import { getStorageProvider } from '../platform/storage/storage'
+import { openDialog } from '../components/common/Dialog'
 
-export async function loadProjectFromFolder(dir: PlatformFilesystemEntry) {
-    const project = await platform.loadProject(dir)
-    if (!project) return false
+function parseProjectFromJson(text: string) {
+    const parsed = tryParseJson(text, 'project', parseProjectDefinition)
+    if (parsed.ctx.warnings.length) void platform.warn(parsed.ctx.warnings)
+    if (!parsed.success) {
+        void platform.error('Failed to parse project', text, parsed.ctx.errors)
+        throw new Error('The project file was outdated or corrupted in a manner that has prevented it from loading.')
+    }
+    return parsed.value
+}
 
-    const projectMetaData: ProjectMetaData = { id: project.id, name: project.name, directory: dir }
+export async function saveProject(root: StorageRootEntry, project: ProjectDefinition) {
+    const json = JSON.stringify(project, undefined, 2)
+    const provider = getStorageProvider(root.type)
+    if (!provider.storeText) throw new Error('Tried to save project file but current storage provider does not support it')
+    await provider.storeText(root, DEFAULT_PROJECT_FILENAME, json)
+}
+
+export async function loadProject(root: StorageRootEntry) {
+    const json = await getStorageProvider(root.type).loadText(root, DEFAULT_PROJECT_FILENAME)
+    const project = parseProjectFromJson(json)
+
+    const projectMetaData: ProjectMetaData = { id: project.id, name: project.name, root: root }
 
     viewStateStore.setValue(viewState => ({
         ...viewState,
         loadedProject: projectMetaData,
-        recentProjects: viewState.recentProjects.filter(p => p.id !== projectMetaData.id).concat([projectMetaData])
+        recentProjects: viewState.recentProjects.filter(p => p.id !== projectMetaData.id).concat([projectMetaData]),
     }))
     projectStore.setValue(() => project)
     projectStore.clearHistory()
@@ -32,7 +53,7 @@ export async function loadInitialViewState() {
     const viewState = await platform.loadViewState()
     viewStateStore.setValue(() => viewState)
     try {
-        if (viewState.loadedProject && await loadProjectFromFolder(viewState.loadedProject.directory)) {
+        if (viewState.loadedProject && await loadProject(viewState.loadedProject.root)) {
             return
         }
     } catch (err) {
@@ -48,6 +69,79 @@ export async function loadInitialViewState() {
         loadedProject: null,
         loaded: true,
     }))
+}
+
+async function tryLoadProject(root: StorageRootEntry) {
+    try {
+        await loadProject(root)
+        viewStateStore.setValue(s => immSet(s, 'currentTab', 'project'))
+    } catch (err) {
+        if (isPlatformErrorCode(err, 'bad-project')) {
+            await openDialog('Bad Project File', err.message, { ok: 'OK' })
+            return false
+        }
+    }
+    return true
+}
+
+export async function userCreateNewProject() {
+    if (projectStore.isDirty()) {
+        const result = await openDialog('Unsaved Changes', 'You have unsaved changes. Are you sure you want to discard these changes and start a new project?', { cancel: 'Cancel', continue: 'Continue' })
+        if (result === 'cancel') return
+    }
+
+    const storage = getStorageProvider()
+
+    const dirResult = await storage.pickDirectory?.(null, { title: 'Select project folder' })
+    if (!dirResult) return
+
+    const root = await dirResult.toRoot()
+    const entries = await storage.listDirectory(root, '.')
+
+    const projectFileEntry = entries.files.find(e => e.name === DEFAULT_PROJECT_FILENAME)
+    if (projectFileEntry) {
+        const result = await openDialog('Folder Not Empty', 'The folder you selected contains an existing project, so a new project cannot be created there. Would you like to open the project you selected instead?', { cancel: 'Cancel', continue: 'Open Project' })
+        if (result === 'cancel') return
+        await tryLoadProject(root)
+        return
+    }
+
+    if (entries.files.length || entries.directories.length) {
+        await openDialog('Folder Not Empty', 'The folder you selected contains files or folders already and cannot be used for new projects. Please select an empty folder.', { ok: 'OK' })
+        return
+    }
+
+    const id = root.type === 'browser' || root.type === 'chromium' ? root.key : uncheckedRandID()
+    const initialProject = createDefaultProject(id)
+    await saveProject(root, initialProject)
+    await tryLoadProject(root)
+}
+
+export async function userSelectProject() {
+    if (projectStore.isDirty()) {
+        const result = await openDialog('Unsaved Changes', 'You have unsaved changes. Are you sure you want to discard these changes and open a different project?', { cancel: 'Cancel', continue: 'Continue' })
+        if (result === 'cancel') return
+    }
+
+    const storage = getStorageProvider()
+
+    const dirResult = await storage.pickDirectory?.(null, { title: 'Select project folder' })
+    if (!dirResult) return
+
+    const root = await dirResult.toRoot()
+    const entries = await storage.listDirectory(root, '.')
+
+    const projectFile = entries.files.find(f => f.name === DEFAULT_PROJECT_FILENAME)
+    if (!projectFile) {
+        await openDialog('Invalid Project', 'The folder you selected does not contain a valid project file. Please select a directory containing a valid project.', { ok: 'OK' })
+        return
+    }
+
+    await tryLoadProject(root)
+}
+
+export async function userOpenRecentProject(p: ProjectMetaData) {
+    await tryLoadProject(p.root)
 }
 
 export function getProjectExprContext(): ExprContext {
