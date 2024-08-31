@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { hintTuple } from './types'
 
 export function useStateFromProps<T>(value: T) {
@@ -46,4 +46,44 @@ export function useAnimationLoop(active: boolean, callback: (deltaTime: number, 
             cancelAnimationFrame(handle)
         }
     }, [active, callback])
+}
+
+export function useDrop(callback: (drops: { type: 'files', files: File[] }) => void) {
+    const [dragOver, setDragOver] = useState(false)
+    const onDragEnter = useCallback((e: React.DragEvent) => {
+        if (e.target != e.currentTarget) return
+        setDragOver(true)
+    }, [])
+    const onDragLeave = useCallback((e: React.DragEvent) => {
+        if (e.target != e.currentTarget) return
+        setDragOver(false)
+    }, [])
+    const onDragOver = useCallback((e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        e.dataTransfer.dropEffect = 'copy'
+        e.dataTransfer.effectAllowed = 'copy'
+    }, [])
+    const onDrop = useCallback((e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+
+        void (async () => {
+            if (e.dataTransfer.files.length) {
+                const files: File[] = []
+                for (let i = 0; i < e.dataTransfer.files.length; i++) {
+                    const file = e.dataTransfer.files[i]
+                    files.push(file)
+                }
+                callback({ type: 'files', files })
+            }
+        })()
+    }, [callback])
+    const props: React.HTMLAttributes<HTMLElement> = useMemo(() => ({
+        onDragEnter,
+        onDragLeave,
+        onDragOver,
+        onDrop,
+    }), [onDragEnter, onDragLeave, onDragOver, onDrop])
+    return hintTuple(props, dragOver)
 }

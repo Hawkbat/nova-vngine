@@ -15,9 +15,13 @@
     --bg-color: #111;
     --text-color: white;
     --primary-color: #FA5;
+    --secondary-color: #5AF;
     --error-color: #f66;
     --menu-bg-color: #222;
     --menu-border-color: #444;
+    --hover-color: #8888;
+    --backsplash-color: #0008;
+    --sidebar-color: #222;
     background: var(--bg-color);
     color: var(--text-color);
     font-family: 'Inter', sans-serif;

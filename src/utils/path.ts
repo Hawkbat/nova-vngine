@@ -23,6 +23,13 @@ export function getPathParentPath(path: string): string {
     return joinPathSegments(segments.slice(0, -1))
 }
 
+export function getPathExtension(path: string): string {
+    const fileName = getPathFileName(path)
+    const index = fileName.indexOf('.')
+    if (index >= 0) return fileName.substring(index)
+    return ''
+}
+
 export function getPathHierarchy(path: string): string[] {
     const results: string[] = []
     const segments = getPathSegments(normalizePath(path))
@@ -104,14 +111,11 @@ export function getRelativePath(to: string, from: string) {
     const sharedSegments = keepWhile(fromSegments, (s, i) => toSegments[i] === s)
 
     const resultSegments: string[] = []
-    while (fromSegments.length > sharedSegments.length) {
-        fromSegments.pop()
+    for (const _ of fromSegments.slice(sharedSegments.length)) {
         resultSegments.push('..')
     }
-    while (toSegments.length > sharedSegments.length) {
-        const segment = toSegments.shift()
-        if (segment === undefined) break
-        resultSegments.push(segment)
+    for (const s of toSegments.slice(sharedSegments.length)) {
+        resultSegments.push(s)
     }
     return joinPathSegments(resultSegments)
 }

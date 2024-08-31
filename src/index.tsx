@@ -36,6 +36,21 @@ window.addEventListener('unhandledrejection', (e) => void (async () => {
     if (result === 'reload') location.reload()
 })())
 
+window.addEventListener('dragover', e => {
+    e.preventDefault()
+    if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'none'
+        e.dataTransfer.dropEffect = 'none'
+    }
+})
+window.addEventListener('drop', e => {
+    e.preventDefault()
+    if (e.dataTransfer) {
+        e.dataTransfer.effectAllowed = 'none'
+        e.dataTransfer.dropEffect = 'none'
+    }
+})
+
 async function updateTitle() {
     const projectIsLoaded = !!viewStateStore.getSnapshot().loadedProject
     const name = projectStore.getSnapshot().name

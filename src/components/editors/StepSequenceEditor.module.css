@@ -82,5 +82,5 @@
 }
 
 .outlineBubble:hover {
-    background: #FFF4;
+    background: var(--hover-color);
 }

@@ -15,7 +15,7 @@ import styles from './EntityWorkspace.module.css'
 export const EntityWorkspace = <T extends EntityType>({ type, immCreate, children }: {
     type: T
     immCreate: (project: ProjectDefinition, parentID: EntityParentIDOf<T>) => [ProjectDefinition, EntityOfType<T>]
-    children: (item: EntityOfType<T>) => React.ReactNode
+    children: (item: EntityOfType<T>, setItem: (setter: (value: EntityOfType<T>) => EntityOfType<T>) => void) => React.ReactNode
 }) => {
     const parentType = getEntityParentType(type)
     const projectKey = getProjectEntityKey(type)
@@ -53,7 +53,7 @@ export const EntityWorkspace = <T extends EntityType>({ type, immCreate, childre
         {item ? <>
             <StringField label={`${prettyPrintIdentifier(type)} Name`} value={item.name} setValue={name => setProject(project => immSet(project, projectKey, immReplaceBy(project[projectKey] as EntityOfType<T>[], s => s.id, immSet(item, 'name', name)) as ProjectDefinition[ProjectEntityKeyOf<T>]))} validate={s => s ? '' : 'Name must be filled out'} />
             <StringField label={`${prettyPrintIdentifier(type)} ID`} value={item.id} />
-            {children(item)}
+            {children(item, setter => setProject(project => immSet(project, projectKey, immReplaceBy(project[projectKey] as EntityOfType<T>[], s => s.id, setter(item)) as ProjectDefinition[ProjectEntityKeyOf<T>])))}
         </> : <>
             {parentType && !scopedParentID ? parentItems?.map(p => <Fragment key={p.id}>
                 <div className={styles.listHeading}>

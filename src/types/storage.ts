@@ -1,6 +1,7 @@
 import type { StorageType } from '../platform/storage/storage'
 import type { ParseFunc } from '../utils/guard'
 import { defineParser, parsers as $ } from '../utils/guard'
+import type { AssetDefinition } from './project'
 
 export interface StorageRootEntry {
     type: StorageType
@@ -39,7 +40,7 @@ export interface StorageProvider {
     storeBinary?(root: StorageRootEntry | null, path: string, buffer: ArrayBuffer): Promise<void>
     loadText(root: StorageRootEntry | null, path: string): Promise<string>
     loadBinary(root: StorageRootEntry | null, path: string): Promise<ArrayBuffer>
-    loadAsset(root: StorageRootEntry | null, path: string): Promise<{ url: string, unload: () => void }>
+    loadAsset(root: StorageRootEntry | null, asset: AssetDefinition): Promise<{ url: string, unload: () => void }>
     listDirectory(root: StorageRootEntry | null, path: string): Promise<{ directories: StorageDirectoryResult[], files: StorageFileResult[] }>
     pickFiles?(root: StorageRootEntry | null, options: { title?: string, fileType: string, extensions: string[], multi?: boolean, startIn?: string }): Promise<StorageFileResult[] | null>
     pickDirectory?(root: StorageRootEntry | null, options: { title?: string, startIn?: string }): Promise<StorageDirectoryResult | null>

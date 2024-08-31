@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 import { type EntityType, type EntityIDOf, getProjectEntityKey, getEntityParentID, getEntityParentType, type EntityOfType, type EntityParentOf, type AnyVariableDefinition, type BackdropDefinition, type BackdropID, type ChapterDefinition, type ChapterID, type CharacterDefinition, type CharacterID, type PortraitDefinition, type PortraitID, type ProjectDefinition, type SceneDefinition, type SceneID, type SongDefinition, type SongID, type SoundDefinition, type SoundID, type StoryDefinition, type StoryID, type VariableID, ENTITY_TYPES, getEntityTypeHierarchy, parseProjectDefinition } from '../types/project'
 import { type ExprContext, resolveExpr, createDefaultExpr } from '../types/expressions'
 import { immSet, immAppend } from '../utils/imm'
-import { DEFAULT_PROJECT_FILENAME, isPlatformErrorCode } from '../types/platform'
+import { DEFAULT_PROJECT_FILENAME, isPlatformErrorCode, PlatformError } from '../types/platform'
 import { platform } from '../platform/platform'
 import { randID, uncheckedRandID } from '../utils/rand'
 import { useSelector } from '../utils/store'
@@ -20,7 +20,7 @@ function parseProjectFromJson(text: string) {
     if (parsed.ctx.warnings.length) void platform.warn(parsed.ctx.warnings)
     if (!parsed.success) {
         void platform.error('Failed to parse project', text, parsed.ctx.errors)
-        throw new Error('The project file was outdated or corrupted in a manner that has prevented it from loading.')
+        throw new PlatformError('bad-project', 'The project file was outdated or corrupted in a manner that has prevented it from loading.')
     }
     return parsed.value
 }
@@ -28,7 +28,7 @@ function parseProjectFromJson(text: string) {
 export async function saveProject(root: StorageRootEntry, project: ProjectDefinition) {
     const json = JSON.stringify(project, undefined, 2)
     const provider = getStorageProvider(root.type)
-    if (!provider.storeText) throw new Error('Tried to save project file but current storage provider does not support it')
+    if (!provider.storeText) throw new PlatformError('bad-project', 'Tried to save project file but current storage provider does not support it')
     await provider.storeText(root, DEFAULT_PROJECT_FILENAME, json)
 }
 
@@ -282,6 +282,7 @@ export function immCreatePortrait(project: ProjectDefinition, characterID: Chara
         id,
         name: '',
         characterID,
+        image: null,
     }
 
     return hintTuple(immSet(project, 'portraits', immAppend(project.portraits, portrait)), portrait)
@@ -294,6 +295,7 @@ export function immCreateBackdrop(project: ProjectDefinition): [ProjectDefinitio
     const backdrop: BackdropDefinition = {
         id,
         name: '',
+        image: null,
     }
 
     return hintTuple(immSet(project, 'backdrops', immAppend(project.backdrops, backdrop)), backdrop)
@@ -306,6 +308,7 @@ export function immCreateSong(project: ProjectDefinition): [ProjectDefinition, S
     const song: SongDefinition = {
         id,
         name: '',
+        audio: null,
     }
 
     return hintTuple(immSet(project, 'songs', immAppend(project.songs, song)), song)
@@ -318,6 +321,7 @@ export function immCreateSound(project: ProjectDefinition): [ProjectDefinition, 
     const sound: SoundDefinition = {
         id,
         name: '',
+        audio: null,
     }
 
     return hintTuple(immSet(project, 'sounds', immAppend(project.sounds, sound)), sound)
@@ -366,4 +370,16 @@ export function useViewStateScope<T extends EntityType>(type: T | null) {
         setViewState(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues } }))
     }, [setViewState, type])
     return hintTuple(scope, setScope)
+}
+
+export function getProjectStorage() {
+    const root = viewStateStore.getSnapshot().loadedProject?.root ?? null
+    const storage = getStorageProvider(root?.type)
+    return { storage, root }
+}
+
+export function useProjectStorage() {
+    const [root] = useSelector(viewStateStore, s => s.loadedProject?.root ?? null)
+    const storage = getStorageProvider(root?.type)
+    return { storage, root }
 }

@@ -5,11 +5,10 @@
     top: 0;
     right: 0;
     bottom: 0;
-    background: #0008;
+    background: var(--backsplash-color);
     display: flex;
     justify-content: center;
     align-items: center;
-    user-select: none;
 }
 
 .dialog {

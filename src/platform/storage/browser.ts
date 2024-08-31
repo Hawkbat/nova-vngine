@@ -124,9 +124,9 @@ export const browserStorageProvider: StorageProvider = {
         const buffer = await file.arrayBuffer()
         return buffer
     },
-    async loadAsset(root, path) {
-        const buffer = await this.loadBinary(root, path)
-        const blob = new Blob([buffer])
+    async loadAsset(root, asset) {
+        const buffer = await this.loadBinary(root, asset.path)
+        const blob = new Blob([buffer], { type: asset.mimeType })
         const url = URL.createObjectURL(blob)
         const unload = () => {
             URL.revokeObjectURL(url)

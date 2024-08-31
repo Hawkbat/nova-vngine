@@ -3,7 +3,7 @@
   "name": "Example Project",
   "editorRandState": [
     "xorshift32",
-    1512714449
+    -996387461
   ],
   "stories": [
     {
@@ -35,7 +35,7 @@
   "scenes": [
     {
       "id": "X81UH1BT",
-      "name": "My New Scene",
+      "name": "My First Scene",
       "chapterID": "213RCRAR",
       "steps": [
         {
@@ -48,9 +48,32 @@
             ]
           },
           "text": {
-            "type": "string",
-            "args": [
-              "Here's some text it never fails"
+            "type": "format",
+            "children": [
+              [
+                {
+                  "type": "string",
+                  "args": [
+                    "Good morning, "
+                  ]
+                }
+              ],
+              [
+                {
+                  "type": "variable",
+                  "args": [
+                    "4BTATXCJ"
+                  ]
+                }
+              ],
+              [
+                {
+                  "type": "string",
+                  "args": [
+                    "!"
+                  ]
+                }
+              ]
             ]
           }
         }
@@ -60,39 +83,95 @@
   "characters": [
     {
       "id": "1U58I1SC",
-      "name": "My Cool Character"
+      "name": "Emma"
     }
   ],
   "portraits": [
     {
       "id": "7R9ORU1P",
       "name": "Neutral",
-      "characterID": "1U58I1SC"
+      "characterID": "1U58I1SC",
+      "image": {
+        "mimeType": "image/png",
+        "path": "portraits/7R9ORU1P"
+      }
+    },
+    {
+      "id": "COL0H7JM",
+      "name": "Happy",
+      "characterID": "1U58I1SC",
+      "image": {
+        "mimeType": "image/png",
+        "path": "portraits/COL0H7JM"
+      }
+    },
+    {
+      "id": "7DX98O0E",
+      "name": "Sad",
+      "characterID": "1U58I1SC",
+      "image": {
+        "mimeType": "image/png",
+        "path": "portraits/7DX98O0E"
+      }
+    },
+    {
+      "id": "QPWCI2HJ",
+      "name": "Blush",
+      "characterID": "1U58I1SC",
+      "image": {
+        "mimeType": "image/png",
+        "path": "portraits/QPWCI2HJ"
+      }
     }
   ],
   "backdrops": [
     {
       "id": "4YAVCQUO",
-      "name": "My Cool Backdrop"
+      "name": "Plaza",
+      "image": {
+        "mimeType": "image/png",
+        "path": "backdrops/4YAVCQUO"
+      }
+    },
+    {
+      "id": "DIIL1XDV",
+      "name": "Dorm Room",
+      "image": {
+        "mimeType": "image/png",
+        "path": "backdrops/DIIL1XDV"
+      }
+    },
+    {
+      "id": "XUJMMGGN",
+      "name": "Classroom",
+      "image": {
+        "mimeType": "image/png",
+        "path": "backdrops/XUJMMGGN"
+      }
     }
   ],
   "songs": [
     {
       "id": "HVBBNPAO",
-      "name": "Neat Song"
+      "name": "Sample Loop",
+      "audio": {
+        "mimeType": "audio/ogg",
+        "path": "songs/HVBBNPAO"
+      }
     }
   ],
   "sounds": [
     {
       "id": "2KX8AFHT",
-      "name": "Awesome Sound"
+      "name": "Awesome Sound",
+      "audio": null
     }
   ],
   "variables": [
     {
       "type": "flag",
       "id": "4BTATXCJ",
-      "name": "Test",
+      "name": "Player Name",
       "scope": {
         "type": "allStories"
       },

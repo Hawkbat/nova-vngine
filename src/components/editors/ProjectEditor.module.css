@@ -9,8 +9,10 @@
     flex-direction: column;
     font-size: 2.25em;
     overflow: auto;
-    background: #222;
+    background: var(--sidebar-color);
     padding-bottom: 0.25em;
+    padding-left: 0.1em;
+    padding-right: 0.1em;
     gap: 0.1em;
 }
 
@@ -20,7 +22,7 @@
 
 .sidebarLine {
     margin: 0.1em;
-    border-bottom: 1px solid #444;
+    border-bottom: 1px solid var(--menu-border-color);
 }
 
 .pane {

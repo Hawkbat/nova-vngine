@@ -164,24 +164,25 @@ export type PortraitID = EntityID<'portrait'>
 
 export interface PortraitDefinition extends EntityDefinition<PortraitID> {
     characterID: CharacterID
+    image: AssetDefinition | null
 }
 
 export type BackdropID = EntityID<'backdrop'>
 
 export interface BackdropDefinition extends EntityDefinition<BackdropID> {
-
+    image: AssetDefinition | null
 }
 
 export type SongID = EntityID<'song'>
 
 export interface SongDefinition extends EntityDefinition<SongID> {
-
+    audio: AssetDefinition | null
 }
 
 export type SoundID = EntityID<'sound'>
 
 export interface SoundDefinition extends EntityDefinition<SoundID> {
-
+    audio: AssetDefinition | null
 }
 
 export type VariableID = EntityID<'variable'>
@@ -269,6 +270,16 @@ export interface MacroDefinition extends EntityDefinition<MacroID> {
     steps: AnyStep[]
 }
 
+export interface AssetDefinition {
+    mimeType: string
+    path: string
+}
+
+const parseAssetDefinition: ParseFunc<AssetDefinition> = defineParser<AssetDefinition>((c, v, d) => $.object(c, v, {
+    mimeType: $.string,
+    path: $.string,
+}, d))
+
 const parseStoryDefinition: ParseFunc<StoryDefinition> = defineParser<StoryDefinition>((c, v, d) => $.object(c, v, {
     id: $.id,
     name: $.string,
@@ -296,21 +307,25 @@ const parsePortraitDefinition: ParseFunc<PortraitDefinition> = defineParser<Port
     id: $.id,
     name: $.string,
     characterID: $.id,
+    image: (c, v, d) => $.either(c, v, parseAssetDefinition, $.null, d),
 }, d))
 
 const parseBackdropDefinition: ParseFunc<BackdropDefinition> = defineParser<BackdropDefinition>((c, v, d) => $.object(c, v, {
     id: $.id,
     name: $.string,
+    image: (c, v, d) => $.either(c, v, parseAssetDefinition, $.null, d),
 }, d))
 
 const parseSongDefinition: ParseFunc<SongDefinition> = defineParser<SongDefinition>((c, v, d) => $.object(c, v, {
     id: $.id,
     name: $.string,
+    audio: (c, v, d) => $.either(c, v, parseAssetDefinition, $.null, d),
 }, d))
 
 const parseSoundDefinition: ParseFunc<SoundDefinition> = defineParser<SoundDefinition>((c, v, d) => $.object(c, v, {
     id: $.id,
     name: $.string,
+    audio: (c, v, d) => $.either(c, v, parseAssetDefinition, $.null, d),
 }, d))
 
 const parseAnyPartialVariableDefinition: ParseFunc<AnyPartialVariableDefinition> = defineParser<AnyPartialVariableDefinition>((c, v, d) => $.typed(c, v, {}, {
