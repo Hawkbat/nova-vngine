@@ -1,6 +1,8 @@
 
 Rework steps to use generic args/params/children definitions like expressions use
 
+Deeply nested step trees are a mess. Maybe we can refactor to store in one long array and have 'end' step markers instead
+
 Handle deferred store updates by deferring calls of the subscription listeners until the end of the current frame using `setTimeout(cb, 0)`. State updates should still happen synchronously, and some listeners may need to be synchronous (like diffing listeners)
 
 Generate and cache thumbnails for images and lazily load audio for 'preview' playback in place of generic icons for those entity types

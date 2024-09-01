@@ -2,6 +2,8 @@ import { parseViewState } from '../types/viewstate'
 import { viewStateStore } from '../store/viewstate'
 import type { Platform } from '../types/platform'
 import { tryParseJson } from '../utils/guard'
+import { parseSettingsState } from '../types/settings'
+import { settingsStore } from '../store/settings'
 
 export const webPlatform: Platform = {
     type: 'web',
@@ -24,6 +26,19 @@ export const webPlatform: Platform = {
     },
     async saveViewState(viewState) {
         localStorage.setItem('nvn-viewstate', JSON.stringify(viewState))
+    },
+    async loadSettings() {
+        const json = localStorage.getItem('nvn-settings')
+        const parsed = tryParseJson(json ?? '', 'settings', parseSettingsState)
+        if (parsed.ctx.warnings.length) void this.warn(parsed.ctx.warnings)
+        if (!parsed.success) {
+            void this.error('Failed to load settings', json, parsed.ctx.errors)
+            return settingsStore.getSnapshot()
+        }
+        return parsed.value
+    },
+    async saveSettings(settings) {
+        localStorage.setItem('nvn-settings', JSON.stringify(settings))
     },
     async setTitle(title) {
         document.title = title

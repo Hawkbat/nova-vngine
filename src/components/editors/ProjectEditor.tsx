@@ -24,6 +24,7 @@ import { platform } from '../../platform/platform'
 import { BUILD_COMMIT, BUILD_DATETIME } from '../../injected'
 import type { ProjectEditorTab } from '../../types/viewstate'
 import { useCallback } from 'react'
+import { SettingsWorkspace } from '../workspaces/SettingsWorkspace'
 
 const Breadcrumb = ({ type }: { type: EntityType }) => {
     const tab = getProjectEntityKey(type)
@@ -100,7 +101,7 @@ export const ProjectEditor = () => {
     return <div className={styles.editor}>
         <Sidebar />
         <div className={styles.pane}>
-            {isProjectEntityKey(currentTab) || currentTab === 'project' ? <Breadcrumbs /> : null}
+            <Breadcrumbs />
             <div className={styles.workspace}>
                 {currentTab === 'home' ? <HomeWorkspace /> : null}
                 {currentTab === 'project' ? <ProjectWorkspace /> : null}
@@ -113,6 +114,7 @@ export const ProjectEditor = () => {
                 {currentTab === 'songs' ? <SongWorkspace /> : null}
                 {currentTab === 'sounds' ? <SoundWorkspace /> : null}
                 {currentTab === 'variables' ? <VariableWorkspace /> : null}
+                {currentTab === 'settings' ? <SettingsWorkspace /> : null}
             </div>
             <Footer />
         </div>

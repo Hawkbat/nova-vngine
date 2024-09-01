@@ -1,4 +1,5 @@
 import type { PlatformType } from '../platform/platform'
+import type { SettingsState } from './settings'
 import type { ViewState } from './viewstate'
 
 export interface Platform {
@@ -8,6 +9,8 @@ export interface Platform {
     initialize(): Promise<void>
     loadViewState(): Promise<ViewState>
     saveViewState(viewState: ViewState): Promise<void>
+    loadSettings(): Promise<SettingsState>
+    saveSettings(settings: SettingsState): Promise<void>
     setTitle(title: string): Promise<void>
     log(...objs: unknown[]): Promise<void>
     warn(...objs: unknown[]): Promise<void>

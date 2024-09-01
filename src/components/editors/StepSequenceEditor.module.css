@@ -10,6 +10,7 @@
     overflow: scroll;
     flex: 0 1 auto;
     align-items: center;
+    padding: 0.25em;
 }
 
 .timeline .timeline {
@@ -84,4 +85,24 @@
 
 .outlineBubble:hover {
     background: var(--hover-color);
+}
+
+.stepGap {
+    width: 0.75em;
+    height: 2em;
+    display: flex;
+    align-items: center;
+}
+
+.stepLine {
+    width: 100%;
+    border-bottom: 1px dashed var(--text-color);
+}
+
+.dragOver {
+    outline: 2px solid var(--secondary-color);
+}
+
+.dragging {
+    opacity: 0.5;
 }

@@ -20,7 +20,8 @@ export const UploadZone = ({ className, title, fileType, extensions, multi, star
 }) => {
     const { root, storage } = useProjectStorage()
 
-    const [dropProps, dropOver] = useDrop(useCallback(values => {
+    const [dropProps, dropOver] = useDrop('copy', useCallback(values => {
+        if (values.type !== 'files') return
         onUpload(values.files.map(f => ({
             type: 'file',
             name: f.name,

@@ -263,15 +263,32 @@ type VariableDefinitionMap = {
     }
 }
 
-type PartialVariableDefinitionOfType<T extends VariableDefinitionType> = T extends VariableDefinitionType ? Omit<VariableDefinitionOfType<T>, 'id' | 'default' | 'name' | 'scope'> : never
-type AnyPartialVariableDefinition = PartialVariableDefinitionOfType<VariableDefinitionType>
+const VARIABLE_TYPE_MAP = {
+    flag: true,
+    integer: true,
+    number: true,
+    text: true,
+    singleChoice: true,
+    multipleChoice: true,
+    chapter: true,
+    scene: true,
+    character: true,
+    portrait: true,
+    list: true,
+    lookup: true,
+} satisfies Record<VariableType, true>
 
-export type VariableDefinitionType = keyof VariableDefinitionMap
-export type VariableDefinitionOfType<T extends VariableDefinitionType> = T extends VariableDefinitionType ? EntityDefinition<VariableID> & {
+export const VARIABLE_TYPES = Object.keys(VARIABLE_TYPE_MAP) as VariableType[]
+
+export type PartialVariableDefinitionOfType<T extends VariableType> = T extends VariableType ? Omit<VariableDefinitionOfType<T>, 'id' | 'default' | 'name' | 'scope'> : never
+export type AnyPartialVariableDefinition = PartialVariableDefinitionOfType<VariableType>
+
+export type VariableType = keyof VariableDefinitionMap
+export type VariableDefinitionOfType<T extends VariableType> = T extends VariableType ? EntityDefinition<VariableID> & {
     type: T
     scope: AnyVariableScope
 } & VariableDefinitionMap[T] : never
-export type AnyVariableDefinition = VariableDefinitionOfType<VariableDefinitionType>
+export type AnyVariableDefinition = VariableDefinitionOfType<VariableType>
 
 export type MacroID = EntityID<'macro'>
 

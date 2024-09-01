@@ -1,5 +1,5 @@
 import { useCallback } from 'react'
-import { type EntityParentIDOf, type MacroDefinition, type MacroID, type EntityType, type EntityIDOf, type EntityOfType, type EntityParentOf, type AnyVariableDefinition, type BackdropDefinition, type BackdropID, type ChapterDefinition, type ChapterID, type CharacterDefinition, type CharacterID, ENTITY_TYPES, getEntityParentID, getEntityParentType, getEntityTypeHierarchy, getProjectEntityKey, type PortraitDefinition, type PortraitID, type ProjectDefinition, type SceneDefinition, type SceneID, type SongDefinition, type SongID, type SoundDefinition, type SoundID, type StoryDefinition, type StoryID, type VariableID, parseProjectDefinition } from '../types/project'
+import { type EntityParentIDOf, type MacroDefinition, type MacroID, type EntityType, type EntityIDOf, type EntityOfType, type EntityParentOf, type AnyVariableDefinition, type BackdropDefinition, type BackdropID, type ChapterDefinition, type ChapterID, type CharacterDefinition, type CharacterID, ENTITY_TYPES, getEntityParentID, getEntityParentType, getEntityTypeHierarchy, getProjectEntityKey, type PortraitDefinition, type PortraitID, type ProjectDefinition, type SceneDefinition, type SceneID, type SongDefinition, type SongID, type SoundDefinition, type SoundID, type StoryDefinition, type StoryID, type VariableID, parseProjectDefinition, type VariableType } from '../types/project'
 import { type ExprContext, resolveExpr, createDefaultExpr } from '../types/expressions'
 import { immSet, immAppend } from '../utils/imm'
 import { DEFAULT_PROJECT_FILENAME, isPlatformErrorCode, PlatformError } from '../types/platform'
@@ -14,6 +14,7 @@ import { tryParseJson } from '../utils/guard'
 import type { StorageRootEntry } from '../types/storage'
 import { getStorageProvider } from '../platform/storage/storage'
 import { openDialog } from '../components/common/Dialog'
+import { settingsStore } from './settings'
 
 function parseProjectFromJson(text: string) {
     const parsed = tryParseJson(text, 'project', parseProjectDefinition)
@@ -69,6 +70,11 @@ export async function loadInitialViewState() {
         loadedProject: null,
         loaded: true,
     }))
+}
+
+export async function loadInitialSettings() {
+    const viewState = await platform.loadSettings()
+    settingsStore.setValue(() => viewState)
 }
 
 async function tryLoadProject(root: StorageRootEntry) {
@@ -372,6 +378,26 @@ export function immCreateEntity<T extends EntityType>(type: T, project: ProjectD
         case 'variable': return immCreateVariable(project) as [ProjectDefinition, EntityOfType<T>]
         case 'macro': return immCreateMacro(project) as [ProjectDefinition, EntityOfType<T>]
         default: assertExhaustive(type, `Unhandled entity type ${type}`)
+    }
+}
+
+export function immConvertVariable(variable: AnyVariableDefinition, type: VariableType): AnyVariableDefinition {
+    const ctx = getProjectExprContext()
+    const { id, name, scope } = variable
+    switch (type) {
+        case 'flag': return { id, name, type, scope, default: createDefaultExpr('boolean', ctx), setValueLabel: createDefaultExpr('string', ctx), unsetValueLabel: createDefaultExpr('string', ctx) }
+        case 'integer': return { id, name, type, scope, default: createDefaultExpr('integer', ctx) }
+        case 'number': return { id, name, type, scope, default: createDefaultExpr('number', ctx) }
+        case 'text': return { id, name, type, scope, default: createDefaultExpr('string', ctx) }
+        case 'singleChoice': return { id, name, type, scope, default: createDefaultExpr('unset', ctx), options: createDefaultExpr('list', ctx) }
+        case 'multipleChoice': return { id, name, type, scope, default: createDefaultExpr('list', ctx), options: createDefaultExpr('list', ctx) }
+        case 'chapter': return { id, name, type, scope, default: createDefaultExpr('chapter', ctx) }
+        case 'scene': return { id, name, type, scope, default: createDefaultExpr('scene', ctx) }
+        case 'character': return { id, name, type, scope, default: createDefaultExpr('character', ctx) }
+        case 'portrait': return { id, name, type, scope, default: createDefaultExpr('portrait', ctx) }
+        case 'list': return { id, name, type, scope, elements: { type: 'flag', setValueLabel: createDefaultExpr('string', ctx), unsetValueLabel: createDefaultExpr('string', ctx) }, default: createDefaultExpr('list', ctx) }
+        case 'lookup': return { id, name, type, scope, keys: { type: 'flag', setValueLabel: createDefaultExpr('string', ctx), unsetValueLabel: createDefaultExpr('string', ctx) }, elements: { type: 'flag', setValueLabel: createDefaultExpr('string', ctx), unsetValueLabel: createDefaultExpr('string', ctx) }, default: createDefaultExpr('unset', ctx) }
+        default: assertExhaustive(type, `Unhandled variable type ${String(type)}`)
     }
 }
 

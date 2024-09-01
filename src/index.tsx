@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { mapStackTrace } from 'sourcemapped-stacktrace'
 import { App } from './components/App'
 import { viewStateStore } from './store/viewstate'
-import { loadInitialViewState, saveProject } from './store/operations'
+import { loadInitialSettings, loadInitialViewState, saveProject } from './store/operations'
 import { projectStore } from './store/project'
 import { wait } from './utils/async'
 import { immSet, immReplaceBy } from './utils/imm'
@@ -11,6 +11,7 @@ import { subscribeToStoreAsync, subscribeToSelector } from './utils/store'
 import { LoadingApp } from './components/LoadingApp'
 import { platform } from './platform/platform'
 import { openDialog } from './components/common/Dialog'
+import { settingsStore } from './store/settings'
 
 const appContainer = document.createElement('div')
 appContainer.id = 'appContainer'
@@ -51,6 +52,10 @@ window.addEventListener('drop', e => {
     }
 })
 
+window.addEventListener('contextmenu', e => {
+    e.preventDefault()
+})
+
 async function updateTitle() {
     const projectIsLoaded = !!viewStateStore.getSnapshot().loadedProject
     const name = projectStore.getSnapshot().name
@@ -76,6 +81,11 @@ async function initializeAll() {
         await wait(1000)
     })
 
+    subscribeToStoreAsync(settingsStore, async state => {
+        await platform.saveSettings(state)
+        await wait(1000)
+    })
+
     subscribeToStoreAsync(viewStateStore, updateTitle)
     subscribeToStoreAsync(projectStore, updateTitle)
     subscribeToStoreAsync(projectStore.meta, updateTitle)
@@ -93,6 +103,7 @@ async function initializeAll() {
         }
     })
 
+    await loadInitialSettings()
     await loadInitialViewState()
 
     appRoot.render(<StrictMode><App /></StrictMode>)

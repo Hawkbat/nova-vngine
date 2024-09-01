@@ -3,7 +3,7 @@
   "name": "Example Project",
   "editorRandState": [
     "xorshift32",
-    1299789110
+    -1207666407
   ],
   "stories": [
     {
@@ -108,6 +108,61 @@
               ]
             ]
           }
+        },
+        {
+          "type": "portrait",
+          "id": "UA19KVHJ",
+          "character": {
+            "type": "character",
+            "args": [
+              "1U58I1SC"
+            ]
+          },
+          "portrait": {
+            "type": "portrait",
+            "args": [
+              "7R9ORU1P"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "003W7J28",
+      "name": "Test Scene",
+      "chapterID": "213RCRAR",
+      "steps": [
+        {
+          "type": "text",
+          "id": "M1X9CFPX",
+          "speaker": {
+            "type": "character",
+            "args": [
+              "1U58I1SC"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "args": [
+              "A"
+            ]
+          }
+        },
+        {
+          "type": "text",
+          "id": "P6I07BSH",
+          "speaker": {
+            "type": "character",
+            "args": [
+              "1U58I1SC"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "args": [
+              "B"
+            ]
+          }
         }
       ]
     }
@@ -204,23 +259,17 @@
   ],
   "variables": [
     {
-      "type": "flag",
+      "type": "text",
       "id": "4BTATXCJ",
       "name": "Player Name",
       "scope": {
         "type": "allStories"
       },
       "default": {
-        "type": "boolean",
+        "type": "string",
         "args": [
-          false
+          "Mary"
         ]
-      },
-      "setValueLabel": {
-        "type": "unset"
-      },
-      "unsetValueLabel": {
-        "type": "unset"
       }
     }
   ],

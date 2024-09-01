@@ -48,37 +48,79 @@ export function useAnimationLoop(active: boolean, callback: (deltaTime: number, 
     }, [active, callback])
 }
 
-export function useDrop(callback: (drops: { type: 'files', files: File[] }) => void) {
+export type DropValues = { type: 'files', files: File[] } | { type: 'json', value: unknown } | { type: 'text', value: string }
+
+function getDropValues(dataTransfer: DataTransfer): DropValues {
+    const textData = dataTransfer.getData('text/plain')
+    if (textData) {
+        try {
+            const value = JSON.parse(textData) as unknown
+            return { type: 'json', value }
+        } catch (err) {
+            console.error(err)
+            return { type: 'text', value: textData }
+        }
+    }
+    if (dataTransfer.files.length) {
+        const files: File[] = []
+        for (let i = 0; i < dataTransfer.files.length; i++) {
+            const file = dataTransfer.files[i]
+            files.push(file)
+        }
+        return { type: 'files', files }
+    }
+    if (dataTransfer.types.length === 0) {
+        return { type: 'files', files: [] }
+    }
+    return { type: 'text', value: '' }
+}
+
+export function useDrag(value: unknown) {
+    const [dragging, setDragging] = useState(false)
+    const onDragStart = useCallback((e: React.DragEvent) => {
+        e.stopPropagation()
+        e.dataTransfer.setDragImage(e.currentTarget, 10, 10)
+        e.dataTransfer.setData('text/plain', JSON.stringify(value))
+        e.dataTransfer.dropEffect = 'move'
+        setDragging(true)
+    }, [value])
+    const onDragEnd = useCallback((e: React.DragEvent) => {
+        e.preventDefault()
+        e.stopPropagation()
+        setDragging(false)
+    }, [])
+    const draggable = true
+    const props: React.HTMLAttributes<HTMLElement> = useMemo(() => ({
+        onDragStart,
+        onDragEnd,
+        draggable,
+    }), [draggable, onDragStart, onDragEnd])
+    return hintTuple(props, dragging)
+}
+
+export function useDrop(effect: DataTransfer['dropEffect'], dropCallback: (drops: DropValues) => void) {
     const [dragOver, setDragOver] = useState(false)
     const onDragEnter = useCallback((e: React.DragEvent) => {
         if (e.target != e.currentTarget) return
+        e.stopPropagation()
         setDragOver(true)
     }, [])
     const onDragLeave = useCallback((e: React.DragEvent) => {
         if (e.target != e.currentTarget) return
+        e.stopPropagation()
         setDragOver(false)
     }, [])
     const onDragOver = useCallback((e: React.DragEvent) => {
         e.preventDefault()
         e.stopPropagation()
-        e.dataTransfer.dropEffect = 'copy'
-        e.dataTransfer.effectAllowed = 'copy'
-    }, [])
+        e.dataTransfer.dropEffect = effect
+        e.dataTransfer.effectAllowed = effect
+    }, [effect])
     const onDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault()
         e.stopPropagation()
-
-        void (async () => {
-            if (e.dataTransfer.files.length) {
-                const files: File[] = []
-                for (let i = 0; i < e.dataTransfer.files.length; i++) {
-                    const file = e.dataTransfer.files[i]
-                    files.push(file)
-                }
-                callback({ type: 'files', files })
-            }
-        })()
-    }, [callback])
+        dropCallback(getDropValues(e.dataTransfer))
+    }, [dropCallback])
     const props: React.HTMLAttributes<HTMLElement> = useMemo(() => ({
         onDragEnter,
         onDragLeave,

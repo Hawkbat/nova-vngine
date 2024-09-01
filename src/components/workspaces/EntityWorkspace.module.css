@@ -18,9 +18,3 @@
     gap: 0.5em;
     flex: 1 0 0;
 }
-
-.subEditor {
-    display: flex;
-    flex-direction: column;
-    flex: 3 0 0;
-}

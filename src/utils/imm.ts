@@ -11,6 +11,11 @@ export function immReplaceAt<T>(arr: T[], index: number, ...values: T[]): T[] {
     return arr.slice(0, index).concat(values).concat(arr.slice(index + values.length))
 }
 
+
+export function immInsertAt<T>(arr: T[], index: number, ...values: T[]): T[] {
+    return arr.slice(0, index).concat(values).concat(arr.slice(index))
+}
+
 export function immRemoveAt<T>(arr: T[], index: number, count: number = 1): T[] {
     return arr.slice(0, index).concat(arr.slice(index + count))
 }

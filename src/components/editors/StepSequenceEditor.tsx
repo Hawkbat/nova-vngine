@@ -1,7 +1,7 @@
-import { useCallback, useMemo, useState } from 'react'
+import { Fragment, useCallback, useMemo, useState } from 'react'
 import type { AnyStep, StepID, StepType } from '../../types/steps'
-import { createStep, isStepType, STEP_TYPES } from '../../types/steps'
-import { immAppend, immRemoveAt, immReplaceAt, immReplaceBy, immSet } from '../../utils/imm'
+import { createStep, isStepType, parseAnyStep, STEP_TYPES } from '../../types/steps'
+import { immAppend, immInsertAt, immRemoveAt, immReplaceAt, immReplaceBy, immSet } from '../../utils/imm'
 import { EditorIcon } from '../common/EditorIcon'
 import { COMMON_ICONS, STEP_ICONS } from '../common/Icons'
 import { ExpressionEditor, ExpressionField } from './ExpressionEditor'
@@ -15,8 +15,14 @@ import { SceneRenderer } from '../player/SceneRenderer'
 import { applyStepToRenderSceneState, getInitialRenderSceneState, type RenderSceneState } from '../../types/player'
 import styles from './StepSequenceEditor.module.css'
 import { DropdownMenuItem, SearchDropdownMenu, useDropdownMenuState } from '../common/DropdownMenu'
+import { useSelector } from '../../utils/store'
+import { settingsStore } from '../../store/settings'
+import { useDrag, useDrop } from '../../utils/hooks'
+import { tryParseValue } from '../../utils/guard'
+import { assertExhaustive } from '../../utils/types'
 
 const StepEditor = ({ step, setStep, deleteStep, ctx }: { step: AnyStep, setStep: (setter: (step: AnyStep) => AnyStep) => void, deleteStep: () => void, ctx: ExprContext }) => {
+    const developerMode = useSelector(settingsStore, s => s.developerMode)
 
     const onDeleteStep = (e: React.MouseEvent) => {
         e.stopPropagation()
@@ -75,12 +81,15 @@ const StepEditor = ({ step, setStep, deleteStep, ctx }: { step: AnyStep, setStep
                 {step.inputs.map((input, i) => <ExpressionField key={i} label={`Input ${String(i)}`} value={input} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'inputs', immReplaceAt(s.inputs, i, expr)) : s)} paramTypes={null} ctx={ctx} />)}
                 {step.outputs.map((output, i) => <ExpressionField key={i} label={`Output ${String(i)}`} value={output} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'outputs', immReplaceAt(s.outputs, i, expr)) : s)} paramTypes={['variable']} ctx={ctx} />)}
             </>
+            default: assertExhaustive(step, `Unhandled step type ${JSON.stringify(step)}`)
         }
     })
 
     return <div className={styles.stepEditor}>
-        <StringField label='Step ID' value={step.id} />
-        <StringField label='Step Type' value={prettyPrintIdentifier(step.type)} />
+        {developerMode ? <>
+            <StringField label='Step ID' value={step.id} />
+            <StringField label='Step Type' value={prettyPrintIdentifier(step.type)} />
+        </> : null}
         {subEditor()}
         <Field label='Delete Step'>
             <EditorIcon path={COMMON_ICONS.deleteItem} label='Delete Step' onClick={onDeleteStep} />
@@ -88,8 +97,7 @@ const StepEditor = ({ step, setStep, deleteStep, ctx }: { step: AnyStep, setStep
     </div>
 }
 
-const StepList = ({ steps, setSteps, selected, setSelected, ctx }: { steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, selected: StepID, setSelected: (id: StepID) => void, ctx: ExprContext }) => {
-
+const StepList = ({ steps, setSteps, selected, setSelected, ctx, rootSteps, setRootSteps }: { steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, selected: StepID, setSelected: (id: StepID) => void, ctx: ExprContext, rootSteps: AnyStep[], setRootSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void }) => {
     const [dropdownProps, openDropdown] = useDropdownMenuState()
 
     const onAddStep = (e: React.MouseEvent, type: StepType) => {
@@ -100,8 +108,34 @@ const StepList = ({ steps, setSteps, selected, setSelected, ctx }: { steps: AnyS
         setSelected(id)
     }
 
+    const StepGap = ({ before, after }: { before: StepID | null, after: StepID | null }) => {
+        const [dropProps, dragOver] = useDrop('move', useCallback(values => {
+            if (values.type === 'json') {
+                const parsed = tryParseValue(values.value, 'step', parseAnyStep)
+                if (parsed.success) {
+                    const [step, , deleteStep] = getDeepStep(parsed.value.id, rootSteps, setRootSteps, [])
+                    if (step) {
+                        // TODO: Fix step moving; broken due to setter getting stable copy of array
+                        deleteStep()
+                        setSteps(s => {
+                            let index = s.findIndex(step => step.id === after)
+                            if (index <= 0) index = s.findIndex(step => step.id === before) + 1
+                            return immInsertAt(s, index, step)
+                        })
+                    }
+                }
+            }
+        }, [before, after]))
+        return <div {...dropProps} className={classes(styles.stepGap, { [styles.dragOver]: dragOver })}>
+            <div className={styles.stepLine} />
+        </div>
+    }
+
     return <div className={styles.timeline}>
-        {steps.map((s, i) => <StepBubble key={s.id} step={s} setStep={setter => setSteps(steps => immReplaceAt(steps, i, setter(steps[i])))} deleteStep={() => setSteps(steps => immRemoveAt(steps, i))} selected={selected} setSelected={setSelected} ctx={ctx} />)}
+        {steps.map((s, i) => <Fragment key={s.id}>
+                <StepBubble key={s.id} step={s} setStep={setter => setSteps(steps => immReplaceAt(steps, i, setter(steps[i])))} deleteStep={() => setSteps(steps => immRemoveAt(steps, i))} selected={selected} setSelected={setSelected} ctx={ctx} rootSteps={rootSteps} setRootSteps={setRootSteps} />
+                <StepGap before={s.id} after={steps[i + 1]?.id ?? null} />
+            </Fragment>)}
         <div className={styles.outlineBubble} onClick={e => onAddStep(e, 'text')}>
             <EditorIcon path={COMMON_ICONS.addItem} />
         </div>
@@ -109,7 +143,7 @@ const StepList = ({ steps, setSteps, selected, setSelected, ctx }: { steps: AnyS
             <EditorIcon path={COMMON_ICONS.more} />
         </div>
         <SearchDropdownMenu items={STEP_TYPES} filter={(t, search) => t.toLowerCase().includes(search.toLowerCase())} {...dropdownProps}>
-            {(type) => <DropdownMenuItem key={type} onClick={e => onAddStep(e, type)}>
+            {(type) => <DropdownMenuItem key={type} onClick={e => (onAddStep(e, type), dropdownProps.onClose())}>
                 <EditorIcon path={STEP_ICONS[type]} label={prettyPrintIdentifier(type)} />
                 <span>{prettyPrintIdentifier(type)}</span>
             </DropdownMenuItem>}
@@ -117,7 +151,8 @@ const StepList = ({ steps, setSteps, selected, setSelected, ctx }: { steps: AnyS
     </div>
 }
 
-const StepBubble = ({ step, setStep, selected, setSelected, ctx }: { step: AnyStep, setStep: (setter: (step: AnyStep) => AnyStep) => void, deleteStep: () => void, selected: StepID, setSelected: (id: StepID) => void, ctx: ExprContext }) => {
+const StepBubble = ({ step, setStep, selected, setSelected, ctx, rootSteps, setRootSteps }: { step: AnyStep, setStep: (setter: (step: AnyStep) => AnyStep) => void, deleteStep: () => void, selected: StepID, setSelected: (id: StepID) => void, ctx: ExprContext, rootSteps: AnyStep[], setRootSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void }) => {
+    const [dragProps, dragging] = useDrag(step)
 
     const onSelect = (e: React.MouseEvent) => {
         e.stopPropagation()
@@ -127,7 +162,7 @@ const StepBubble = ({ step, setStep, selected, setSelected, ctx }: { step: AnySt
     switch (step.type) {
         case 'decision':
         case 'branch':
-            return <div className={classes(styles.bubble, { [styles.active]: selected === step.id })}>
+            return <div {...dragProps} className={classes(styles.bubble, { [styles.active]: selected === step.id, [styles.dragging]: dragging })}>
                 <div className={styles.bubbleFront} onClick={onSelect}>
                     <EditorIcon path={STEP_ICONS[step.type]} />
                 </div>
@@ -138,7 +173,7 @@ const StepBubble = ({ step, setStep, selected, setSelected, ctx }: { step: AnySt
                                 <ExpressionEditor expr={o.condition} setExpr={expr => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'condition', expr))) : s)} paramTypes={['boolean']} ctx={ctx} />
                                 <ExpressionEditor expr={o.text} setExpr={expr => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'text', expr))) : s)} paramTypes={['string']} ctx={ctx} />
                             </div>
-                            <StepList steps={o.steps} setSteps={setter => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'steps', setter(s.options[i].steps)))) : s)} selected={selected} setSelected={setSelected} ctx={ctx} />
+                            <StepList steps={o.steps} setSteps={setter => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'steps', setter(s.options[i].steps)))) : s)} selected={selected} setSelected={setSelected} ctx={ctx} rootSteps={rootSteps} setRootSteps={setRootSteps} />
                         </div>)}
                     </> : null}
                     {step.type === 'branch' ? <>
@@ -146,19 +181,35 @@ const StepBubble = ({ step, setStep, selected, setSelected, ctx }: { step: AnySt
                             <div className={styles.option}>
                                 <ExpressionEditor expr={o.condition} setExpr={expr => setStep(s => isStepType(s, 'branch') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'condition', expr))) : s)} ctx={ctx} />
                             </div>
-                            <StepList steps={o.steps} setSteps={setter => setStep(s => isStepType(s, 'branch') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'steps', setter(s.options[i].steps)))) : s)} selected={selected} setSelected={setSelected} ctx={ctx} />
+                            <StepList steps={o.steps} setSteps={setter => setStep(s => isStepType(s, 'branch') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'steps', setter(s.options[i].steps)))) : s)} selected={selected} setSelected={setSelected} ctx={ctx} rootSteps={rootSteps} setRootSteps={setRootSteps} />
                         </div>)}
                     </> : null}
                 </div>
-                <div className={styles.bubbleBack}>
+                <div className={styles.bubbleBack} onClick={onSelect}>
 
                 </div>
             </div>
         default:
-            return <div className={classes(styles.simpleBubble, { [styles.active]: selected === step.id })} onClick={onSelect}>
+            return <div {...dragProps} className={classes(styles.simpleBubble, { [styles.active]: selected === step.id, [styles.dragging]: dragging })} onClick={onSelect}>
                 <EditorIcon path={STEP_ICONS[step.type]} label={prettyPrintIdentifier(step.type)} />
             </div>
     }
+}
+
+function getDeepStep(stepID: StepID, steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, previousSteps: AnyStep[]): [AnyStep, (setter: (step: AnyStep) => AnyStep) => void, () => void, AnyStep[]] | [null, null, null, null] {
+    const index = steps.findIndex(s => s.id === stepID)
+    if (index >= 0) {
+        return [steps[index], setter => setSteps(steps => immReplaceAt(steps, index, setter(steps[index]))), () => setSteps(steps => steps.filter(s => s.id === stepID)), previousSteps.concat(steps.slice(0, index))]
+    }
+    for (const s of steps) {
+        if (s.type === 'decision' || s.type === 'branch') {
+            for (let i = 0; i < s.options.length; i++) {
+                const [step, setStep, deleteStep, childPreviousSteps] = getDeepStep(stepID, s.options[i].steps, setter => setSteps(steps => immReplaceBy(steps, s => s.id, immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'steps', setter(s.options[i].steps)))))), previousSteps.concat(steps.slice(0, steps.findIndex(o => o.id === s.id))))
+                if (step) return [step, setStep, deleteStep, childPreviousSteps]
+            }
+        }
+    }
+    return [null, null, null, null]
 }
 
 export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void }) => {
@@ -166,23 +217,7 @@ export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setS
 
     const ctx = getProjectExprContext()
 
-    const getSelectedStep = useCallback((stepID: StepID, steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, previousSteps: AnyStep[]): [AnyStep, (setter: (step: AnyStep) => AnyStep) => void, () => void, AnyStep[]] | [null, null, null, null] => {
-        const index = steps.findIndex(s => s.id === stepID)
-        if (index >= 0) {
-            return [steps[index], setter => setSteps(steps => immReplaceAt(steps, index, setter(steps[index]))), () => setSteps(steps => immRemoveAt(steps, index)), previousSteps.concat(steps.slice(0, index))]
-        }
-        for (const s of steps) {
-            if (s.type === 'decision' || s.type === 'branch') {
-                for (let i = 0; i < s.options.length; i++) {
-                    const [step, setStep, deleteStep, childPreviousSteps] = getSelectedStep(stepID, s.options[i].steps, setter => setSteps(steps => immReplaceBy(steps, s => s.id, immSet(s, 'options', immReplaceAt(s.options, i, immSet(s.options[i], 'steps', setter(s.options[i].steps)))))), previousSteps.concat(steps.slice(0, steps.findIndex(o => o.id === s.id))))
-                    if (step) return [step, setStep, deleteStep, childPreviousSteps]
-                }
-            }
-        }
-        return [null, null, null, null]
-    }, [])
-
-    const [selectedStep, setSelectedStep, deleteSelectedStep, selectedPreviousSteps] = useMemo(() => getSelectedStep(selectedStepID, steps, setSteps, []), [getSelectedStep, selectedStepID, steps, setSteps])
+    const [selectedStep, setSelectedStep, deleteSelectedStep, selectedPreviousSteps] = useMemo(() => getDeepStep(selectedStepID, steps, setSteps, []), [selectedStepID, steps, setSteps])
 
     const sceneState: RenderSceneState = useMemo(() => {
         let state = getInitialRenderSceneState()
@@ -195,8 +230,8 @@ export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setS
     return <div className={styles.sequenceEditor}>
         <SceneRenderer state={sceneState} />
         <div className={styles.timeline}>
-            <StepList steps={steps} setSteps={setSteps} selected={selectedStepID} setSelected={setSelectedStepID} ctx={ctx} />
+            <StepList steps={steps} setSteps={setSteps} selected={selectedStepID} setSelected={setSelectedStepID} ctx={ctx} rootSteps={steps} setRootSteps={setSteps} />
         </div>
-        {selectedStep ? <StepEditor step={selectedStep} setStep={setSelectedStep} deleteStep={deleteSelectedStep} ctx={ctx} /> : null}
+        {selectedStep ? <StepEditor key={selectedStep.id} step={selectedStep} setStep={setSelectedStep} deleteStep={deleteSelectedStep} ctx={ctx} /> : null}
     </div>
 }

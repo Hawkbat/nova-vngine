@@ -9,6 +9,8 @@ import { tryParseJson } from '../utils/guard'
 import { inlineThrow } from '../utils/types'
 import { StorageError } from '../types/storage'
 import { LOG_FILE_WRITES } from '../debug'
+import { parseSettingsState } from '../types/settings'
+import { settingsStore } from '../store/settings'
 
 const APP_DIR_NAME = '/Nova VNgine'
 
@@ -174,6 +176,24 @@ export const neutralinoPlatform: Platform = {
         const json = JSON.stringify(viewState, undefined, 2)
         if (!await writeFile(path, json)) {
             void this.error('Failed to save viewstate', path, json)
+        }
+    },
+    async loadSettings() {
+        const path = `${await getConfigFolderPath()}/settings.json`
+        const json = await readFile(path)
+        const parsed = tryParseJson(json ?? '', 'settings', parseSettingsState)
+        if (parsed.ctx.warnings.length) void this.warn(parsed.ctx.warnings)
+        if (!parsed.success) {
+            void this.error('Failed to load settings', json, parsed.ctx.errors)
+            return settingsStore.getSnapshot()
+        }
+        return parsed.value
+    },
+    async saveSettings(settings) {
+        const path = `${await getConfigFolderPath()}/settings.json`
+        const json = JSON.stringify(settings, undefined, 2)
+        if (!await writeFile(path, json)) {
+            void this.error('Failed to save settings', path, json)
         }
     },
     async setTitle(title) {

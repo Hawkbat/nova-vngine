@@ -142,7 +142,7 @@ const PRIMITIVE_DEFAULT_VALUES: ExprPrimitiveValueTypeMap = {
 
 function getContextualDefaultPrimitiveValue<T extends ExprPrimitiveValueType>(type: T, ctx: ExprContext) {
     if (type in ctx.suggestions) {
-        return ctx.suggestions[type as keyof ExprContext['suggestions']]()
+        return ctx.suggestions[type as keyof ExprContext['suggestions']]()[0]
     }
     return PRIMITIVE_DEFAULT_VALUES[type]
 }
