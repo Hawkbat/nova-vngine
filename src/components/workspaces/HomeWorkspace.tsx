@@ -1,9 +1,10 @@
+import faviconSvgUrl from '../../favicon.svg'
+import { userCreateNewProject, userOpenRecentProject, userSelectProject, useViewStateTab } from '../../store/operations'
+import { viewStateStore } from '../../store/viewstate'
 import { useSelector } from '../../utils/store'
 import { EditorIcon } from '../common/EditorIcon'
 import { COMMON_ICONS, PROJECT_TAB_ICONS } from '../common/Icons'
-import { viewStateStore } from '../../store/viewstate'
-import { userCreateNewProject, userOpenRecentProject, userSelectProject, useViewStateTab } from '../../store/operations'
-import faviconSvgUrl from '../../favicon.svg'
+
 import styles from './HomeWorkspace.module.css'
 
 export const HomeWorkspace = () => {

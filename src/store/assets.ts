@@ -1,7 +1,8 @@
 import { useEffect } from 'react'
-import { createSimpleStore, useStore, type SimpleStore } from '../utils/store'
-import { getProjectStorage } from './operations'
+
 import type { AssetDefinition } from '../types/project'
+import { createSimpleStore, type SimpleStore, useStore } from '../utils/store'
+import { getProjectStorage } from './operations'
 
 interface AssetCacheEntry {
     count: number

@@ -5,6 +5,7 @@ import pluginReact from "eslint-plugin-react";
 import pluginHooks from "eslint-plugin-react-hooks";
 import pluginImportX from "eslint-plugin-import-x";
 import pluginStylistic from "@stylistic/eslint-plugin";
+import pluginSimpleImportSort from "eslint-plugin-simple-import-sort";
 
 export default pluginTseslint.config(
   {files: ["src/**/*.{js,mjs,cjs,ts,jsx,tsx}"]},
@@ -30,6 +31,7 @@ export default pluginTseslint.config(
   },
   {
     plugins: {
+      "simple-import-sort": pluginSimpleImportSort,
       "@stylistic": pluginStylistic,
     },
     rules: {
@@ -44,6 +46,23 @@ export default pluginTseslint.config(
       "import-x/no-unused-modules": "warn",
       "no-warning-comments": ["warn", { terms: ['todo'], location: 'start', decoration: ['*'] }],
 
+      "simple-import-sort/imports": ["warn", { groups: [
+        // Side effect imports.
+        ["^\\u0000"],
+        // Node.js builtins prefixed with `node:`.
+        ["^node:"],
+        // Packages.
+        // Things that start with a letter (or digit or underscore), or `@` followed by a letter.
+        ["^@?\\w"],
+        // Absolute imports and other imports such as Vue-style `@/foo`.
+        // Anything not matched in another group.
+        ["^"],
+        // Relative imports.
+        // Anything that starts with a dot.
+        ["^\\."],
+        // Style imports.
+        ["^.*?\.module\.css"],
+      ] }],
       "@stylistic/no-tabs": "warn",
       "@stylistic/no-trailing-spaces": "warn",
       "@stylistic/quotes": ["warn", "single"],

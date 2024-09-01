@@ -1,10 +1,9 @@
-import type { BackdropID, ChapterID, CharacterID, MacroID, PortraitID, SceneID, SongID, SoundID, StoryID, VariableID, EntityOfType, EntityType, ProjectEntityKeyOf } from './project'
-import { PROJECT_ENTITY_KEYS } from './project'
-
 import type { ParseFunc } from '../utils/guard'
 import { defineParser, parsers as $ } from '../utils/guard'
-import { parseStorageRootEntry, type StorageRootEntry } from './storage'
+import type { BackdropID, ChapterID, CharacterID, EntityOfType, EntityType, MacroID, PortraitID, ProjectEntityKeyOf, SceneID, SongID, SoundID, StoryID, VariableID } from './project'
+import { PROJECT_ENTITY_KEYS } from './project'
 import type { StepID } from './steps'
+import { parseStorageRootEntry, type StorageRootEntry } from './storage'
 
 export type ProjectEditorTab = 'home' | 'manual' | 'settings' | 'project' | ProjectEntityKeyOf<EntityType>
 

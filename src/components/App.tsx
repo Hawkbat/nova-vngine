@@ -1,8 +1,10 @@
 import { ErrorBoundary, type ErrorBoundaryProps } from 'react-error-boundary'
+
+import { openErrorDialog } from '../utils/debug'
 import { Dialog } from './common/Dialog'
 import { ProjectEditor } from './editors/ProjectEditor'
+
 import styles from './App.module.css'
-import { openErrorDialog } from '../utils/debug'
 
 export const App = () => {
     // eslint-disable-next-line @typescript-eslint/no-misused-promises

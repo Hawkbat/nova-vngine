@@ -3,6 +3,7 @@ import { getProjectEntityKey, type PortraitDefinition } from '../../types/projec
 import { immSet } from '../../utils/imm'
 import { ImageField } from '../common/ImageField'
 import { EntityWorkspace } from './EntityWorkspace'
+
 import styles from './PortraitWorkspace.module.css'
 
 const PortraitPreview = ({ portrait }: { portrait: PortraitDefinition }) => {

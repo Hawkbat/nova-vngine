@@ -1,9 +1,9 @@
-import type { ParseFunc } from '../utils/guard'
-import { throwIfNull, defineParser, parsers as $ } from '../utils/guard'
 import { arrayHead, forEachMultiple } from '../utils/array'
+import type { ParseFunc } from '../utils/guard'
+import { defineParser, parsers as $, throwIfNull } from '../utils/guard'
 import type { OmitUndefined } from '../utils/types'
 import { assertExhaustive, hintTuple } from '../utils/types'
-import type { StoryID, ChapterID, SceneID, VariableID, CharacterID, BackdropID, SongID, SoundID, AnyVariableDefinition, CharacterDefinition, BackdropDefinition, ChapterDefinition, SceneDefinition, SongDefinition, SoundDefinition, StoryDefinition, PortraitID, MacroID, MacroDefinition, PortraitDefinition } from './project'
+import type { AnyVariableDefinition, BackdropDefinition, BackdropID, ChapterDefinition, ChapterID, CharacterDefinition, CharacterID, MacroDefinition, MacroID, PortraitDefinition, PortraitID, SceneDefinition, SceneID, SongDefinition, SongID, SoundDefinition, SoundID, StoryDefinition, StoryID, VariableID } from './project'
 
 export type LocationValue = 'auto' | 'left' | 'center' | 'right' | number
 

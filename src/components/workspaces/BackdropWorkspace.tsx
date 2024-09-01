@@ -1,9 +1,10 @@
-import { EntityWorkspace } from './EntityWorkspace'
-import { ImageField } from '../common/ImageField'
-import { immSet } from '../../utils/imm'
-import { getProjectEntityKey, type BackdropDefinition } from '../../types/project'
-import styles from './BackdropWorkspace.module.css'
 import { useAsset } from '../../store/assets'
+import { type BackdropDefinition, getProjectEntityKey } from '../../types/project'
+import { immSet } from '../../utils/imm'
+import { ImageField } from '../common/ImageField'
+import { EntityWorkspace } from './EntityWorkspace'
+
+import styles from './BackdropWorkspace.module.css'
 
 const BackdropPreview = ({ backdrop }: { backdrop: BackdropDefinition }) => {
     const getImgSrc = useAsset(backdrop.image)

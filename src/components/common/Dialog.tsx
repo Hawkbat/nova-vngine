@@ -1,14 +1,16 @@
+import { createPortal } from 'react-dom'
+
+import { arrayHead } from '../../utils/array'
 import type { ExposedPromise } from '../../utils/async'
 import { createExposedPromise } from '../../utils/async'
-import { createPortal } from 'react-dom'
-import styles from './Dialog.module.css'
-import { EditorIcon } from './EditorIcon'
-import { createSimpleStore, useSelector, useStore } from '../../utils/store'
 import { immAppend, immRemoveAt, immSet } from '../../utils/imm'
+import { createSimpleStore, useSelector, useStore } from '../../utils/store'
 import { hintTuple } from '../../utils/types'
 import { EditorButton, EditorButtonGroup } from './EditorButton'
+import { EditorIcon } from './EditorIcon'
 import { COMMON_ICONS } from './Icons'
-import { arrayHead } from '../../utils/array'
+
+import styles from './Dialog.module.css'
 
 export interface DialogChoice {
     content: React.ReactNode

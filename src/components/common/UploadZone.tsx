@@ -1,11 +1,13 @@
 import { useCallback } from 'react'
-import { EditorIcon } from './EditorIcon'
-import { COMMON_ICONS } from './Icons'
-import styles from './UploadZone.module.css'
-import { useDrop } from '../../utils/hooks'
+
+import { useProjectStorage } from '../../store/operations'
 import type { StorageFileResult } from '../../types/storage'
 import { classes } from '../../utils/display'
-import { useProjectStorage } from '../../store/operations'
+import { useDrop } from '../../utils/hooks'
+import { EditorIcon } from './EditorIcon'
+import { COMMON_ICONS } from './Icons'
+
+import styles from './UploadZone.module.css'
 
 export type UploadCallback = (files: StorageFileResult[]) => void
 

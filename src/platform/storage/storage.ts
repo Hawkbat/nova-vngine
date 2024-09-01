@@ -1,8 +1,8 @@
+import { STORAGE_FORCE } from '../../debug'
 import { browserStorageProvider } from './browser'
 import { chromiumStorageProvider } from './chromium'
-import { neutralinoStorageProvider } from './neutralino'
 import { fetchStorageProvider } from './fetch'
-import { STORAGE_FORCE } from '../../debug'
+import { neutralinoStorageProvider } from './neutralino'
 
 export const storage = {
     neutralino: neutralinoStorageProvider,

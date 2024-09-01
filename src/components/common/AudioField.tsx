@@ -1,14 +1,15 @@
 import { useCallback } from 'react'
-import type { FieldProps } from './Field'
-import { Field } from './Field'
-import type { UploadCallback } from './UploadZone'
-import { UploadZone } from './UploadZone'
-import { useProjectStorage } from '../../store/operations'
+
 import { useAsset } from '../../store/assets'
-import { EditorIcon } from './EditorIcon'
-import { COMMON_ICONS } from './Icons'
+import { useProjectStorage } from '../../store/operations'
 import type { AssetDefinition } from '../../types/project'
 import { AUDIO_EXTENSIONS, getMimeType } from '../../utils/media'
+import { EditorIcon } from './EditorIcon'
+import type { FieldProps } from './Field'
+import { Field } from './Field'
+import { COMMON_ICONS } from './Icons'
+import type { UploadCallback } from './UploadZone'
+import { UploadZone } from './UploadZone'
 
 export const AudioField = ({ className, label, value, setValue, validate, targetPath }: FieldProps<AssetDefinition | null> & { targetPath: string }) => {
     const { getRoot, storage } = useProjectStorage()

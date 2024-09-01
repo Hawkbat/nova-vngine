@@ -1,7 +1,9 @@
 import { useCallback } from 'react'
+
 import { classes } from '../../utils/display'
-import styles from './EditorButton.module.css'
 import { EditorIcon } from './EditorIcon'
+
+import styles from './EditorButton.module.css'
 
 export type EditorButtonStyle = 'solid' | 'outline' | 'text'
 

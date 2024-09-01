@@ -2,6 +2,7 @@ import { getProjectEntityKey } from '../../types/project'
 import { immSet } from '../../utils/imm'
 import { AudioField } from '../common/AudioField'
 import { EntityWorkspace } from './EntityWorkspace'
+
 import styles from './SoundWorkspace.module.css'
 
 export const SoundWorkspace = () => {

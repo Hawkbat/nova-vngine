@@ -1,10 +1,11 @@
 import { getProjectExprContext, immConvertVariable } from '../../store/operations'
-import { VARIABLE_TYPES, type AnyPartialVariableDefinition } from '../../types/project'
+import { type AnyPartialVariableDefinition, VARIABLE_TYPES } from '../../types/project'
 import { prettyPrintIdentifier } from '../../utils/display'
 import { immSet } from '../../utils/imm'
 import { DropdownField } from '../common/DropdownField'
 import { ExpressionField } from '../editors/ExpressionEditor'
 import { EntityWorkspace } from './EntityWorkspace'
+
 import styles from './VariableWorkspace.module.css'
 
 const PartialVariableEditor = ({ variable, setVariable }: { variable: AnyPartialVariableDefinition, setVariable: (setter: (value: AnyPartialVariableDefinition) => AnyPartialVariableDefinition) => void }) => {

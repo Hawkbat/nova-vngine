@@ -1,10 +1,11 @@
-import { mapStackTrace } from 'sourcemapped-stacktrace'
-import { openCustomDialog } from '../components/common/Dialog'
 import { useRef, useState } from 'react'
+import { mapStackTrace } from 'sourcemapped-stacktrace'
+
+import { openCustomDialog } from '../components/common/Dialog'
 import { EditorButton, EditorButtonGroup } from '../components/common/EditorButton'
-import { platform } from '../platform/platform'
 import { EditorIcon } from '../components/common/EditorIcon'
 import { COMMON_ICONS } from '../components/common/Icons'
+import { platform } from '../platform/platform'
 
 export async function mapStackTraceAsync(stack: string | undefined) {
     return await new Promise<string>((resolve, reject) => {

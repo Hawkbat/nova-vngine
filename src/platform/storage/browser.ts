@@ -1,5 +1,6 @@
 import { createStore, entries, get, set } from 'idb-keyval'
-import type { StorageDirectoryResult, StorageFileResult, StorageRootEntry, StorageProvider } from '../../types/storage'
+
+import type { StorageDirectoryResult, StorageFileResult, StorageProvider, StorageRootEntry } from '../../types/storage'
 import { StorageError } from '../../types/storage'
 import { getClassFilter, throwIfNull } from '../../utils/guard'
 import { getPathFileName, getPathParentPath, getPathSegments, joinPaths, joinPathSegments } from '../../utils/path'

@@ -9,6 +9,7 @@
     "esbuild:serve": "node scripts/serve.js",
     "typecheck": "tsc -p src/",
     "lint": "npx eslint .",
+    "lint:fix": "npm run lint -- --fix",
     "neu:start": "neu run -- --window-enable-inspector",
     "neu:build": "neu build --release"
   },
@@ -32,6 +33,7 @@
     "eslint-plugin-import-x": "^4.0.0",
     "eslint-plugin-react": "^7.35.0",
     "eslint-plugin-react-hooks": "^5.1.0-rc-b57d2823-20240822",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
     "git-last-commit": "^1.0.1",
     "globals": "^15.9.0",
     "idb-keyval": "^6.2.1",

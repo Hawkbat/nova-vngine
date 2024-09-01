@@ -1,9 +1,9 @@
-import { parseViewState } from '../types/viewstate'
+import { settingsStore } from '../store/settings'
 import { viewStateStore } from '../store/viewstate'
 import type { Platform } from '../types/platform'
-import { tryParseJson } from '../utils/guard'
 import { parseSettingsState } from '../types/settings'
-import { settingsStore } from '../store/settings'
+import { parseViewState } from '../types/viewstate'
+import { tryParseJson } from '../utils/guard'
 
 export const webPlatform: Platform = {
     type: 'web',

@@ -1,10 +1,11 @@
 import { useCallback, useSyncExternalStore } from 'react'
-import { hintTuple } from './types'
-import { deepDiff, immSet } from './imm'
+
 import { LOG_STORE_DIFFS } from '../debug'
-import { useLatest } from './hooks'
-import { throwIfNull } from './guard'
 import { arrayHead } from './array'
+import { throwIfNull } from './guard'
+import { useLatest } from './hooks'
+import { deepDiff, immSet } from './imm'
+import { hintTuple } from './types'
 
 export type StoreValueGetter<T> = () => T
 export type StoreValueSetter<T> = (oldValue: T) => T

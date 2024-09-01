@@ -1,8 +1,9 @@
 import { useCallback } from 'react'
-import { Field, type FieldProps } from './Field'
-import { EditorButton } from './EditorButton'
+
 import { DropdownMenuItem, SearchDropdownMenu, useDropdownMenuState } from './DropdownMenu'
+import { EditorButton } from './EditorButton'
 import { EditorIcon } from './EditorIcon'
+import { Field, type FieldProps } from './Field'
 import { COMMON_ICONS } from './Icons'
 
 export const DropdownField = <T,>({ className, label, value, setValue, validate, options, format = String }: FieldProps<T> & { options: T[], format?: (value: T) => string }) => {

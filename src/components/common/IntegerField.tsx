@@ -1,6 +1,7 @@
 import { useCallback } from 'react'
+
 import type { FieldProps } from './Field'
-import type { FieldParseFunc, FieldFormatFunc } from './ParsedStringField'
+import type { FieldFormatFunc, FieldParseFunc } from './ParsedStringField'
 import { ParsedStringField } from './ParsedStringField'
 
 export const IntegerField = ({ className, label, value, setValue, validate }: FieldProps<number>) => {

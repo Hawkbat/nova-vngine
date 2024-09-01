@@ -1,7 +1,9 @@
 import { Icon } from '@mdi/react'
-import styles from './EditorIcon.module.css'
-import { classes } from '../../utils/display'
 import { useCallback } from 'react'
+
+import { classes } from '../../utils/display'
+
+import styles from './EditorIcon.module.css'
 
 export type EditorIconStyle = 'solid' | 'outline' | 'text'
 

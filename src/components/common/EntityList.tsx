@@ -1,12 +1,14 @@
 import { Fragment } from 'react/jsx-dev-runtime'
-import { useViewStateScope, immCreateEntity, useViewStateTab } from '../../store/operations'
+
+import { immCreateEntity, useViewStateScope, useViewStateTab } from '../../store/operations'
 import { projectStore } from '../../store/project'
-import { type EntityType, getEntityParentType, getProjectEntityKey, type EntityParentIDOf, type EntityIDOf, getEntityParentID, type EntityOfType, type EntityParentOf } from '../../types/project'
+import { type EntityIDOf, type EntityOfType, type EntityParentIDOf, type EntityParentOf, type EntityType, getEntityParentID, getEntityParentType, getProjectEntityKey } from '../../types/project'
 import { prettyPrintIdentifier } from '../../utils/display'
 import { useSelector } from '../../utils/store'
 import { EditorButton } from './EditorButton'
 import { EditorIcon } from './EditorIcon'
-import { EXPR_VALUE_ICONS, COMMON_ICONS } from './Icons'
+import { COMMON_ICONS, EXPR_VALUE_ICONS } from './Icons'
+
 import styles from './EntityList.module.css'
 
 // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters

@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+
+import { classes } from '../../utils/display'
+import { useDebounce, useLatest } from '../../utils/hooks'
 import type { FieldProps } from './Field'
 import { Field } from './Field'
-import { useDebounce, useLatest } from '../../utils/hooks'
-import { classes } from '../../utils/display'
+
 import styles from './ParsedStringField.module.css'
 
 export type FieldFormatFunc<T> = (value: T) => string

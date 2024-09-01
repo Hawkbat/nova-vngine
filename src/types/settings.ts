@@ -1,4 +1,4 @@
-import { defineParser, parsers as $, type ParseFunc } from '../utils/guard'
+import { defineParser, type ParseFunc, parsers as $ } from '../utils/guard'
 
 export interface SettingsState {
     developerMode: boolean

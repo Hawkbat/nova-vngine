@@ -1,4 +1,5 @@
 import { useCallback, useRef } from 'react'
+
 import { useAnimationLoop, useLatest } from './hooks'
 import { moveTowards } from './math'
 import { getPathExtension } from './path'

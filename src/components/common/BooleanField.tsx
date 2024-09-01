@@ -1,7 +1,8 @@
 import { useCallback } from 'react'
+
+import { EditorIcon } from './EditorIcon'
 import type { FieldProps } from './Field'
 import { Field } from './Field'
-import { EditorIcon } from './EditorIcon'
 import { COMMON_ICONS } from './Icons'
 
 export const BooleanField = ({ className, label, value, setValue, validate }: FieldProps<boolean>) => {

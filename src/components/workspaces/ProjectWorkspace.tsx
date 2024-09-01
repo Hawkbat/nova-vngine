@@ -1,12 +1,13 @@
 import { projectStore } from '../../store/project'
-import { immSet } from '../../utils/imm'
-import { useSelector, useStore } from '../../utils/store'
-import { StringField } from '../common/StringField'
-import { NumberField } from '../common/NumberField'
-import styles from './ProjectWorkspace.module.css'
 import { settingsStore } from '../../store/settings'
 import { ENTITY_TYPES, getEntityParentType } from '../../types/project'
+import { immSet } from '../../utils/imm'
+import { useSelector, useStore } from '../../utils/store'
 import { EntityList } from '../common/EntityList'
+import { NumberField } from '../common/NumberField'
+import { StringField } from '../common/StringField'
+
+import styles from './ProjectWorkspace.module.css'
 
 export const ProjectWorkspace = () => {
     const getDeveloperMode = useSelector(settingsStore, s => s.developerMode)

@@ -1,6 +1,6 @@
-import { EntityWorkspace } from './EntityWorkspace'
-import { StepSequenceEditor } from '../editors/StepSequenceEditor'
 import { immSet } from '../../utils/imm'
+import { StepSequenceEditor } from '../editors/StepSequenceEditor'
+import { EntityWorkspace } from './EntityWorkspace'
 
 
 export const SceneWorkspace = () => {

@@ -1,16 +1,17 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+
 import { App } from './components/App'
-import { viewStateStore } from './store/viewstate'
-import { loadInitialSettings, loadInitialViewState, saveProject } from './store/operations'
-import { projectStore } from './store/project'
-import { wait } from './utils/async'
-import { immSet, immReplaceBy } from './utils/imm'
-import { subscribeToStoreAsync, subscribeToSelector } from './utils/store'
 import { LoadingApp } from './components/LoadingApp'
 import { platform } from './platform/platform'
+import { loadInitialSettings, loadInitialViewState, saveProject } from './store/operations'
+import { projectStore } from './store/project'
 import { settingsStore } from './store/settings'
+import { viewStateStore } from './store/viewstate'
+import { wait } from './utils/async'
 import { openErrorDialog } from './utils/debug'
+import { immReplaceBy, immSet } from './utils/imm'
+import { subscribeToSelector, subscribeToStoreAsync } from './utils/store'
 
 const appContainer = document.createElement('div')
 appContainer.id = 'appContainer'

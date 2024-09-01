@@ -1,6 +1,6 @@
 import { immAppend, immReplaceWhere, immSet, immSetProps } from '../utils/imm'
-import { resolveExprAs, type ExprContext, type LocationValue } from './expressions'
-import type { CharacterID, PortraitID, BackdropID, SongID, SoundID } from './project'
+import { type ExprContext, type LocationValue, resolveExprAs } from './expressions'
+import type { BackdropID, CharacterID, PortraitID, SongID, SoundID } from './project'
 import type { AnyStep } from './steps'
 
 export interface CharacterPlayerState {

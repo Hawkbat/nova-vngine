@@ -1,9 +1,10 @@
 import { useAsset } from '../../store/assets'
 import { projectStore } from '../../store/project'
-import type { CharacterPlayerState, BackdropPlayerState, SongPlayerState, SoundPlayerState, DialoguePlayerState, ScenePlayerState, OptionPlayerState } from '../../types/player'
+import type { BackdropPlayerState, CharacterPlayerState, DialoguePlayerState, OptionPlayerState, ScenePlayerState, SongPlayerState, SoundPlayerState } from '../../types/player'
 import { classes } from '../../utils/display'
 import { useSmoothAudio } from '../../utils/media'
 import { useSelector } from '../../utils/store'
+
 import styles from './SceneRenderer.module.css'
 
 const Character = ({ characterID, portraitID, location }: CharacterPlayerState) => {

@@ -1,6 +1,5 @@
 import type { StorageDirectoryResult, StorageFileResult, StorageProvider } from '../../types/storage'
 import { parseStorageDirectoryListing, StorageError } from '../../types/storage'
-
 import { tryParseJson } from '../../utils/guard'
 import { getAbsolutePath, getRelativePath, joinPaths } from '../../utils/path'
 import { platform } from '../platform'

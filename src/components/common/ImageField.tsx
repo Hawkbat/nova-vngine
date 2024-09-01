@@ -1,18 +1,20 @@
 import { useCallback, useState } from 'react'
+
+import { useAsset } from '../../store/assets'
+import { useProjectStorage } from '../../store/operations'
+import type { AssetDefinition } from '../../types/project'
+import { classes } from '../../utils/display'
+import { throwIfNull } from '../../utils/guard'
+import { getMimeType, IMAGE_EXTENSIONS } from '../../utils/media'
+import { EditorIcon } from './EditorIcon'
 import type { FieldProps } from './Field'
 import { Field } from './Field'
+import { COMMON_ICONS } from './Icons'
+import { ImagePreview } from './ImagePreview'
 import type { UploadCallback } from './UploadZone'
 import { UploadZone } from './UploadZone'
-import { useProjectStorage } from '../../store/operations'
-import { useAsset } from '../../store/assets'
+
 import styles from './ImageField.module.css'
-import { EditorIcon } from './EditorIcon'
-import { COMMON_ICONS } from './Icons'
-import { classes } from '../../utils/display'
-import type { AssetDefinition } from '../../types/project'
-import { getMimeType, IMAGE_EXTENSIONS } from '../../utils/media'
-import { ImagePreview } from './ImagePreview'
-import { throwIfNull } from '../../utils/guard'
 
 export const ImageField = ({ className, label, value, setValue, validate, targetPath }: FieldProps<AssetDefinition | null> & { targetPath: string }) => {
     const { getRoot, storage } = useProjectStorage()

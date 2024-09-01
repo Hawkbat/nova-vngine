@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom'
+
 import styles from './ImagePreview.module.css'
 
 export const ImagePreview = ({ src, open, onClose }: {

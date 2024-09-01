@@ -1,9 +1,10 @@
-import { EntityWorkspace } from './EntityWorkspace'
-import type { CharacterDefinition } from '../../types/project'
-import { useSelector } from '../../utils/store'
-import { projectStore } from '../../store/project'
 import { useAsset } from '../../store/assets'
+import { projectStore } from '../../store/project'
+import type { CharacterDefinition } from '../../types/project'
 import { arrayHead } from '../../utils/array'
+import { useSelector } from '../../utils/store'
+import { EntityWorkspace } from './EntityWorkspace'
+
 import styles from './CharacterWorkspace.module.css'
 
 const CharacterPreview = ({ character }: { character: CharacterDefinition }) => {

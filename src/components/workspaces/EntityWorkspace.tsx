@@ -1,15 +1,17 @@
-import { projectStore } from '../../store/project'
+import { Fragment } from 'react/jsx-dev-runtime'
+
 import { useViewStateScope } from '../../store/operations'
+import { projectStore } from '../../store/project'
+import { settingsStore } from '../../store/settings'
 import type { EntityOfType, EntityType, ProjectDefinition, ProjectEntityKeyOf } from '../../types/project'
 import { getEntityChildTypes, getProjectEntityKey } from '../../types/project'
 import { prettyPrintIdentifier } from '../../utils/display'
 import { immReplaceWhere, immSet } from '../../utils/imm'
 import { useSelector } from '../../utils/store'
-import { StringField } from '../common/StringField'
 import { EntityList } from '../common/EntityList'
+import { StringField } from '../common/StringField'
+
 import styles from './EntityWorkspace.module.css'
-import { settingsStore } from '../../store/settings'
-import { Fragment } from 'react/jsx-dev-runtime'
 
 export const EntityWorkspace = <T extends EntityType>({ type, children, preview }: {
     type: T

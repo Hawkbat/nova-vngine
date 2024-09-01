@@ -1,27 +1,29 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { AnyExpr, ExprContext, ExprDefinition, ExprPrimitiveRawValueOfType, ExprPrimitiveValueType, ExprType, ExprValueType } from '../../types/expressions'
-import { EXPR_DEFINITION_MAP, EXPR_DEFINITIONS, createDefaultExpr, guessExprReturnType, createDefaultExprChild, exprValueTypeAssignableTo, validateExpr } from '../../types/expressions'
-import styles from './ExpressionEditor.module.css'
 import { Fragment } from 'react'
-import { DropdownMenuItem, SearchDropdownMenu, useDropdownMenuState } from '../common/DropdownMenu'
-import { immAppend, immRemoveAt, immReplaceAt, immSet } from '../../utils/imm'
-import { forEachMultiple } from '../../utils/array'
-import { EditorIcon } from '../common/EditorIcon'
-import { COMMON_ICONS, EXPR_ICONS } from '../common/Icons'
-import { Field } from '../common/Field'
+
+import { getEntityByID } from '../../store/operations'
+import { projectStore } from '../../store/project'
+import type { AnyExpr, ExprContext, ExprDefinition, ExprPrimitiveRawValueOfType, ExprPrimitiveValueType, ExprType, ExprValueType } from '../../types/expressions'
+import { createDefaultExpr, createDefaultExprChild, EXPR_DEFINITION_MAP, EXPR_DEFINITIONS, exprValueTypeAssignableTo, guessExprReturnType, validateExpr } from '../../types/expressions'
 import type { EntityIDOf, EntityOfType, EntityType } from '../../types/project'
 import { getProjectEntityKey } from '../../types/project'
-import { EditorButton } from '../common/EditorButton'
-import { projectStore } from '../../store/project'
-import { getEntityByID } from '../../store/operations'
-import { useSelector } from '../../utils/store'
-import { StringField } from '../common/StringField'
-import { NumberField } from '../common/NumberField'
-import { BooleanField } from '../common/BooleanField'
-import { hintTuple } from '../../utils/types'
+import { forEachMultiple } from '../../utils/array'
 import { throwIfNull } from '../../utils/guard'
+import { immAppend, immRemoveAt, immReplaceAt, immSet } from '../../utils/imm'
+import { useSelector } from '../../utils/store'
+import { hintTuple } from '../../utils/types'
+import { BooleanField } from '../common/BooleanField'
+import { DropdownMenuItem, SearchDropdownMenu, useDropdownMenuState } from '../common/DropdownMenu'
+import { EditorButton } from '../common/EditorButton'
+import { EditorIcon } from '../common/EditorIcon'
+import { Field } from '../common/Field'
+import { COMMON_ICONS, EXPR_ICONS } from '../common/Icons'
+import { NumberField } from '../common/NumberField'
+import { StringField } from '../common/StringField'
+
+import styles from './ExpressionEditor.module.css'
 
 type ArgEditorProps<T extends ExprPrimitiveValueType> = {
     label: string

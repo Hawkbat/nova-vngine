@@ -4,8 +4,8 @@ import { defineParser, parsers as $ } from '../utils/guard'
 import type { RandState } from '../utils/rand'
 import type { Branded, OmitUndefined } from '../utils/types'
 import { hintTuple } from '../utils/types'
-import { parseAnyExpr, type BooleanExpr, type ChapterExpr, type CharacterExpr, type IntegerExpr, type ListExpr, type NumberExpr, type PortraitExpr, type SceneExpr, type StringExpr, type ValueExpr } from './expressions'
-import { parseAnyStep, type AnyStep } from './steps'
+import { type BooleanExpr, type ChapterExpr, type CharacterExpr, type IntegerExpr, type ListExpr, type NumberExpr, parseAnyExpr, type PortraitExpr, type SceneExpr, type StringExpr, type ValueExpr } from './expressions'
+import { type AnyStep, parseAnyStep } from './steps'
 
 type EntityID<T extends EntityType> = Branded<string, T>
 

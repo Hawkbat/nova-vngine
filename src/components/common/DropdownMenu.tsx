@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
-import styles from './DropdownMenu.module.css'
+
 import { hintTuple } from '../../utils/types'
+
+import styles from './DropdownMenu.module.css'
 
 interface DropdownMenuState {
     open: boolean
