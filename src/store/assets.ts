@@ -56,12 +56,12 @@ function decrementRefCount(asset: AssetDefinition | null) {
 
 export function useAsset(asset: AssetDefinition | null) {
     const entry = getCacheEntry(asset)
-    const [url] = useStore(entry.store)
+    const [getURL] = useStore(entry.store)
     useEffect(() => {
         incrementRefCount(asset)
         return () => {
             decrementRefCount(asset)
         }
     }, [asset])
-    return asset ? url : null
+    return asset ? getURL : () => null
 }

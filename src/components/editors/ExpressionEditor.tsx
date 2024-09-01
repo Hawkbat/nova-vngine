@@ -7,6 +7,7 @@ import styles from './ExpressionEditor.module.css'
 import { Fragment } from 'react'
 import { DropdownMenuItem, SearchDropdownMenu, useDropdownMenuState } from '../common/DropdownMenu'
 import { immAppend, immRemoveAt, immReplaceAt, immSet } from '../../utils/imm'
+import { forEachMultiple } from '../../utils/array'
 import { EditorIcon } from '../common/EditorIcon'
 import { COMMON_ICONS, EXPR_ICONS } from '../common/Icons'
 import { Field } from '../common/Field'
@@ -19,6 +20,8 @@ import { useSelector } from '../../utils/store'
 import { StringField } from '../common/StringField'
 import { NumberField } from '../common/NumberField'
 import { BooleanField } from '../common/BooleanField'
+import { hintTuple } from '../../utils/types'
+import { throwIfNull } from '../../utils/guard'
 
 type ArgEditorProps<T extends ExprPrimitiveValueType> = {
     label: string
@@ -74,12 +77,12 @@ const BooleanArgEditor = ({ value, setValue, label }: ArgSubEditorProps<'boolean
 const EntityArgEditor = <T extends EntityType>({ type, value, setValue, label }: ArgEditorProps<T>) => {
     const entity = getEntityByID(type, value as unknown as EntityIDOf<T>)
     const [dropdownProps, openDropdown] = useDropdownMenuState()
-    const items = useSelector(projectStore, s => s[getProjectEntityKey(type)]) as EntityOfType<T>[]
+    const getItems = useSelector(projectStore, s => s[getProjectEntityKey(type)]) as () => EntityOfType<T>[]
     return <>
         <EditorButton className={styles.argButton} style='text' onClick={openDropdown}>
             {entity ? entity.name ? entity.name : 'Untitled' : 'None'}
         </EditorButton>
-        <SearchDropdownMenu<EntityOfType<T>> {...dropdownProps} items={items} filter={(e, search) => e.name.toLowerCase().includes(search.toLowerCase())}>{(entity: EntityOfType<T>) => <DropdownMenuItem key={entity.id} onClick={() => (setValue(entity.id as ExprPrimitiveRawValueOfType<T>), dropdownProps.onClose())}>{entity.name ? entity.name : 'Untitled'}</DropdownMenuItem>}</SearchDropdownMenu>
+        <SearchDropdownMenu<EntityOfType<T>> {...dropdownProps} items={getItems()} filter={(e, search) => e.name.toLowerCase().includes(search.toLowerCase())}>{(entity: EntityOfType<T>) => <DropdownMenuItem key={entity.id} onClick={() => (setValue(entity.id as ExprPrimitiveRawValueOfType<T>), dropdownProps.onClose())}>{entity.name ? entity.name : 'Untitled'}</DropdownMenuItem>}</SearchDropdownMenu>
     </>
 }
 
@@ -127,11 +130,11 @@ export const ExpressionEditor = ({ expr, setExpr, paramTypes, ctx }: { expr: Any
         const d = EXPR_DEFINITION_MAP[type]
         const newExpr = createDefaultExpr(type, ctx)
         if (def.params && d.params && 'params' in expr && 'params' in newExpr) {
-            for (let i = 0; i < def.params.length; i++) {
-                if (def.params[i].label === d.params[i].label) {
+            forEachMultiple(hintTuple(def.params, d.params), (i, p, c) => {
+                if (p.label === c.label && expr.params[i]) {
                     newExpr.params[i] = expr.params[i]
                 }
-            }
+            })
         }
         setExpr(newExpr)
     }
@@ -142,18 +145,18 @@ export const ExpressionEditor = ({ expr, setExpr, paramTypes, ctx }: { expr: Any
         <div className={styles.expr}>
             {infix ? null : <ExpressionIcon type={expr.type} onClick={openExprMenu} />}
             {def.args && 'args' in expr ? <>
-                {def.args.map((a, i) => <ArgEditor key={i} label={a.label} type={a.type} value={expr.args[i]} setValue={v => setExpr({ ...expr, args: immReplaceAt(expr.args, i, v) as any })} />)}
+                {def.args.map((a, i) => <ArgEditor key={i} label={a.label} type={a.type} value={throwIfNull(expr.args[i])} setValue={v => setExpr({ ...expr, args: immReplaceAt(expr.args, i, v) as any })} />)}
             </> : null}
             {def.params && 'params' in expr ? <>
                 {def.params.map((p, i) => <Fragment key={i}>
-                    <ParamEditor label={p.label} types={p.types} expr={expr.params[i]} setExpr={v => setExpr({ ...expr, params: immReplaceAt(expr.params, i, v) as any })} ctx={ctx} />
+                    <ParamEditor label={p.label} types={p.types} expr={throwIfNull(expr.params[i])} setExpr={v => setExpr({ ...expr, params: immReplaceAt(expr.params, i, v) as any })} ctx={ctx} />
                     {infix && i === 0 ? <ExpressionIcon type={expr.type} onClick={openExprMenu} /> : null}
                 </Fragment>)}
             </> : null}
             {def.children && 'children' in expr ? <>
                 {expr.children.map((c, i) => <div key={i} className={styles.child}>
                     <EditorIcon path={COMMON_ICONS.deleteItem} label='Remove Item' size={0.75} onClick={() => setExpr(immSet(expr, 'children', immRemoveAt<AnyExpr[]>(expr.children, i) as any))} />
-                    {def.children?.map((d, j) => <ParamEditor key={j} label={d.label} types={d.types} expr={c[j]} setExpr={v => setExpr(immSet(expr, 'children', immReplaceAt(expr.children, i, immReplaceAt(expr.children[i], j, v) as any)))} ctx={ctx} />)}
+                    {def.children?.map((d, j) => <ParamEditor key={j} label={d.label} types={d.types} expr={throwIfNull(c[j])} setExpr={v => setExpr(immSet(expr, 'children', immReplaceAt(expr.children, i, immReplaceAt(throwIfNull(expr.children[i]), j, v) as any)))} ctx={ctx} />)}
                 </div>)}
                 <EditorIcon path={COMMON_ICONS.addItem} label='Add Item' size={0.75} onClick={() => setExpr(immSet(expr, 'children', immAppend(expr.children, createDefaultExprChild(expr.type, ctx) as any)))} />
             </> : null}

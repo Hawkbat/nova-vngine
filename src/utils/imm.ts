@@ -11,7 +11,6 @@ export function immReplaceAt<T>(arr: T[], index: number, ...values: T[]): T[] {
     return arr.slice(0, index).concat(values).concat(arr.slice(index + values.length))
 }
 
-
 export function immInsertAt<T>(arr: T[], index: number, ...values: T[]): T[] {
     return arr.slice(0, index).concat(values).concat(arr.slice(index))
 }
@@ -29,7 +28,7 @@ export function immReplaceWhere<T>(arr: T[], filter: (value: T) => boolean, sett
     return arr.map(v => filter(v) ? setter(v) : v)
 }
 
-export function keepWhile<T>(arr: T[], shouldKeep: (value: T, i: number, arr: T[]) => boolean): T[] {
+export function immKeepWhile<T>(arr: T[], shouldKeep: (value: T, i: number, arr: T[]) => boolean): T[] {
     const endIndex = arr.findIndex((a, i, arr) => !shouldKeep(a, i, arr))
     if (endIndex < 0) return arr.slice()
     return arr.slice(0, endIndex)
@@ -38,6 +37,11 @@ export function keepWhile<T>(arr: T[], shouldKeep: (value: T, i: number, arr: T[
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function immSet<T extends Record<string, any>, K extends keyof T>(obj: T, key: K, value: T[K]): T {
     return { ...obj, [key]: value }
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function immSetProps<T extends Record<string, any>>(obj: T, values: Partial<T>): T {
+    return { ...obj, ...values }
 }
 
 export function deepDiff<T>(a: T, b: T, path: string, diffs: [path: string, before: unknown, after: unknown][] = []) {

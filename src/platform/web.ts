@@ -43,6 +43,14 @@ export const webPlatform: Platform = {
     async setTitle(title) {
         document.title = title
     },
+    async readFromClipboard() {
+        const text = await navigator.clipboard.readText()
+        if (!text) return null
+        return text
+    },
+    async writeToClipboard(text) {
+        await navigator.clipboard.writeText(text)
+    },
     async log(...objs) {
         console.log(...objs)
     },

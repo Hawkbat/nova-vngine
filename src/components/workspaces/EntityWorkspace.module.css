@@ -1,20 +1,18 @@
 
-.workspace {
-    display: flex;
-    flex: 1 0 auto;
-    gap: 0.5em;
-}
-
 .fields {
     display: flex;
     flex-direction: column;
     gap: 0.5em;
-    flex: 1 0 0;
+    flex: 0 0 auto;
+    max-width: 100%;
 }
 
 .childLists {
     display: flex;
     flex-direction: column;
     gap: 0.5em;
-    flex: 1 0 0;
+}
+
+.preview {
+    flex: 1 1 0;
 }

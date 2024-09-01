@@ -2,8 +2,15 @@
 .buttonGroup {
     display: flex;
     flex-flow: row wrap;
-    justify-content: flex-end;
     gap: 0.5em;
+}
+
+.buttonGroup.left {
+    justify-content: flex-start;
+}
+
+.buttonGroup.right {
+    justify-content: flex-end;
 }
 
 .button {

@@ -18,7 +18,7 @@ export const UploadZone = ({ className, title, fileType, extensions, multi, star
     startIn?: string
     onUpload: UploadCallback
 }) => {
-    const { root, storage } = useProjectStorage()
+    const { getRoot, storage } = useProjectStorage()
 
     const [dropProps, dropOver] = useDrop('copy', useCallback(values => {
         if (values.type !== 'files') return
@@ -42,13 +42,13 @@ export const UploadZone = ({ className, title, fileType, extensions, multi, star
         e.stopPropagation()
 
         void (async () => {
-            const files = await storage.pickFiles?.(root, { title, fileType, extensions, multi, startIn })
+            const files = await storage.pickFiles?.(getRoot(), { title, fileType, extensions, multi, startIn })
             if (!files) return
             onUpload(files)
         })()
-    }, [root, storage, title, fileType, extensions, multi, startIn, onUpload])
+    }, [getRoot, storage, title, fileType, extensions, multi, startIn, onUpload])
 
-    return <div className={classes(styles.uploadZone, { [styles.dropOver]: dropOver, [styles.picker]: enablePicker, [styles.dropSite]: enableDrop })} onClick={enablePicker ? onClick : undefined} {...(enableDrop ? dropProps : {})}>
+    return <div className={classes(styles.uploadZone, { [styles.dropOver ?? '']: dropOver, [styles.picker ?? '']: enablePicker, [styles.dropSite ?? '']: enableDrop })} onClick={enablePicker ? onClick : undefined} {...(enableDrop ? dropProps : {})}>
         <EditorIcon className={className} path={COMMON_ICONS.upload} label={enablePicker && enableDrop ? `Upload or Drop ${fileType}` : (enablePicker as boolean) ? `Upload ${fileType}` : enableDrop ? `Drop ${fileType}` : undefined} showLabel />
     </div>
 }

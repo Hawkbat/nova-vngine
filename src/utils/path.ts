@@ -1,4 +1,6 @@
-import { keepWhile } from './imm'
+import { arrayHead, arrayTail } from './array'
+import { throwIfNull } from './guard'
+import { immKeepWhile } from './imm'
 
 const domainRegex = /^(?:[a-zA-Z][a-zA-Z0-9+.-]*:(?:\/\/(?:\w*(?::\w*)?@)?(?:[\w.-]+|\[[0-9a-fA-F.]+\])(?::\d+)?)?|\\\\\w+)/
 
@@ -14,7 +16,7 @@ export function pathIsAbsolute(path: string) {
 export function getPathFileName(path: string): string {
     const segments = getPathSegments(normalizePath(path))
     if (!segments.length) return ''
-    return segments[segments.length - 1]
+    return throwIfNull(arrayTail(segments))
 }
 
 export function getPathParentPath(path: string): string {
@@ -76,7 +78,7 @@ export function getPathSegments(path: string): string[] {
         const domain = domainMatch[0]
         const subPath = path.substring(domain.length)
         const segments = getPathSegments(subPath)
-        return [`${domain}${segments[0]}`, ...segments.slice(1)]
+        return [`${domain}${arrayHead(segments) ?? ''}`, ...segments.slice(1)]
     }
     const queryIndex = path.indexOf('?')
     const fragmentIndex = path.indexOf('#')
@@ -85,7 +87,7 @@ export function getPathSegments(path: string): string[] {
         const tail = path.substring(tailIndex)
         const subPath = path.substring(0, tailIndex)
         const segments = getPathSegments(subPath)
-        return [...segments.slice(0, -1), `${segments[segments.length - 1]}${tail}`]
+        return [...segments.slice(0, -1), `${arrayTail(segments) ?? ''}${tail}`]
     }
     return path.split('/')
 }
@@ -108,7 +110,7 @@ export function getRelativePath(to: string, from: string) {
 
     const toSegments = getPathSegments(normalizePath(to))
     const fromSegments = getPathSegments(normalizePath(from))
-    const sharedSegments = keepWhile(fromSegments, (s, i) => toSegments[i] === s)
+    const sharedSegments = immKeepWhile(fromSegments, (s, i) => toSegments[i] === s)
 
     const resultSegments: string[] = []
     for (const _ of fromSegments.slice(sharedSegments.length)) {

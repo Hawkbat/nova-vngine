@@ -1,5 +1,5 @@
 import type { LoggerType, KnownPath } from '@neutralinojs/lib'
-import { init, events as nEvents, app as nApp, os as nOS, filesystem as nFS, window as nWindow, debug as nDebug } from '@neutralinojs/lib'
+import { init, events as nEvents, app as nApp, os as nOS, filesystem as nFS, window as nWindow, debug as nDebug, clipboard as nClipboard } from '@neutralinojs/lib'
 import faviconUrl from '../favicon.png'
 import { awaitAllMap, createExposedPromise } from '../utils/async'
 import { parseViewState } from '../types/viewstate'
@@ -198,6 +198,17 @@ export const neutralinoPlatform: Platform = {
     },
     async setTitle(title) {
         await setTitle(title)
+    },
+    async readFromClipboard() {
+        const format = await nClipboard.getFormat()
+        console.log(format)
+        if (format !== nClipboard.ClipboardFormat.text) return null
+        const text = await nClipboard.readText()
+        if (!text) return null
+        return text
+    },
+    async writeToClipboard(text) {
+        await nClipboard.writeText(text)
     },
     async log(...objs) {
         console.log(...objs)

@@ -1,8 +1,12 @@
-import { useSyncExternalStore } from 'react'
+import { useCallback, useSyncExternalStore } from 'react'
 import { hintTuple } from './types'
 import { deepDiff, immSet } from './imm'
 import { LOG_STORE_DIFFS } from '../debug'
+import { useLatest } from './hooks'
+import { throwIfNull } from './guard'
+import { arrayHead } from './array'
 
+export type StoreValueGetter<T> = () => T
 export type StoreValueSetter<T> = (oldValue: T) => T
 
 export function createSimpleStore<T>(defaultValue: T) {
@@ -21,6 +25,7 @@ export function createSimpleStore<T>(defaultValue: T) {
     }
     const notify = () => listeners.forEach(l => l())
     const getSnapshot = () => value
+    const getValue = () => value
     const setValue = (setter: StoreValueSetter<T>) => {
         if (disposed) {
             console.warn('setValue called on disposed store', value)
@@ -46,6 +51,7 @@ export function createSimpleStore<T>(defaultValue: T) {
         subscribe,
         notify,
         getSnapshot,
+        getValue,
         setValue,
         isDisposed,
         dispose,
@@ -77,7 +83,7 @@ export function createTrackedStore<T>(defaultValue: T) {
         const s = metaStore.getSnapshot()
         if (s.undos.length) {
             const currentValue = store.getSnapshot()
-            const newValue = s.undos[0]
+            const newValue = throwIfNull(arrayHead(s.undos))
             metaStore.setValue(s => ({
                 ...s,
                 dirty: true,
@@ -93,7 +99,7 @@ export function createTrackedStore<T>(defaultValue: T) {
         const s = metaStore.getSnapshot()
         if (s.redos.length) {
             const currentValue = store.getSnapshot()
-            const newValue = s.redos[0]
+            const newValue = throwIfNull(arrayHead(s.redos))
             metaStore.setValue(s => ({
                 ...s,
                 dirty: true,
@@ -144,23 +150,24 @@ export function createTrackedStore<T>(defaultValue: T) {
 export type TrackedStore<T> = ReturnType<typeof createTrackedStore<T>>
 
 export function useStore<T>(store: SimpleStore<T>) {
-    const state = useSyncExternalStore(store.subscribe, store.getSnapshot)
-    return hintTuple(state, store.setValue)
+    useSyncExternalStore(store.subscribe, store.getSnapshot)
+    return hintTuple(store.getValue, store.setValue)
 }
 
 export function useMetaStore<T>(store: TrackedStore<T>) {
-    const state = useSyncExternalStore(store.meta.subscribe, store.meta.getSnapshot)
-    return hintTuple(state, store.meta.setValue)
+    useSyncExternalStore(store.meta.subscribe, store.meta.getSnapshot)
+    return hintTuple(store.meta.getValue, store.meta.setValue)
 }
 
-export function useSelector<T, U>(store: SimpleStore<T>, selector: (value: T) => U) {
-    const state = useSyncExternalStore(store.subscribe, () => selector(store.getSnapshot()))
-    return state
+export function useSelector<T, U>(store: SimpleStore<T>, selector: (value: T) => U): StoreValueGetter<U> {
+    const latestSelector = useLatest(selector)
+    const getValue = useCallback(() => latestSelector()(store.getSnapshot()), [latestSelector, store])
+    useSyncExternalStore(store.subscribe, getValue)
+    return getValue
 }
 
 export function useMetaSelector<T, U>(store: TrackedStore<T>, selector: (value: StoreMetaState<T>) => U) {
-    const state = useSyncExternalStore(store.meta.subscribe, () => selector(store.meta.getSnapshot()))
-    return hintTuple(state, store.meta.setValue)
+    return useSelector(store.meta, selector)
 }
 
 export function subscribeToStore<T>(store: SimpleStore<T>, callback: (newState: T, oldState: T) => void) {
@@ -184,12 +191,13 @@ export function subscribeToSelector<T, U>(store: SimpleStore<T>, selector: (stat
 
 export function subscribeToSelectorAsync<T, U>(store: SimpleStore<T>, selector: (state: T) => U, callback: (newValue: U, oldValue: U) => Promise<void>) {
     let updateInProgress = false
-    let pendingUpdate = false
+    let pendingUpdate: { newState: U, oldState : U } | null = null
 
     const syncCallback = async (newState: U, oldState: U) => {
-        pendingUpdate = true
+        pendingUpdate = pendingUpdate ? { newState, oldState: pendingUpdate.oldState } : { newState, oldState }
         while (pendingUpdate && !updateInProgress) {
-            pendingUpdate = false
+            const { newState, oldState } = pendingUpdate
+            pendingUpdate = null
             updateInProgress = true
             await callback(newState, oldState)
             updateInProgress = false

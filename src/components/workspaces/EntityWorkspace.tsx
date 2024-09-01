@@ -9,34 +9,37 @@ import { StringField } from '../common/StringField'
 import { EntityList } from '../common/EntityList'
 import styles from './EntityWorkspace.module.css'
 import { settingsStore } from '../../store/settings'
+import { Fragment } from 'react/jsx-dev-runtime'
 
-export const EntityWorkspace = <T extends EntityType>({ type, children }: {
+export const EntityWorkspace = <T extends EntityType>({ type, children, preview }: {
     type: T
     children: (item: EntityOfType<T>, setItem: (setter: (value: EntityOfType<T>) => EntityOfType<T>) => void) => React.ReactNode
+    preview?: (item: EntityOfType<T>) => React.ReactNode
 }) => {
-    const developerMode = useSelector(settingsStore, s => s.developerMode)
+    const getDeveloperMode = useSelector(settingsStore, s => s.developerMode)
     const projectKey = getProjectEntityKey(type)
-    const [itemID] = useViewStateScope(type)
-    const items = useSelector(projectStore, s => s[projectKey])
+    const [getItemID] = useViewStateScope(type)
+    const getItems = useSelector(projectStore, s => s[projectKey])
 
     const childTypes = getEntityChildTypes(type)
 
-    const item = (itemID ? items.find(s => s.id === itemID) ?? null : null) as EntityOfType<T> | null
+    const item = (getItemID() ? getItems().find(s => s.id === getItemID()) ?? null : null) as EntityOfType<T> | null
 
-    return <div className={styles.workspace}>
-        {item ? <>
-            <div key={item.id} className={styles.fields}>
-                <StringField label={`${prettyPrintIdentifier(type)} Name`} value={item.name} setValue={name => projectStore.setValue(project => immSet(project, projectKey, immReplaceWhere(project[projectKey] as EntityOfType<T>[], s => s.id === itemID, item => immSet(item, 'name', name)) as ProjectDefinition[ProjectEntityKeyOf<T>]))} validate={s => s ? '' : 'Name must be filled out'} />
-                {developerMode ? <>
-                    <StringField label={`${prettyPrintIdentifier(type)} ID`} value={item.id} />
-                </> : null}
-                {children(item, setter => projectStore.setValue(project => immSet(project, projectKey, immReplaceWhere(project[projectKey] as EntityOfType<T>[], s => s.id === itemID, e => setter(e)) as ProjectDefinition[ProjectEntityKeyOf<T>])))}
-            </div>
+    return item ? <Fragment key={item.id}>
+        <div className={styles.fields}>
+            <StringField label={`${prettyPrintIdentifier(type)} Name`} value={item.name} setValue={name => projectStore.setValue(project => immSet(project, projectKey, immReplaceWhere(project[projectKey] as EntityOfType<T>[], s => s.id === getItemID(), item => immSet(item, 'name', name)) as ProjectDefinition[ProjectEntityKeyOf<T>]))} validate={s => s ? '' : 'Name must be filled out'} />
+            {getDeveloperMode() ? <>
+                <StringField label={`${prettyPrintIdentifier(type)} ID`} value={item.id} />
+            </> : null}
+            {children(item, setter => projectStore.setValue(project => immSet(project, projectKey, immReplaceWhere(project[projectKey] as EntityOfType<T>[], s => s.id === getItemID(), e => setter(e)) as ProjectDefinition[ProjectEntityKeyOf<T>])))}
             {childTypes.length ? <div className={styles.childLists}>
                 {childTypes.map(c => <EntityList key={c} type={c} />)}
             </div> : null}
-        </> : <>
-            <EntityList type={type} />
-        </>}
-    </div>
+        </div>
+        {preview ? <div className={styles.preview}>
+            {preview(item)}
+        </div> : null}
+    </Fragment> : <>
+        <EntityList type={type} />
+    </>
 }

@@ -7,7 +7,7 @@
     "esbuild:build": "node scripts/build.js",
     "esbuild:watch": "node scripts/watch.js",
     "esbuild:serve": "node scripts/serve.js",
-    "typescript:build": "tsc -p src/",
+    "typecheck": "tsc -p src/",
     "lint": "npx eslint .",
     "neu:start": "neu run -- --window-enable-inspector",
     "neu:build": "neu build --release"
@@ -37,6 +37,7 @@
     "idb-keyval": "^6.2.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-error-boundary": "^4.0.13",
     "sourcemapped-stacktrace": "^1.1.11",
     "typescript": "^5.5.4",
     "typescript-eslint": "^8.2.0"

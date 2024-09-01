@@ -25,8 +25,8 @@ export const fetchStorageProvider: StorageProvider = {
         const buffer = await res.arrayBuffer()
         return buffer
     },
-    async loadAsset(root, path) {
-        path = root ? getAbsolutePath(path, root.key) : path
+    async loadAsset(root, asset) {
+        const path = root ? getAbsolutePath(asset.path, root.key) : asset.path
         const res = await fetch(path)
         if (!res.ok) throw new StorageError('not-found', 'File coult not be fetched at the provided URL.')
         return {

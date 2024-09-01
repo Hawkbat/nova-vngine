@@ -17,5 +17,6 @@ export const viewStateStore = createSimpleStore<ViewState>({
         sound: null,
         variable: null,
         macro: null,
+        step: null,
     },
 })

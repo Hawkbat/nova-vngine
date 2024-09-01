@@ -1,3 +1,4 @@
+import { throwIfNull } from './guard'
 import { remap } from './math'
 
 const INT32_MIN = -2147483648
@@ -39,7 +40,7 @@ export function randInt(state: RandState, min: number, max: number): RandResult<
 
 export function randItem<T>(state: RandState, array: T[]): RandResult<T> {
     const [newState, index] = randInt(state, 0, array.length - 1)
-    const result = array[index]
+    const result = throwIfNull(array[index])
     return [newState, result]
 }
 
@@ -54,7 +55,7 @@ export function randString(state: RandState, charSet: string, length: number): R
     let index = -1
     for (let i = 0; i < length; i++) {
         [state, index] = randInt(state, 0, charSet.length - 1)
-        result += charSet[index]
+        result += throwIfNull(charSet[index])
     }
     return [state, result]
 }

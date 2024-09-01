@@ -4,6 +4,7 @@ import { PROJECT_ENTITY_KEYS } from './project'
 import type { ParseFunc } from '../utils/guard'
 import { defineParser, parsers as $ } from '../utils/guard'
 import { parseStorageRootEntry, type StorageRootEntry } from './storage'
+import type { StepID } from './steps'
 
 export type ProjectEditorTab = 'home' | 'manual' | 'settings' | 'project' | ProjectEntityKeyOf<EntityType>
 
@@ -18,7 +19,7 @@ export interface ViewState {
     currentTab: ProjectEditorTab
     loadedProject: ProjectMetaData | null
     recentProjects: ProjectMetaData[]
-    scopes: { [K in EntityType]: EntityOfType<K>['id'] | null }
+    scopes: { [K in EntityType]: EntityOfType<K>['id'] | null } & { step: StepID | null }
 }
 
 const parseProjectMetaData: ParseFunc<ProjectMetaData> = defineParser<ProjectMetaData>((c, v, d) => $.object(c, v, {
@@ -43,5 +44,6 @@ export const parseViewState: ParseFunc<ViewState> = defineParser<ViewState>((c, 
         sound: (c, v, d) => $.either<SoundID, null>(c, v, $.id, $.null, d),
         variable: (c, v, d) => $.either<VariableID, null>(c, v, $.id, $.null, d),
         macro: (c, v, d) => $.either<MacroID, null>(c, v, $.id, $.null, d),
+        step: (c, v, d) => $.either<StepID, null>(c, v, $.id, $.null, d),
     }, d),
 }, d))

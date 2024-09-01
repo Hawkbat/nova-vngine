@@ -8,6 +8,7 @@ import { immAppend, immRemoveAt, immSet } from '../../utils/imm'
 import { hintTuple } from '../../utils/types'
 import { EditorButton, EditorButtonGroup } from './EditorButton'
 import { COMMON_ICONS } from './Icons'
+import { arrayHead } from '../../utils/array'
 
 export interface DialogChoice {
     content: React.ReactNode
@@ -50,8 +51,8 @@ export function useIsDialogOpen() {
 }
 
 export const Dialog = () => {
-    const [store, setStore] = useStore(dialogStore)
-    const currentState = store.states.length ? store.states[0] : null
+    const [getStore, setStore] = useStore(dialogStore)
+    const currentState = arrayHead(getStore().states)
 
     const onChoiceClicked = (k: string) => {
         currentState?.promise.resolve(k)
@@ -67,7 +68,7 @@ export const Dialog = () => {
                 <div className={styles.content}>
                     {currentState.content}
                 </div>
-                <EditorButtonGroup>
+                <EditorButtonGroup side='right'>
                     {Object.entries(currentState.choices).map(([k, v]) => <EditorButton key={k} active={v.primary} onClick={() => onChoiceClicked(k)}>
                         {v.icon ? <EditorIcon path={v.icon} /> : null}
                         {v.content}

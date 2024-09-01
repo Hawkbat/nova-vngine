@@ -12,6 +12,8 @@ export interface Platform {
     loadSettings(): Promise<SettingsState>
     saveSettings(settings: SettingsState): Promise<void>
     setTitle(title: string): Promise<void>
+    readFromClipboard(): Promise<string | null>
+    writeToClipboard(text: string): Promise<void>
     log(...objs: unknown[]): Promise<void>
     warn(...objs: unknown[]): Promise<void>
     error(...objs: unknown[]): Promise<void>

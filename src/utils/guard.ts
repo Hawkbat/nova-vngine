@@ -3,6 +3,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+import { arrayHead } from './array'
 import { hintTuple } from './types'
 
 export function throwIfNull<T>(value: T): NonNullable<T> {
@@ -50,14 +51,14 @@ function parseEnum<T extends string>(ctx: ParseContext, value: unknown, validVal
             return value as T
         } else {
             ctx.errors.push(`${ctx.path}.type is not a valid string enum value; it must be one of the following: ${validValues.map(v => JSON.stringify(v)).join(', ')}`)
-            return validValues[0]
+            return arrayHead(validValues) ?? '' as T
         }
     } else if (defaultValue !== undefined) {
         ctx.warnings.push(`${ctx.path} is not a string; default value of ${JSON.stringify(defaultValue)} will be used`)
         return defaultValue
     }
     ctx.errors.push(`${ctx.path} is not a string`)
-    return validValues[0]
+    return arrayHead(validValues) ?? '' as T
 }
 
 function parseNumber(ctx: ParseContext, value: unknown, defaultValue?: number): number {

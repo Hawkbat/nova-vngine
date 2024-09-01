@@ -11,6 +11,7 @@
     "noImplicitOverride": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
+    "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": false,
     "verbatimModuleSyntax": true,
     "jsx": "react-jsxdev"

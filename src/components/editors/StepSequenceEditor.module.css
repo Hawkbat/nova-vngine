@@ -15,6 +15,7 @@
 
 .timeline .timeline {
     overflow: visible;
+    padding: 0;
 }
 
 .stepEditor {
@@ -24,21 +25,62 @@
     gap: 0.5em;
 }
 
+.optionEditor {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    border-radius: 0.25em;
+    gap: 0.5em;
+    background-color: var(--hover-color);
+}
+
 .bubble {
     display: flex;
 }
 
 .bubbleFront {
     display: flex;
+    background: var(--text-color);
+    color: var(--bg-color);
+    cursor: pointer;
+    opacity: 0.8;
+    border-top-left-radius: 1em;
+    border-bottom-left-radius: 1em;
 }
 
 .bubbleBack {
+    width: 1em;
     display: flex;
+    background: var(--text-color);
+    color: var(--bg-color);
+    cursor: pointer;
+    opacity: 0.8;
+    border-top-right-radius: 1em;
+    border-bottom-right-radius: 1em;
 }
 
 .bubbleBody {
     display: flex;
     flex-direction: column;
+    padding: 0.1em;
+    gap: 0.1em;
+    border-top: 1px solid var(--text-color);
+    border-bottom: 1px solid var(--text-color);
+}
+
+.bubble.active > .bubbleBody {
+    border-top: 1px solid var(--primary-color);
+    border-bottom: 1px solid var(--primary-color);
+}
+
+.bubbleFront:hover, .bubbleBack:hover {
+    opacity: 1.0;
+}
+
+.bubble.active > .bubbleFront, .bubble.active > .bubbleBack {
+    opacity: 1;
+    background-color: var(--primary-color);
+    color: var(--bg-color);
 }
 
 .bubbleBodyRow {
@@ -51,13 +93,13 @@
 
 .simpleBubble {
     display: flex;
+    justify-content: center;
+    align-items: center;
     min-width: 2em;
     height: 2em;
     border-radius: 50%;
     background: var(--text-color);
     color: var(--bg-color);
-    justify-content: center;
-    align-items: center;
     cursor: pointer;
     opacity: 0.8;
 }
@@ -88,7 +130,7 @@
 }
 
 .stepGap {
-    width: 0.75em;
+    width: 0.5em;
     height: 2em;
     display: flex;
     align-items: center;
@@ -96,7 +138,7 @@
 
 .stepLine {
     width: 100%;
-    border-bottom: 1px dashed var(--text-color);
+    border-bottom: 1px solid var(--text-color);
 }
 
 .dragOver {

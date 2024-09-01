@@ -62,11 +62,7 @@ function getDropValues(dataTransfer: DataTransfer): DropValues {
         }
     }
     if (dataTransfer.files.length) {
-        const files: File[] = []
-        for (let i = 0; i < dataTransfer.files.length; i++) {
-            const file = dataTransfer.files[i]
-            files.push(file)
-        }
+        const files: File[] = [...dataTransfer.files]
         return { type: 'files', files }
     }
     if (dataTransfer.types.length === 0) {

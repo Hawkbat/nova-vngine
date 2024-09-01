@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import type { FieldProps } from './Field'
 import { Field } from './Field'
 import { useDebounce, useLatest } from '../../utils/hooks'
@@ -10,7 +10,7 @@ export type FieldParseFunc<T> = (str: string) => { success: true, value: T } | {
 
 export const ParsedStringField = <T,>({ className, label, value, setValue, validate, parse, format }: FieldProps<T> & { parse: FieldParseFunc<T>, format: FieldFormatFunc<T> }) => {
     const [tempValue, setTempValue] = useState(format(value))
-    const [hasFocus, setHasFocus] = useState(false)
+    const hasFocusRef = useRef(false)
     const getLatestValue = useLatest(value)
     const getLatestTempValue = useLatest(tempValue)
     const getLatestValidate = useLatest(validate)
@@ -42,16 +42,10 @@ export const ParsedStringField = <T,>({ className, label, value, setValue, valid
     }, [getLatestParse, getLatestValidate, getLatestValue, setValue])
 
     useEffect(() => {
-        if (!hasFocus) {
+        if (!hasFocusRef.current) {
             setTempValue(getLatestFormat()(value))
         }
-    }, [getLatestFormat, hasFocus, value])
-
-    useEffect(() => {
-        return () => {
-            attemptCommit(getLatestTempValue())
-        }
-    }, [attemptCommit, getLatestTempValue])
+    }, [getLatestFormat, value])
 
     useDebounce(1000, useCallback(() => attemptCommit(tempValue), [attemptCommit, tempValue]))
 
@@ -60,14 +54,14 @@ export const ParsedStringField = <T,>({ className, label, value, setValue, valid
     }, [])
 
     const onFocus = useCallback((e: React.FocusEvent) => {
-        setHasFocus(true)
+        hasFocusRef.current = true
     }, [])
 
     const onBlur = useCallback((e: React.FocusEvent) => {
         if (!attemptCommit(getLatestTempValue())) {
             setTempValue(getLatestFormat()(getLatestValue()))
         }
-        setHasFocus(false)
+        hasFocusRef.current = false
     }, [attemptCommit, getLatestFormat, getLatestTempValue, getLatestValue])
 
     const readonly = !setValue

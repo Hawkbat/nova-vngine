@@ -5,14 +5,14 @@ import { EditorIcon } from './EditorIcon'
 
 export type EditorButtonStyle = 'solid' | 'outline' | 'text'
 
-const BUTTON_STYLES: Record<EditorButtonStyle, string> = {
+const BUTTON_STYLES: Record<EditorButtonStyle, string | undefined> = {
     solid: styles.solid,
     outline: styles.outline,
     text: styles.text,
 }
 
-export const EditorButtonGroup = ({ children }: { children: React.ReactNode }) => {
-    return <div className={styles.buttonGroup}>
+export const EditorButtonGroup = ({ children, side }: { children: React.ReactNode, side: 'left' | 'right' }) => {
+    return <div className={classes(styles.buttonGroup, { [styles.left ?? '']: side === 'left', [styles.right ?? '']: side === 'right' })}>
         {children}
     </div>
 }
@@ -31,7 +31,7 @@ export const EditorButton = ({ className, icon, style, active, children, onClick
         onClick(e)
     }, [onClick])
 
-    return <div className={classes(styles.button, BUTTON_STYLES[style ?? 'solid'], { [styles.active]: active !== undefined ? active : false, [styles.inactive]: active !== undefined ? !active : false }, className)} onClick={actualOnClick}>
+    return <div className={classes(styles.button, BUTTON_STYLES[style ?? 'solid'], { [styles.active ?? '']: active !== undefined ? active : false, [styles.inactive ?? '']: active !== undefined ? !active : false }, className)} onClick={actualOnClick}>
         {icon ? <EditorIcon path={icon} /> : null}
         {children}
     </div>

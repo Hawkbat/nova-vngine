@@ -8,8 +8,8 @@ import styles from './HomeWorkspace.module.css'
 
 export const HomeWorkspace = () => {
     const [, setCurrentTab] = useViewStateTab()
-    const loadedProject = useSelector(viewStateStore, s => s.loadedProject)
-    const recentProjects = useSelector(viewStateStore, s => s.recentProjects)
+    const getLoadedProject = useSelector(viewStateStore, s => s.loadedProject)
+    const getRecentProjects = useSelector(viewStateStore, s => s.recentProjects)
 
     return <div className={styles.workspace}>
         <div className={styles.logo}>
@@ -22,10 +22,10 @@ export const HomeWorkspace = () => {
             <EditorIcon label='Help Manual' path={PROJECT_TAB_ICONS['manual']} showLabel onClick={() => setCurrentTab('manual')} />
             <EditorIcon label='Edit Settings' path={PROJECT_TAB_ICONS['settings']} showLabel onClick={() => setCurrentTab('settings')} />
         </div>
-        {recentProjects.length ? <>
+        {getRecentProjects().length ? <>
             <span className={styles.heading}>Recent Projects</span>
             <div className={styles.buttonGroup}>
-                {recentProjects.map(p => <EditorIcon key={p.id} label={p.name ? p.name : 'Untitled Project'} path={PROJECT_TAB_ICONS['project']} active={p.id === loadedProject?.id} showLabel onClick={() => void userOpenRecentProject(p)} />)}
+                {getRecentProjects().map(p => <EditorIcon key={p.id} label={p.name ? p.name : 'Untitled Project'} path={PROJECT_TAB_ICONS['project']} active={p.id === getLoadedProject()?.id} showLabel onClick={() => void userOpenRecentProject(p)} />)}
             </div>
         </> : null}
     </div>

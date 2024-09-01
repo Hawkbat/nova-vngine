@@ -3,7 +3,7 @@
   "name": "Example Project",
   "editorRandState": [
     "xorshift32",
-    -1207666407
+    1947480351
   ],
   "stories": [
     {
@@ -133,24 +133,50 @@
       "chapterID": "213RCRAR",
       "steps": [
         {
-          "type": "text",
-          "id": "M1X9CFPX",
-          "speaker": {
+          "type": "backdrop",
+          "id": "TND27UFY",
+          "backdrop": {
+            "type": "backdrop",
+            "args": [
+              "DIIL1XDV"
+            ]
+          }
+        },
+        {
+          "type": "music",
+          "id": "WL4ETVD1",
+          "song": {
+            "type": "song",
+            "args": [
+              "HVBBNPAO"
+            ]
+          }
+        },
+        {
+          "type": "enter",
+          "id": "S039OKK3",
+          "character": {
             "type": "character",
             "args": [
               "1U58I1SC"
             ]
           },
-          "text": {
-            "type": "string",
+          "portrait": {
+            "type": "portrait",
             "args": [
-              "A"
+              "COL0H7JM"
+            ]
+          },
+          "location": {
+            "type": "location",
+            "args": [
+              "auto"
             ]
           }
         },
         {
           "type": "text",
-          "id": "P6I07BSH",
+          "id": "NW6V77OD",
           "speaker": {
             "type": "character",
             "args": [
@@ -160,9 +186,193 @@
           "text": {
             "type": "string",
             "args": [
-              "B"
+              "Names are weird."
             ]
           }
+        },
+        {
+          "type": "text",
+          "id": "GWZ5IYOQ",
+          "speaker": {
+            "type": "character",
+            "args": [
+              "1U58I1SC"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "args": [
+              "My sister's name is Mary."
+            ]
+          }
+        },
+        {
+          "type": "decision",
+          "id": "EDY9EUB9",
+          "options": [
+            {
+              "text": {
+                "type": "string",
+                "args": [
+                  "My name is Mary too!"
+                ]
+              },
+              "condition": {
+                "type": "equal",
+                "params": [
+                  {
+                    "type": "variable",
+                    "args": [
+                      "4BTATXCJ"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "args": [
+                      "Mary"
+                    ]
+                  }
+                ]
+              },
+              "steps": [
+                {
+                  "type": "text",
+                  "id": "5UJTVP50",
+                  "speaker": {
+                    "type": "character",
+                    "args": [
+                      "1U58I1SC"
+                    ]
+                  },
+                  "text": {
+                    "type": "string",
+                    "args": [
+                      "What a coincidence!"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "text": {
+                "type": "string",
+                "args": [
+                  "Mary? That's a nice name."
+                ]
+              },
+              "condition": {
+                "type": "notEqual",
+                "params": [
+                  {
+                    "type": "variable",
+                    "args": [
+                      "4BTATXCJ"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "args": [
+                      "Mary"
+                    ]
+                  }
+                ]
+              },
+              "steps": [
+                {
+                  "type": "text",
+                  "id": "GOHDTPJP",
+                  "speaker": {
+                    "type": "character",
+                    "args": [
+                      "1U58I1SC"
+                    ]
+                  },
+                  "text": {
+                    "type": "string",
+                    "args": [
+                      "Isn't it?"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "text": {
+                "type": "string",
+                "args": [
+                  "Weird."
+                ]
+              },
+              "condition": {
+                "type": "boolean",
+                "args": [
+                  true
+                ]
+              },
+              "steps": []
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "4YY691TF",
+          "speaker": {
+            "type": "character",
+            "args": [
+              "1U58I1SC"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "args": [
+              "Anyway, see you later!"
+            ]
+          }
+        },
+        {
+          "type": "sound",
+          "id": "CCX2O2G8",
+          "sound": {
+            "type": "sound",
+            "args": [
+              "2KX8AFHT"
+            ]
+          }
+        },
+        {
+          "type": "branch",
+          "id": "MCZ2KPQW",
+          "options": [
+            {
+              "condition": {
+                "type": "equal",
+                "params": [
+                  {
+                    "type": "variable",
+                    "args": [
+                      "4BTATXCJ"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "args": [
+                      ""
+                    ]
+                  }
+                ]
+              },
+              "steps": []
+            },
+            {
+              "condition": {
+                "type": "boolean",
+                "args": [
+                  true
+                ]
+              },
+              "steps": []
+            }
+          ]
         }
       ]
     }

@@ -7,8 +7,8 @@
 }
 
 .expr {
-    display: inline-flex;
-    flex-flow: row wrap;
+    display: flex;
+    flex-flow: row;
     gap: 0.25em;
     background: var(--hover-color);
     min-height: 1.5em;

@@ -39,12 +39,12 @@
     right: 1em;
     bottom: 1em;
     border-radius: 0.5em;
-    padding: 0.5em;
+    padding: 1em;
     background-color: var(--dialogue-box-bg-color);
 }
 
 .dialogue {
-
+    font-size: 1.5em;
 }
 
 .speaker {
@@ -54,4 +54,39 @@
     border-radius: 0.5em;
     padding: 0 0.5em;
     background-color: var(--dialogue-box-bg-color);
+}
+
+.options {
+    position: absolute;
+    left: 50%;
+    right: 0;
+    top: 10em;
+    bottom: 10em;
+    max-width: fit-content;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: stretch;
+    gap: 0.25em;
+}
+
+.option {
+    display: flex;
+    padding: 0.5em;
+    border: 2px solid var(--bg-color);
+    border-radius: 0.5em;
+    background-color: var(--dialogue-box-bg-color);
+    opacity: 0.5;
+    font-size: 1.5em;
+}
+
+.option.enabled {
+    opacity: 0.8;
+    cursor: pointer;
+    border: 2px solid var(--text-color);
+}
+
+.option.enabled:hover {
+    opacity: 1;
 }

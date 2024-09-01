@@ -17,9 +17,9 @@ export const EntityList = <T extends EntityType>({ type }: {
     const projectKey = getProjectEntityKey(type)
     const [, setScope] = useViewStateScope(type)
     const [, setCurrentTab] = useViewStateTab()
-    const [scopedParentID, setParentScope] = useViewStateScope(parentType)
-    const items = useSelector(projectStore, s => s[projectKey])as EntityOfType<T>[]
-    const parentItems = useSelector(projectStore, s => parentType ? s[getProjectEntityKey(parentType)] : null) as EntityOfType<EntityParentOf<T>>[] | null
+    const [getScopedParentID, setParentScope] = useViewStateScope(parentType)
+    const getItems = useSelector(projectStore, s => s[projectKey]) as () => EntityOfType<T>[]
+    const getParentItems = useSelector(projectStore, s => parentType ? s[getProjectEntityKey(parentType)] : null) as () => EntityOfType<EntityParentOf<T>>[] | null
 
     const onNewItem = (parentID?: EntityParentIDOf<T> | null) => {
         if (parentType) {
@@ -50,22 +50,22 @@ export const EntityList = <T extends EntityType>({ type }: {
 
     return <div className={styles.list}>
         <div className={styles.heading}>{prettyPrintIdentifier(projectKey)}</div>
-        {parentType && scopedParentID ? <>
+        {parentType && getScopedParentID() ? <>
             <div className={styles.items}>
-                {items.filter(i => getEntityParentID(type, i as EntityOfType<T>) === scopedParentID as EntityParentIDOf<T> | null).map(item => <Item key={item.id} item={item} />)}
-                <EditorIcon path={COMMON_ICONS.addItem} label={`New ${prettyPrintIdentifier(type)}`} showLabel onClick={() => onNewItem(scopedParentID as EntityParentIDOf<T> | null)} />
+                {getItems().filter(i => getEntityParentID(type, i as EntityOfType<T>) === getScopedParentID() as EntityParentIDOf<T> | null).map(item => <Item key={item.id} item={item} />)}
+                <EditorIcon path={COMMON_ICONS.addItem} label={`New ${prettyPrintIdentifier(type)}`} showLabel onClick={() => onNewItem(getScopedParentID() as EntityParentIDOf<T> | null)} />
             </div>
-        </> : parentType ? parentItems?.map(p => <Fragment key={p.id}>
+        </> : parentType ? getParentItems()?.map(p => <Fragment key={p.id}>
             <div className={styles.heading}>
                 <EditorButton icon={EXPR_VALUE_ICONS[parentType]} style='text' onClick={() => onSelectParent(p.id as EntityParentIDOf<T>)}>{p.name ? p.name : `Untitled ${prettyPrintIdentifier(parentType)}`}</EditorButton>
             </div>
             <div className={styles.items}>
-                {items.filter(i => getEntityParentID(type, i as EntityOfType<T>) === p.id).map(item => <EditorIcon key={item.id} path={EXPR_VALUE_ICONS[type]} label={item.name ? item.name : `Untitled ${prettyPrintIdentifier(type)}`} active={false} showLabel onClick={() => onSelectItem(item.id as EntityIDOf<T>)} />)}
+                {getItems().filter(i => getEntityParentID(type, i as EntityOfType<T>) === p.id).map(item => <EditorIcon key={item.id} path={EXPR_VALUE_ICONS[type]} label={item.name ? item.name : `Untitled ${prettyPrintIdentifier(type)}`} active={false} showLabel onClick={() => onSelectItem(item.id as EntityIDOf<T>)} />)}
                 <EditorIcon path={COMMON_ICONS.addItem} label={`New ${prettyPrintIdentifier(type)}`} showLabel onClick={() => onNewItem(p.id as EntityParentIDOf<T>)} />
             </div>
         </Fragment>) ?? null : <div className={styles.items}>
-            {items.map(item => <EditorIcon key={item.id} path={EXPR_VALUE_ICONS[type]} label={item.name ? item.name : `Untitled ${prettyPrintIdentifier(type)}`} active={false} showLabel onClick={() => onSelectItem(item.id as EntityIDOf<T>)} />)}
-            <EditorIcon path={COMMON_ICONS.addItem} label={`New ${prettyPrintIdentifier(type)}`} showLabel onClick={() => onNewItem(scopedParentID as EntityParentIDOf<T> | null)} />
+            {getItems().map(item => <EditorIcon key={item.id} path={EXPR_VALUE_ICONS[type]} label={item.name ? item.name : `Untitled ${prettyPrintIdentifier(type)}`} active={false} showLabel onClick={() => onSelectItem(item.id as EntityIDOf<T>)} />)}
+            <EditorIcon path={COMMON_ICONS.addItem} label={`New ${prettyPrintIdentifier(type)}`} showLabel onClick={() => onNewItem(getScopedParentID() as EntityParentIDOf<T> | null)} />
         </div>}
     </div>
 }

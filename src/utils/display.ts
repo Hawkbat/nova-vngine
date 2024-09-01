@@ -7,48 +7,52 @@ export function isLowerCase(c: string) {
     return c.charCodeAt(0) >= 0x61 && c.charCodeAt(0) <= 0x7A
 }
 
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 export function prettyPrintIdentifier(s: string) {
     if (!s) return s
     let o = ''
     let i = 0
     let isWordBoundary = true
     while (i < s.length) {
-        if (isWordBoundary && isLowerCase(s[i])) {
-            o += s[i++].toUpperCase()
+        if (isWordBoundary && isLowerCase(s[i]!)) {
+            o += s[i++]!.toUpperCase()
             isWordBoundary = false
         } else if (s[i] === '_') {
             o += ' '
             i++
             isWordBoundary = true
-        } else if (i < s.length - 1 && isLowerCase(s[i]) && isUpperCase(s[i + 1])) {
-            o += s[i++]
+        } else if (i < s.length - 1 && isLowerCase(s[i]!) && isUpperCase(s[i + 1]!)) {
+            o += s[i++]!
             o += ' '
             isWordBoundary = true
         } else {
-            o += s[i++]
+            o += s[i++]!
         }
     }
     return o
 }
+/* eslint-enable @typescript-eslint/no-non-null-assertion */
 
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 export function camelCaseString(s: string) {
     if (!s) return s
     let o = ''
     let i = 0
     while (i < s.length) {
-        if (i === 0 && isUpperCase(s[i])) {
-            while (i < s.length && isUpperCase(s[i])) {
-                o += s[i++].toLowerCase()
+        if (i === 0 && isUpperCase(s[i]!)) {
+            while (i < s.length && isUpperCase(s[i]!)) {
+                o += s[i++]!.toLowerCase()
             }
         } else if (s[i] === ' ') {
             i++
-            o += s[i++].toUpperCase()
+            o += s[i++]!.toUpperCase()
         } else {
-            o += s[i++]
+            o += s[i++]!
         }
     }
     return o
 }
+/* eslint-enable @typescript-eslint/no-non-null-assertion */
 
 type ClassLike = boolean | null | undefined | string | string[] | Record<string, unknown>
 

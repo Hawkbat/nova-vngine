@@ -12,10 +12,11 @@ import { classes } from '../../utils/display'
 import type { AssetDefinition } from '../../types/project'
 import { getMimeType, IMAGE_EXTENSIONS } from '../../utils/media'
 import { ImagePreview } from './ImagePreview'
+import { throwIfNull } from '../../utils/guard'
 
 export const ImageField = ({ className, label, value, setValue, validate, targetPath }: FieldProps<AssetDefinition | null> & { targetPath: string }) => {
-    const { root, storage } = useProjectStorage()
-    const imgSrc = useAsset(value)
+    const { getRoot, storage } = useProjectStorage()
+    const getImgSrc = useAsset(value)
     const [previewOpen, setPreviewOpen] = useState(false)
 
     const errorCheck = useCallback(() => {
@@ -24,19 +25,18 @@ export const ImageField = ({ className, label, value, setValue, validate, target
     }, [value, validate])
 
     const onUpload: UploadCallback = useCallback(files => {
-        if (files.length === 1) {
-            const [file] = files
-            void (async () => {
-                const buffer = await file.binary()
-                if (!storage.storeBinary) throw new Error(`Storage ${storage.type} does not support saving binary files`)
-                const mimeType = getMimeType(file.name)
-                if (!mimeType) throw new Error('File did not have a recognized file extension')
-                const path = targetPath
-                await storage.storeBinary(root, path, buffer)
-                setValue?.({ mimeType, path })
-            })()
-        }
-    }, [targetPath, root, setValue, storage])
+        const [file] = files
+        if (!file) return
+        void (async () => {
+            const buffer = await file.binary()
+            if (!storage.storeBinary) throw new Error(`Storage ${storage.type} does not support saving binary files`)
+            const mimeType = getMimeType(file.name)
+            if (!mimeType) throw new Error('File did not have a recognized file extension')
+            const path = targetPath
+            await storage.storeBinary(getRoot(), path, buffer)
+            setValue?.({ mimeType, path })
+        })()
+    }, [targetPath, getRoot, setValue, storage])
 
     const onDelete = useCallback((e: React.MouseEvent) => {
         e.stopPropagation()
@@ -50,9 +50,9 @@ export const ImageField = ({ className, label, value, setValue, validate, target
 
     return <Field label={label} error={errorCheck()}>
         {value ? <>
-            {imgSrc ? <>
-                <img className={classes(styles.preview, className)} src={imgSrc} onClick={onPreview} />
-                <ImagePreview open={previewOpen} src={imgSrc} onClose={() => setPreviewOpen(false)} />
+            {getImgSrc() ? <>
+                <img className={classes(styles.preview, className)} src={getImgSrc() ?? undefined} onClick={onPreview} />
+                <ImagePreview open={previewOpen} src={throwIfNull(getImgSrc())} onClose={() => setPreviewOpen(false)} />
             </> : <span>Loading...</span>}
             <EditorIcon path={COMMON_ICONS.deleteItem} label='Delete Image' onClick={onDelete} />
         </> : <>

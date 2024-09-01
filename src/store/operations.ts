@@ -402,16 +402,16 @@ export function immConvertVariable(variable: AnyVariableDefinition, type: Variab
 }
 
 export function useViewStateTab() {
-    const tab = useSelector(viewStateStore, s => s.currentTab)
+    const getTab = useSelector(viewStateStore, s => s.currentTab)
     const setTab = useCallback((tab: ProjectEditorTab) => {
         viewStateStore.setValue(s => immSet(s, 'currentTab', tab))
     }, [])
-    return hintTuple(tab, setTab)
+    return hintTuple(getTab, setTab)
 }
 
-export function useViewStateScope<T extends EntityType>(type: T | null): [EntityIDOf<T> | null, (id: EntityIDOf<T> | null) => void] {
-    const scopes = useSelector(viewStateStore, s => s.scopes)
-    const scope = type ? scopes[type] as EntityIDOf<T> | null : null
+export function useViewStateScope<T extends EntityType>(type: T | null): [() => EntityIDOf<T> | null, (id: EntityIDOf<T> | null) => void] {
+    const getScopes = useSelector(viewStateStore, s => s.scopes)
+    const getScope = useCallback(() => type ? getScopes()[type] as EntityIDOf<T> | null : null, [getScopes, type])
     const setScope = useCallback((id: EntityIDOf<T> | null) => {
         if (!type) return
         if (!id) {
@@ -424,7 +424,7 @@ export function useViewStateScope<T extends EntityType>(type: T | null): [Entity
         const scopeValues = Object.fromEntries(hierarchy.map(h => hintTuple(h.type, h.entity.id)))
         viewStateStore.setValue(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues } }))
     }, [type])
-    return hintTuple(scope, setScope)
+    return hintTuple(getScope, setScope)
 }
 
 export function getProjectStorage() {
@@ -434,7 +434,7 @@ export function getProjectStorage() {
 }
 
 export function useProjectStorage() {
-    const root = useSelector(viewStateStore, s => s.loadedProject?.root ?? null)
-    const storage = getStorageProvider(root?.type)
-    return { storage, root }
+    const getRoot = useSelector(viewStateStore, s => s.loadedProject?.root ?? null)
+    const storage = getStorageProvider(getRoot()?.type)
+    return { storage, getRoot }
 }

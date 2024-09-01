@@ -1,5 +1,6 @@
 import type { ParseFunc } from '../utils/guard'
 import { throwIfNull, defineParser, parsers as $ } from '../utils/guard'
+import { arrayHead, forEachMultiple } from '../utils/array'
 import type { OmitUndefined } from '../utils/types'
 import { assertExhaustive, hintTuple } from '../utils/types'
 import type { StoryID, ChapterID, SceneID, VariableID, CharacterID, BackdropID, SongID, SoundID, AnyVariableDefinition, CharacterDefinition, BackdropDefinition, ChapterDefinition, SceneDefinition, SongDefinition, SoundDefinition, StoryDefinition, PortraitID, MacroID, MacroDefinition, PortraitDefinition } from './project'
@@ -142,7 +143,7 @@ const PRIMITIVE_DEFAULT_VALUES: ExprPrimitiveValueTypeMap = {
 
 function getContextualDefaultPrimitiveValue<T extends ExprPrimitiveValueType>(type: T, ctx: ExprContext) {
     if (type in ctx.suggestions) {
-        return ctx.suggestions[type as keyof ExprContext['suggestions']]()[0]
+        return arrayHead(ctx.suggestions[type as keyof ExprContext['suggestions']]() as unknown[]) as T | null
     }
     return PRIMITIVE_DEFAULT_VALUES[type]
 }
@@ -244,7 +245,7 @@ export function resolveExpr(expr: AnyExpr, ctx: ExprContext): AnyExprValue {
         case 'unset': throw new Error('Could not resolve incomplete expression')
         case 'list': {
             const values = expr.children.map(([item]) => resolveExpr(item, ctx))
-            const subType: ExprValueType = values.length ? values[0].type : 'string'
+            const subType: ExprValueType = arrayHead(values)?.type ?? 'string'
             if (!isPrimitiveValueType(subType)) {
                 throw new Error(`Could not resolve expression containing a list of lists: ${JSON.stringify(expr)}`)
             }
@@ -272,8 +273,8 @@ export function resolveExpr(expr: AnyExpr, ctx: ExprContext): AnyExprValue {
         case 'divide': return resolveNumberOp(expr.params[0], expr.params[1], (a, b, i) => i ? Math.floor(a / b) : a / b, ctx)
         case 'modulo': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a % b, ctx)
         case 'format': return { type: 'string', value: expr.children.map(([part]) => resolveExprAs(part, 'string', ctx).value).join('') }
-        case 'equal': return { type: 'boolean', value: exprValuesEqual(resolveExpr(expr.params[0], ctx), resolveExpr(expr.params[1], ctx)) }
-        case 'notEqual': return { type: 'boolean', value: !exprValuesEqual(resolveExpr(expr.params[0], ctx), resolveExpr(expr.params[1], ctx)) }
+        case 'equal': return { type: 'boolean', value: exprValuesEqual(resolveExpr(expr.params[0], ctx), resolveExpr(expr.params[1], ctx), ctx) }
+        case 'notEqual': return { type: 'boolean', value: !exprValuesEqual(resolveExpr(expr.params[0], ctx), resolveExpr(expr.params[1], ctx), ctx) }
         case 'lessThan': return resolveNumberComparison(expr.params[0], expr.params[1], (a, b) => a < b, ctx)
         case 'lessThanOrEqual': return resolveNumberComparison(expr.params[0], expr.params[1], (a, b) => a <= b, ctx)
         case 'greaterThan': return resolveNumberComparison(expr.params[0], expr.params[1], (a, b) => a > b, ctx)
@@ -323,11 +324,11 @@ export function createDefaultExprChild(type: ExprType, ctx: ExprContext) {
 
 export function guessExprReturnType(expr: AnyExpr, ctx: ExprContext): ExprValueType | null {
     const def = EXPR_DEFINITION_MAP[expr.type]
-    if (def.returnTypes?.length === 1) return def.returnTypes[0]
+    if (def.returnTypes?.length === 1) return throwIfNull(def.returnTypes[0])
     switch (expr.type) {
         case 'list':
             if (expr.children.length) {
-                const firstChildType = guessExprReturnType(expr.children[0][0], ctx)
+                const firstChildType = guessExprReturnType(throwIfNull(arrayHead(expr.children))[0], ctx)
                 if (firstChildType === null) return null
                 if (isPrimitiveValueType(firstChildType)) return `list:${firstChildType}`
             }
@@ -399,12 +400,31 @@ export function exprValueTypeAssignableTo(type: ExprValueType | null, types: Exp
     return false
 }
 
-export function exprValuesEqual(left: AnyExprValue, right: AnyExprValue): boolean {
+export function exprValuesEqual(left: AnyExprValue, right: AnyExprValue, ctx: ExprContext): boolean {
+    if (left.type === 'variable' && right.type !== 'variable') {
+        const leftValue = castExprValue(left, right.type, ctx)
+        return exprValuesEqual(leftValue, right, ctx)
+    }
+    if (right.type === 'variable' && left.type !== 'variable') {
+        const rightValue = castExprValue(right, left.type, ctx)
+        return exprValuesEqual(left, rightValue, ctx)
+    }
+    if (left.type === 'variable' && right.type === 'variable') {
+        const leftValue = throwIfNull(ctx.resolvers.variableValue(left.value))
+        const rightValue = throwIfNull(ctx.resolvers.variableValue(right.value))
+        return exprValuesEqual(leftValue, rightValue, ctx)
+    }
+    if (left.type === 'number' && right.type === 'integer') {
+        return exprValuesEqual(left, castExprValue(right, 'integer', ctx), ctx)
+    }
+    if (left.type === 'integer' && right.type === 'number') {
+        return exprValuesEqual(castExprValue(left, 'integer', ctx), right, ctx)
+    }
     if (left.type !== right.type) return false
     if (isPrimitiveValue(left) && isPrimitiveValue(right)) {
         return left.value === right.value
     } else if (!isPrimitiveValue(left) && !isPrimitiveValue(right)) {
-        return left.values.length === right.values.length && left.values.every((v, i) => exprValuesEqual(v, right.values[i]))
+        return left.values.length === right.values.length && left.values.every((v, i) => exprValuesEqual(v, throwIfNull(right.values[i]), ctx))
     }
     return false
 }
@@ -413,21 +433,23 @@ export function prettyPrintExpr(expr: AnyExpr): string {
     const def = EXPR_DEFINITION_MAP[expr.type]
     let out = `${expr.type}(`
     if (def.args && 'args' in expr) {
-        for (let i = 0; i < def.args.length; i++) {
-            out += `${def.args[i].label}: ${JSON.stringify(expr.args[i])}`
-        }
+        forEachMultiple(hintTuple(def.args, expr.args), (i, d, e) => {
+            out += `${d.label}: ${JSON.stringify(e)}`
+        })
     }
     if (def.params && 'params' in expr) {
-        for (let i = 0; i < def.params.length; i++) {
-            out += `${def.params[i].label}: ${prettyPrintExpr(expr.params[i])}`
-        }
+        forEachMultiple(hintTuple(def.params, expr.params), (i, d, e) => {
+            out += `${d.label}: ${prettyPrintExpr(e)}`
+        })
     }
     if (def.children && 'children' in expr) {
         out += '['
         for (const c of expr.children) {
             out += '('
             for (let i = 0; i < def.children.length; i++) {
-                out += `${def.children[i].label}: ${prettyPrintExpr(c[i])}`
+                forEachMultiple(hintTuple(def.children, c), (i, d, e) => {
+                    out += `${d.label}: ${prettyPrintExpr(e)}`
+                })
             }
             if (out.endsWith(', ')) out = out.substring(0, out.length - 2)
             out += '), '
