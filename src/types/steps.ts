@@ -62,6 +62,23 @@ type StepMap = {
     }
 }
 
+const STEP_TYPE_MAP = {
+    text: true,
+    backdrop: true,
+    enter: true,
+    exit: true,
+    move: true,
+    portrait: true,
+    music: true,
+    sound: true,
+    decision: true,
+    branch: true,
+    set: true,
+    macro: true,
+} satisfies Record<StepType, true>
+
+export const STEP_TYPES = Object.keys(STEP_TYPE_MAP) as StepType[]
+
 export type StepType = keyof StepMap
 export type StepOfType<T extends StepType> = T extends StepType ? { id: StepID, type: T } & StepMap[T] : never
 export type AnyStep = StepOfType<StepType>

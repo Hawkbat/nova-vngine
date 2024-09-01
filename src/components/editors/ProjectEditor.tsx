@@ -23,27 +23,29 @@ import { VariableWorkspace } from '../workspaces/VariableWorkspace'
 import { platform } from '../../platform/platform'
 import { BUILD_COMMIT, BUILD_DATETIME } from '../../injected'
 import type { ProjectEditorTab } from '../../types/viewstate'
+import { useCallback } from 'react'
 
 const Breadcrumb = ({ type }: { type: EntityType }) => {
     const tab = getProjectEntityKey(type)
     const [scope, setScope] = useViewStateScope(type)
-    const [name] = useSelector(projectStore, s => s[tab].find(i => i.id === scope)?.name)
+    const name = useSelector(projectStore, s => s[tab].find(i => i.id === scope)?.name ?? null)
     const [currentTab, setCurrentTab] = useViewStateTab()
-    if (name === undefined) return
-    if (!isProjectEntityKey(currentTab) || !getEntityTypeHierarchy(getEntityTypeByProjectKey(currentTab)).includes(type)) return
+    if (name === null) return
+    const entityType = getEntityTypeByProjectKey(currentTab)
+    if (!isProjectEntityKey(currentTab) || !entityType || !getEntityTypeHierarchy(entityType).includes(type)) return
 
     return <>
         <EditorIcon path={COMMON_ICONS.breadcrumbArrow} />
         <EditorButton icon={EXPR_VALUE_ICONS[type]} style='text' active={currentTab === tab} onClick={() => setCurrentTab(tab)}>
             <span>{name ? name : `Untitled ${prettyPrintIdentifier(type)}`}</span>
-            <EditorIcon path={COMMON_ICONS.cancel} label={`Stop Filtering By ${prettyPrintIdentifier(type)}`} onClick={() => setScope(undefined)} />
+            <EditorIcon path={COMMON_ICONS.cancel} label={`Stop Filtering By ${prettyPrintIdentifier(type)}`} onClick={() => setScope(null)} />
         </EditorButton>
     </>
 }
 
 const Breadcrumbs = () => {
-    const [projectName] = useSelector(projectStore, s => s.name)
-    const [projectIsLoaded] = useSelector(viewStateStore, s => s.loadedProject !== null)
+    const projectName = useSelector(projectStore, s => s.name)
+    const projectIsLoaded = useSelector(viewStateStore, s => s.loadedProject !== null)
     const [currentTab, setCurrentTab] = useViewStateTab()
     return projectIsLoaded ? <div className={styles.breadcrumbs}>
         <EditorButton icon={PROJECT_TAB_ICONS.project} style='text' active={currentTab === 'project'} onClick={() => setCurrentTab('project')}>{projectName}</EditorButton>
@@ -53,11 +55,23 @@ const Breadcrumbs = () => {
 
 const TabButton = ({ tab }: { tab: ProjectEditorTab }) => {
     const [currentTab, setCurrentTab] = useViewStateTab()
-    return <EditorIcon path={PROJECT_TAB_ICONS[tab]} label={prettyPrintIdentifier(tab)} active={currentTab === tab} showLabel onClick={() => setCurrentTab(tab)} />
+    const entityType = getEntityTypeByProjectKey(tab)
+    const [, setScope] = useViewStateScope(entityType)
+    const onClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation()
+        if (currentTab === tab) {
+            if (entityType) {
+                setScope(null)
+            }
+        } else {
+            setCurrentTab(tab)
+        }
+    }, [currentTab, entityType, setCurrentTab, setScope, tab])
+    return <EditorIcon path={PROJECT_TAB_ICONS[tab]} label={prettyPrintIdentifier(tab)} active={currentTab === tab} showLabel onClick={onClick} />
 }
 
 const Sidebar = () => {
-    const [projectIsLoaded] = useSelector(viewStateStore, s => s.loadedProject !== null)
+    const projectIsLoaded = useSelector(viewStateStore, s => s.loadedProject !== null)
 
     return <div className={styles.sidebar}>
         <TabButton tab='home' />
@@ -81,7 +95,7 @@ const Footer = () => {
 }
 
 export const ProjectEditor = () => {
-    const [currentTab] = useSelector(viewStateStore, s => s.currentTab)
+    const currentTab = useSelector(viewStateStore, s => s.currentTab)
 
     return <div className={styles.editor}>
         <Sidebar />

@@ -19,5 +19,3 @@ export const viewStateStore = createSimpleStore<ViewState>({
         macro: null,
     },
 })
-
-

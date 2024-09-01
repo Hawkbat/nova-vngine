@@ -2,7 +2,7 @@
 import type { ParseFunc } from '../utils/guard'
 import { defineParser, parsers as $ } from '../utils/guard'
 import type { RandState } from '../utils/rand'
-import type { Branded } from '../utils/types'
+import type { Branded, OmitUndefined } from '../utils/types'
 import { hintTuple } from '../utils/types'
 import { parseAnyExpr, type BooleanExpr, type ChapterExpr, type CharacterExpr, type IntegerExpr, type ListExpr, type NumberExpr, type PortraitExpr, type SceneExpr, type StringExpr, type ValueExpr } from './expressions'
 import { parseAnyStep, type AnyStep } from './steps'
@@ -83,8 +83,11 @@ export type ProjectEntityKeyOf<T extends EntityType> = T extends EntityType ? Pr
 
 export type EntityTypeOfProjectKey<T extends ProjectEntityKey> = TypeByProjectKeyMap[T]
 
-export function getEntityTypeByProjectKey<T extends ProjectEntityKey>(key: T): EntityTypeOfProjectKey<T> {
-    return TYPE_BY_PROJECT_KEY_MAP[key] as EntityTypeOfProjectKey<T>
+export function getEntityTypeByProjectKey(key: string): EntityType | null {
+    if (key in TYPE_BY_PROJECT_KEY_MAP) {
+        return TYPE_BY_PROJECT_KEY_MAP[key as keyof TypeByProjectKeyMap]
+    }
+    return null
 }
 
 export function getProjectEntityKey<T extends EntityType>(type: T): ProjectEntityKeyOf<T> {
@@ -133,6 +136,12 @@ export function getEntityParentID<T extends EntityType>(type: T, entity: EntityO
         return ENTITY_PARENT_GETTERS[type as keyof typeof ENTITY_PARENT_GETTERS](entity as any) as EntityParentIDOf<T>
     }
     return null
+}
+
+const ENTITY_CHILDREN = Object.fromEntries(ENTITY_TYPES.map(t => hintTuple(t, ENTITY_TYPES.filter(c => getEntityParentType(c) === t)))) as Record<EntityType, EntityType[]>
+
+export function getEntityChildTypes(type: EntityType): EntityType[] {
+    return ENTITY_CHILDREN[type]
 }
 
 export type StoryID = EntityID<'story'>
@@ -188,24 +197,24 @@ export interface SoundDefinition extends EntityDefinition<SoundID> {
 export type VariableID = EntityID<'variable'>
 
 type VariableScopeMap = {
-    allStories: {}
-    story: { id: StoryID }
-    stories: { ids: StoryID[] }
-    allChapters: {}
-    chapter: { id: ChapterID }
-    chapters: { ids: ChapterID[] }
-    allScenes: {}
-    scene: { id: SceneID }
-    scenes: { ids: SceneID[] }
-    allCharacters: {}
-    character: { id: CharacterID }
-    characters: { ids: CharacterID[] }
-    macro: { id: MacroID }
-    macros: { ids: MacroID[] }
+    allStories: undefined
+    story: StoryID
+    stories: StoryID[]
+    allChapters: undefined
+    chapter: ChapterID
+    chapters: ChapterID[]
+    allScenes: undefined
+    scene: SceneID
+    scenes: SceneID[]
+    allCharacters: undefined
+    character: CharacterID
+    characters: CharacterID[]
+    macro: MacroID
+    macros: MacroID[]
 }
 
 export type VariableScopeType = keyof VariableScopeMap
-export type VariableScopeOfType<T extends VariableScopeType> = T extends VariableScopeType ? { type: T } & VariableScopeMap[T] : never
+export type VariableScopeOfType<T extends VariableScopeType> = T extends VariableScopeType ? OmitUndefined<{ type: T, value: VariableScopeMap[T] }> : never
 export type AnyVariableScope = VariableScopeOfType<VariableScopeType>
 
 type VariableDefinitionMap = {
@@ -347,20 +356,20 @@ const parseAnyVariableDefinition: ParseFunc<AnyVariableDefinition> = defineParse
     id: $.id,
     name: $.string,
     scope: (c, v, d) => $.typed(c, v, {}, {
-        allStories: {},
-        story: { id: $.id },
-        stories: { ids: (c, v, d) => $.array(c, v, $.id, d) },
+        allStories: { },
+        story: { value: $.id },
+        stories: { value: (c, v, d) => $.array(c, v, $.id, d) },
         allChapters: {},
-        chapter: { id: $.id },
-        chapters: { ids: (c, v, d) => $.array(c, v, $.id, d) },
+        chapter: { value: $.id },
+        chapters: { value: (c, v, d) => $.array(c, v, $.id, d) },
         allScenes: {},
-        scene: { id: $.id },
-        scenes: { ids: (c, v, d) => $.array(c, v, $.id, d) },
+        scene: { value: $.id },
+        scenes: { value: (c, v, d) => $.array(c, v, $.id, d) },
         allCharacters: {},
-        character: { id: $.id },
-        characters: { ids: (c, v, d) => $.array(c, v, $.id, d) },
-        macro: { id: $.id },
-        macros: { ids: (c, v, d) => $.array(c, v, $.id, d) },
+        character: { value: $.id },
+        characters: { value: (c, v, d) => $.array(c, v, $.id, d) },
+        macro: { value: $.id },
+        macros: { value: (c, v, d) => $.array(c, v, $.id, d) },
     }, d),
     default: parseAnyExpr,
 }, {

@@ -1,12 +1,12 @@
 import { useCallback } from 'react'
-import { type EntityType, type EntityIDOf, getProjectEntityKey, getEntityParentID, getEntityParentType, type EntityOfType, type EntityParentOf, type AnyVariableDefinition, type BackdropDefinition, type BackdropID, type ChapterDefinition, type ChapterID, type CharacterDefinition, type CharacterID, type PortraitDefinition, type PortraitID, type ProjectDefinition, type SceneDefinition, type SceneID, type SongDefinition, type SongID, type SoundDefinition, type SoundID, type StoryDefinition, type StoryID, type VariableID, ENTITY_TYPES, getEntityTypeHierarchy, parseProjectDefinition } from '../types/project'
+import { type EntityParentIDOf, type MacroDefinition, type MacroID, type EntityType, type EntityIDOf, type EntityOfType, type EntityParentOf, type AnyVariableDefinition, type BackdropDefinition, type BackdropID, type ChapterDefinition, type ChapterID, type CharacterDefinition, type CharacterID, ENTITY_TYPES, getEntityParentID, getEntityParentType, getEntityTypeHierarchy, getProjectEntityKey, type PortraitDefinition, type PortraitID, type ProjectDefinition, type SceneDefinition, type SceneID, type SongDefinition, type SongID, type SoundDefinition, type SoundID, type StoryDefinition, type StoryID, type VariableID, parseProjectDefinition } from '../types/project'
 import { type ExprContext, resolveExpr, createDefaultExpr } from '../types/expressions'
 import { immSet, immAppend } from '../utils/imm'
 import { DEFAULT_PROJECT_FILENAME, isPlatformErrorCode, PlatformError } from '../types/platform'
 import { platform } from '../platform/platform'
 import { randID, uncheckedRandID } from '../utils/rand'
 import { useSelector } from '../utils/store'
-import { hintTuple } from '../utils/types'
+import { assertExhaustive, hintTuple } from '../utils/types'
 import { createDefaultProject, projectStore } from './project'
 import type { ProjectEditorTab, ProjectMetaData } from '../types/viewstate'
 import { viewStateStore } from './viewstate'
@@ -346,29 +346,58 @@ export function immCreateVariable(project: ProjectDefinition): [ProjectDefinitio
     return hintTuple(immSet(project, 'variables', immAppend(project.variables, variable)), variable)
 }
 
+export function immCreateMacro(project: ProjectDefinition): [ProjectDefinition, MacroDefinition] {
+    let id: MacroID;
+    [project, id] = immGenerateID(project)
+
+    const macro: MacroDefinition = {
+        id,
+        name: '',
+        steps: [],
+    }
+
+    return hintTuple(immSet(project, 'macros', immAppend(project.macros, macro)), macro)
+}
+
+export function immCreateEntity<T extends EntityType>(type: T, project: ProjectDefinition, parentID: EntityParentIDOf<T>): [ProjectDefinition, EntityOfType<T>] {
+    switch (type) {
+        case 'story': return immCreateStory(project) as [ProjectDefinition, EntityOfType<T>]
+        case 'chapter': return immCreateChapter(project, parentID as StoryID) as [ProjectDefinition, EntityOfType<T>]
+        case 'scene': return immCreateScene(project, parentID as ChapterID) as [ProjectDefinition, EntityOfType<T>]
+        case 'character': return immCreateCharacter(project) as [ProjectDefinition, EntityOfType<T>]
+        case 'portrait': return immCreatePortrait(project, parentID as CharacterID) as [ProjectDefinition, EntityOfType<T>]
+        case 'backdrop': return immCreateBackdrop(project) as [ProjectDefinition, EntityOfType<T>]
+        case 'song': return immCreateSong(project) as [ProjectDefinition, EntityOfType<T>]
+        case 'sound': return immCreateSound(project) as [ProjectDefinition, EntityOfType<T>]
+        case 'variable': return immCreateVariable(project) as [ProjectDefinition, EntityOfType<T>]
+        case 'macro': return immCreateMacro(project) as [ProjectDefinition, EntityOfType<T>]
+        default: assertExhaustive(type, `Unhandled entity type ${type}`)
+    }
+}
+
 export function useViewStateTab() {
-    const [tab, setViewState] = useSelector(viewStateStore, s => s.currentTab)
+    const tab = useSelector(viewStateStore, s => s.currentTab)
     const setTab = useCallback((tab: ProjectEditorTab) => {
-        setViewState(s => immSet(s, 'currentTab', tab))
-    }, [setViewState])
+        viewStateStore.setValue(s => immSet(s, 'currentTab', tab))
+    }, [])
     return hintTuple(tab, setTab)
 }
 
-export function useViewStateScope<T extends EntityType>(type: T | null) {
-    const [scopes, setViewState] = useSelector(viewStateStore, s => s.scopes)
-    const scope = type ? scopes[type] : null
-    const setScope = useCallback((id: EntityIDOf<T> | undefined) => {
+export function useViewStateScope<T extends EntityType>(type: T | null): [EntityIDOf<T> | null, (id: EntityIDOf<T> | null) => void] {
+    const scopes = useSelector(viewStateStore, s => s.scopes)
+    const scope = type ? scopes[type] as EntityIDOf<T> | null : null
+    const setScope = useCallback((id: EntityIDOf<T> | null) => {
         if (!type) return
         if (!id) {
             const subTypes = ENTITY_TYPES.filter(e => getEntityTypeHierarchy(e).includes(type))
-            const scopeValues = Object.fromEntries(subTypes.map(t => hintTuple(t, undefined)))
-            setViewState(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues } }))
+            const scopeValues = Object.fromEntries(subTypes.map(t => hintTuple(t, null)))
+            viewStateStore.setValue(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues } }))
             return
         }
         const hierarchy = getEntityHierarchy(type, id)
         const scopeValues = Object.fromEntries(hierarchy.map(h => hintTuple(h.type, h.entity.id)))
-        setViewState(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues } }))
-    }, [setViewState, type])
+        viewStateStore.setValue(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues } }))
+    }, [type])
     return hintTuple(scope, setScope)
 }
 
@@ -379,7 +408,7 @@ export function getProjectStorage() {
 }
 
 export function useProjectStorage() {
-    const [root] = useSelector(viewStateStore, s => s.loadedProject?.root ?? null)
+    const root = useSelector(viewStateStore, s => s.loadedProject?.root ?? null)
     const storage = getStorageProvider(root?.type)
     return { storage, root }
 }

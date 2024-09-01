@@ -59,6 +59,7 @@ export default pluginTseslint.config(
       "require-await": "off",
       "@typescript-eslint/require-await": "off",
       "@typescript-eslint/no-confusing-void-expression": "off",
+      "react/prop-types": "off",
     }
   },
 );

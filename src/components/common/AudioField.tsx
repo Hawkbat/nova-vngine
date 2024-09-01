@@ -40,8 +40,8 @@ export const AudioField = ({ className, label, value, setValue, validate, target
     }, [setValue])
 
     return <Field label={label} error={errorCheck()}>
-        {audioSrc ? <>
-            <audio src={audioSrc} controls />
+        {value ? <>
+            {audioSrc ? <audio src={audioSrc} controls /> : <span>Loading...</span>}
             <EditorIcon path={COMMON_ICONS.deleteItem} label='Delete Audio' onClick={onDelete} />
         </> : <>
             <UploadZone fileType='Audio File' extensions={AUDIO_EXTENSIONS} title='Upload Audio File' onUpload={onUpload} />

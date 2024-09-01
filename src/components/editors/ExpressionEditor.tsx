@@ -74,12 +74,12 @@ const BooleanArgEditor = ({ value, setValue, label }: ArgSubEditorProps<'boolean
 const EntityArgEditor = <T extends EntityType>({ type, value, setValue, label }: ArgEditorProps<T>) => {
     const entity = getEntityByID(type, value as unknown as EntityIDOf<T>)
     const [dropdownProps, openDropdown] = useDropdownMenuState()
-    const [items] = useSelector(projectStore, s => s[getProjectEntityKey(type)])
+    const items = useSelector(projectStore, s => s[getProjectEntityKey(type)]) as EntityOfType<T>[]
     return <>
         <EditorButton className={styles.argButton} style='text' onClick={openDropdown}>
             {entity ? entity.name ? entity.name : 'Untitled' : 'None'}
         </EditorButton>
-        <SearchDropdownMenu<EntityOfType<T>> {...dropdownProps} items={items as EntityOfType<T>[]} filter={(e, search) => e.name.toLowerCase().includes(search.toLowerCase())}>{(entity: EntityOfType<T>) => <DropdownMenuItem key={entity.id} onClick={() => (setValue(entity.id as ExprPrimitiveRawValueOfType<T>), dropdownProps.onClose())}>{entity.name ? entity.name : 'Untitled'}</DropdownMenuItem>}</SearchDropdownMenu>
+        <SearchDropdownMenu<EntityOfType<T>> {...dropdownProps} items={items} filter={(e, search) => e.name.toLowerCase().includes(search.toLowerCase())}>{(entity: EntityOfType<T>) => <DropdownMenuItem key={entity.id} onClick={() => (setValue(entity.id as ExprPrimitiveRawValueOfType<T>), dropdownProps.onClose())}>{entity.name ? entity.name : 'Untitled'}</DropdownMenuItem>}</SearchDropdownMenu>
     </>
 }
 

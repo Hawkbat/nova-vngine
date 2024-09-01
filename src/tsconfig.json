@@ -12,6 +12,7 @@
     "noImplicitReturns": true,
     "noImplicitThis": true,
     "exactOptionalPropertyTypes": false,
+    "verbatimModuleSyntax": true,
     "jsx": "react-jsxdev"
   }
 }

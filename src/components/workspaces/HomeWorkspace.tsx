@@ -8,8 +8,8 @@ import styles from './HomeWorkspace.module.css'
 
 export const HomeWorkspace = () => {
     const [, setCurrentTab] = useViewStateTab()
-    const [loadedProject] = useSelector(viewStateStore, s => s.loadedProject)
-    const [recentProjects] = useSelector(viewStateStore, s => s.recentProjects)
+    const loadedProject = useSelector(viewStateStore, s => s.loadedProject)
+    const recentProjects = useSelector(viewStateStore, s => s.recentProjects)
 
     return <div className={styles.workspace}>
         <div className={styles.logo}>

@@ -155,7 +155,7 @@ export function useMetaStore<T>(store: TrackedStore<T>) {
 
 export function useSelector<T, U>(store: SimpleStore<T>, selector: (value: T) => U) {
     const state = useSyncExternalStore(store.subscribe, () => selector(store.getSnapshot()))
-    return hintTuple(state, store.setValue)
+    return state
 }
 
 export function useMetaSelector<T, U>(store: TrackedStore<T>, selector: (value: StoreMetaState<T>) => U) {

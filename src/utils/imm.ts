@@ -20,6 +20,10 @@ export function immReplaceBy<T>(arr: T[], getKey: (value: T) => unknown, value: 
     return arr.map(v => getKey(v) === key ? value : v)
 }
 
+export function immReplaceWhere<T>(arr: T[], filter: (value: T) => boolean, setter: (value: T) => T): T[] {
+    return arr.map(v => filter(v) ? setter(v) : v)
+}
+
 export function keepWhile<T>(arr: T[], shouldKeep: (value: T, i: number, arr: T[]) => boolean): T[] {
     const endIndex = arr.findIndex((a, i, arr) => !shouldKeep(a, i, arr))
     if (endIndex < 0) return arr.slice()

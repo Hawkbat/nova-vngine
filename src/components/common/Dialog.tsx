@@ -45,7 +45,7 @@ export async function openDialog<T extends string>(title: string, message: strin
 }
 
 export function useIsDialogOpen() {
-    const [isDialogOpen] = useSelector(dialogStore, s => !!s.states.length)
+    const isDialogOpen = useSelector(dialogStore, s => !!s.states.length)
     return isDialogOpen
 }
 

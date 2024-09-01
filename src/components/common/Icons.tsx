@@ -1,4 +1,4 @@
-import { mdiAccount, mdiAccountMinus, mdiAccountPlus, mdiAlert, mdiApplicationVariable, mdiArchive, mdiArchiveEdit, mdiArchivePlus, mdiArrowExpandHorizontal, mdiBookMultipleOutline, mdiBookOpenVariantOutline, mdiCheckboxBlankOutline, mdiCheckboxMarked, mdiChevronDown, mdiChevronRight, mdiClose, mdiCog, mdiCreation, mdiEmoticon, mdiEqual, mdiFlag, mdiFormatHorizontalAlignCenter, mdiFormatHorizontalAlignLeft, mdiFormatHorizontalAlignRight, mdiFormatListCheckbox, mdiFormatListChecks, mdiFormatListGroup, mdiFormatListText, mdiFormatText, mdiGreaterThan, mdiGreaterThanOrEqual, mdiHome, mdiImageArea, mdiLessThan, mdiLessThanOrEqual, mdiMapSearch, mdiMinus, mdiMusic, mdiNotEqualVariant, mdiPercent, mdiPlus, mdiPlusBox, mdiPound, mdiPoundBox, mdiScriptText, mdiScriptTextPlay, mdiSignatureText, mdiSlashForward, mdiSourceBranch, mdiSquareOutline, mdiText, mdiTextBoxOutline, mdiTrashCan, mdiUpload, mdiVariable, mdiVolumeHigh } from '@mdi/js'
+import { mdiAccount, mdiAccountMinus, mdiAccountPlus, mdiAlert, mdiApplicationVariable, mdiArchive, mdiArchiveEdit, mdiArchivePlus, mdiArrowExpandHorizontal, mdiBookMultipleOutline, mdiBookOpenVariantOutline, mdiCheckboxBlankOutline, mdiCheckboxMarked, mdiChevronDown, mdiChevronRight, mdiClose, mdiCog, mdiCreation, mdiDotsHorizontal, mdiEmoticon, mdiEqual, mdiFlag, mdiFormatHorizontalAlignCenter, mdiFormatHorizontalAlignLeft, mdiFormatHorizontalAlignRight, mdiFormatListCheckbox, mdiFormatListChecks, mdiFormatListGroup, mdiFormatListText, mdiFormatText, mdiGreaterThan, mdiGreaterThanOrEqual, mdiHome, mdiImageArea, mdiLessThan, mdiLessThanOrEqual, mdiMapSearch, mdiMinus, mdiMusic, mdiNotEqualVariant, mdiPercent, mdiPlus, mdiPlusBox, mdiPound, mdiPoundBox, mdiScriptText, mdiScriptTextPlay, mdiSignatureText, mdiSlashForward, mdiSourceBranch, mdiSquareOutline, mdiText, mdiTextBoxOutline, mdiTrashCan, mdiUpload, mdiVariable, mdiVolumeHigh } from '@mdi/js'
 import type { ExprPrimitiveValueType, ExprType } from '../../types/expressions'
 import type { StepType } from '../../types/steps'
 import type { ProjectEditorTab } from '../../types/viewstate'
@@ -20,6 +20,7 @@ export const COMMON_ICONS = {
     alignAuto: mdiCreation,
     alignCustom: mdiPercent,
     upload: mdiUpload,
+    more: mdiDotsHorizontal,
 } satisfies Record<string, string>
 
 export const EXPR_ICONS: Record<ExprType, string> = {

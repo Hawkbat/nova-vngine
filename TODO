@@ -1,8 +1,11 @@
 
 Rework steps to use generic args/params/children definitions like expressions use
 
-Handle deferred store updates by using setter functions exclusively instead of direct values. Apply each setter immediately but queue up store notifications until the end of the current frame using `setTimeout(cb, 0)`.
+Handle deferred store updates by deferring calls of the subscription listeners until the end of the current frame using `setTimeout(cb, 0)`. State updates should still happen synchronously, and some listeners may need to be synchronous (like diffing listeners)
 
-Asset handling is tricky. Ideally we want something akin to ref counting where React components request assets via file path/file handle in a hook, automatically rerendering the components when the asset is available (probably via `useSyncExternalStore`), and then the asset can be unloaded when all components using it have expired. We will likely want to delay expiration by a minute or two to avoid thrashing the cache.
+Generate and cache thumbnails for images and lazily load audio for 'preview' playback in place of generic icons for those entity types
+100x100px thumbnails should be a good size, 100% zoom for a 2em square and 50% zoom for a 1em square
+Can use OffscreenCanvas to load and render image and then crop it and export it to image format
+Audio truncation is tricker if we want to ever go that route, but should be possible using an OfflineAudioContext and MediaRecorder
 
-We probably don't actually need the Web Audio API for audio; `HTMLAudioElement` is decent, similar to `HTMLImageElement`, and potentially less resource intensive on lower-end devices.
+Make custom audio player control component

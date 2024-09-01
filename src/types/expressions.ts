@@ -271,7 +271,7 @@ export function resolveExpr(expr: AnyExpr, ctx: ExprContext): AnyExprValue {
         case 'multiply': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a * b, ctx)
         case 'divide': return resolveNumberOp(expr.params[0], expr.params[1], (a, b, i) => i ? Math.floor(a / b) : a / b, ctx)
         case 'modulo': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a % b, ctx)
-        case 'format': return { type: 'string', value: expr.children.map(([part]) => resolveExprAs(part, 'string', ctx)).join('') }
+        case 'format': return { type: 'string', value: expr.children.map(([part]) => resolveExprAs(part, 'string', ctx).value).join('') }
         case 'equal': return { type: 'boolean', value: exprValuesEqual(resolveExpr(expr.params[0], ctx), resolveExpr(expr.params[1], ctx)) }
         case 'notEqual': return { type: 'boolean', value: !exprValuesEqual(resolveExpr(expr.params[0], ctx), resolveExpr(expr.params[1], ctx)) }
         case 'lessThan': return resolveNumberComparison(expr.params[0], expr.params[1], (a, b) => a < b, ctx)
@@ -364,6 +364,7 @@ export function castExprValue<T extends ExprValueType>(expr: AnyExprValue, type:
             switch (expr.type) {
                 case 'number': return { type: 'string', value: expr.value.toString() } as ExprValueOfType<T>
                 case 'integer': return { type: 'string', value: expr.value.toString() } as ExprValueOfType<T>
+                case 'boolean': return { type: 'string', value: expr.value.toString() } as ExprValueOfType<T>
                 case 'story': return { type: 'string', value: throwIfNull(ctx.resolvers.story(expr.value)).name } as ExprValueOfType<T>
                 case 'chapter': return { type: 'string', value: throwIfNull(ctx.resolvers.chapter(expr.value)).name } as ExprValueOfType<T>
                 case 'scene': return { type: 'string', value: throwIfNull(ctx.resolvers.scene(expr.value)).name } as ExprValueOfType<T>

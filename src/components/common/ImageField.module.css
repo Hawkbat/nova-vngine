@@ -1,11 +1,12 @@
 
 .preview {
+    box-sizing: content-box;
     border: 1px solid var(--text-color);
     border-radius: 0.25em;
     width: 5em;
     height: 5em;
     object-fit: cover;
     object-position: center top;
-    background-color: black;
     cursor: pointer;
+    background: repeating-conic-gradient(#666 0% 25%, #999 0% 50%) 50% / 16px 16px;
 }

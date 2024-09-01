@@ -11,6 +11,7 @@
 .name {
     font-size: 0.6em;
     font-weight: bold;
+    white-space: pre;
 }
 
 .invalid > label > .name {

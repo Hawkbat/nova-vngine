@@ -8,7 +8,7 @@
 .timeline {
     display: flex;
     overflow: scroll;
-    flex: 1 1 0;
+    flex: 0 1 auto;
     align-items: center;
 }
 
@@ -18,7 +18,8 @@
 
 .stepEditor {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
     gap: 0.5em;
 }
 

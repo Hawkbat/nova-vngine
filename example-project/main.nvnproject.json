@@ -3,7 +3,7 @@
   "name": "Example Project",
   "editorRandState": [
     "xorshift32",
-    -996387461
+    1299789110
   ],
   "stories": [
     {
@@ -12,7 +12,7 @@
     },
     {
       "id": "DCV72REE",
-      "name": "Second Story"
+      "name": "My Second Story"
     }
   ],
   "chapters": [
@@ -38,6 +38,38 @@
       "name": "My First Scene",
       "chapterID": "213RCRAR",
       "steps": [
+        {
+          "type": "backdrop",
+          "id": "D9RPZ30U",
+          "backdrop": {
+            "type": "backdrop",
+            "args": [
+              "4YAVCQUO"
+            ]
+          }
+        },
+        {
+          "type": "enter",
+          "id": "BP9PKG9I",
+          "character": {
+            "type": "character",
+            "args": [
+              "1U58I1SC"
+            ]
+          },
+          "portrait": {
+            "type": "portrait",
+            "args": [
+              "COL0H7JM"
+            ]
+          },
+          "location": {
+            "type": "location",
+            "args": [
+              "auto"
+            ]
+          }
+        },
         {
           "type": "text",
           "id": "D7YO9UY4",
@@ -163,8 +195,11 @@
   "sounds": [
     {
       "id": "2KX8AFHT",
-      "name": "Awesome Sound",
-      "audio": null
+      "name": "Scream",
+      "audio": {
+        "mimeType": "audio/ogg",
+        "path": "sounds/2KX8AFHT"
+      }
     }
   ],
   "variables": [

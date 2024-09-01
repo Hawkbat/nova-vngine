@@ -49,10 +49,12 @@ export const ImageField = ({ className, label, value, setValue, validate, target
     }, [])
 
     return <Field label={label} error={errorCheck()}>
-        {imgSrc ? <>
-            <img className={classes(styles.preview, className)} src={imgSrc} onClick={onPreview} />
+        {value ? <>
+            {imgSrc ? <>
+                <img className={classes(styles.preview, className)} src={imgSrc} onClick={onPreview} />
+                <ImagePreview open={previewOpen} src={imgSrc} onClose={() => setPreviewOpen(false)} />
+            </> : <span>Loading...</span>}
             <EditorIcon path={COMMON_ICONS.deleteItem} label='Delete Image' onClick={onDelete} />
-            <ImagePreview open={previewOpen} src={imgSrc} onClose={() => setPreviewOpen(false)} />
         </> : <>
             <UploadZone fileType='Image File' extensions={IMAGE_EXTENSIONS} title='Upload Image File' onUpload={onUpload} />
         </>}

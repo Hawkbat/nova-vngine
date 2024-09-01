@@ -3,20 +3,30 @@ import { createPortal } from 'react-dom'
 import styles from './DropdownMenu.module.css'
 import { hintTuple } from '../../utils/types'
 
+interface DropdownMenuState {
+    open: boolean
+    x: number
+    y: number
+    dx: -1 | 1
+    dy: -1 | 1
+}
+
 export const useDropdownMenuState = () => {
-    const [menuState, setMenuState] = useState({ open: false, x: 0, y: 0 })
+    const [menuState, setMenuState] = useState<DropdownMenuState>({ open: false, x: 0, y: 0, dx: 1, dy: 1 })
 
     const onClick = useCallback((e: React.MouseEvent) => {
         e.stopPropagation()
         const el = e.target as HTMLElement
         const rect = el.getBoundingClientRect()
+        const dx = rect.left > window.innerWidth - 300 ? -1 : 1
+        const dy = rect.bottom > window.innerHeight - 300 ? -1 : 1
         const x = rect.left + 10
         const y = rect.bottom - 4
-        setMenuState({ open: true, x, y })
+        setMenuState({ open: true, x, y, dx, dy })
     }, [])
 
     const onClose = useCallback(() => {
-        setMenuState({ open: false, x: 0, y: 0 })
+        setMenuState({ open: false, x: 0, y: 0, dx: 1, dy: 1 })
     }, [])
 
     const props = useMemo(() => ({ ...menuState, onClose }), [menuState, onClose])
@@ -24,10 +34,7 @@ export const useDropdownMenuState = () => {
     return hintTuple(props, onClick)
 }
 
-export const DropdownMenu = ({ open, x, y, children, onClose }: {
-    open: boolean
-    x: number
-    y: number
+export const DropdownMenu = ({ open, x, y, dx, dy, children, onClose }: DropdownMenuState & {
     children: React.ReactNode
     onClose: () => void
 }) => {
@@ -40,8 +47,14 @@ export const DropdownMenu = ({ open, x, y, children, onClose }: {
         e.stopPropagation()
     }
 
+    const left = dx === 1 ? `${String(x)}px` : undefined
+    const right = dx === -1 ? `${String(window.innerWidth - x)}px` : undefined
+    const top = dy === 1 ? `${String(y)}px` : undefined
+    const bottom = dy === -1 ? `${String(window.innerHeight - y)}px` : undefined
+    const flexDirection = dy === 1 ? 'column' : 'column-reverse'
+
     return open ? createPortal(<div className={styles.backsplash} onClick={onBacksplashClick}>
-        <div className={styles.menuContainer} style={{ left: `${String(x)}px`, top: `${String(y)}px` }} onClick={onMenuClick}>
+        <div className={styles.menuContainer} style={{ left, right, top, bottom, flexDirection }} onClick={onMenuClick}>
             <div className={styles.menu}>
                 {children}
             </div>
@@ -55,10 +68,7 @@ export const DropdownMenuItem = ({ children, onClick }: { children: React.ReactN
     </div>
 }
 
-export const SearchDropdownMenu = <T,>(props: {
-    open: boolean
-    x: number
-    y: number
+export const SearchDropdownMenu = <T,>(props: DropdownMenuState & {
     onClose: () => void
     items: T[]
     children: (item: T, i: number) => React.ReactNode

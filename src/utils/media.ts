@@ -41,7 +41,7 @@ export function getMimeType(path: string) {
 }
 
 export function useSmoothAudio(props: { playing?: boolean, looping?: boolean, volume?: number, fadeRate?: number, speed?: number, pauseOnMute?: boolean }) {
-    const audioRef = useRef<HTMLAudioElement>()
+    const audioRef = useRef<HTMLAudioElement | null>(null)
     const latestProps = useLatest(props)
     useAnimationLoop(true, useCallback(dt => {
         const audio = audioRef.current
