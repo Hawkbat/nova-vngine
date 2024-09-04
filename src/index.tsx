@@ -69,6 +69,8 @@ async function initializeAll() {
     })
 
     subscribeToStoreAsync(settingsStore, async state => {
+        document.documentElement.style.fontSize = `${String(20 * state.uiScale)}px`
+
         await platform.saveSettings(state)
         await wait(1000)
     })

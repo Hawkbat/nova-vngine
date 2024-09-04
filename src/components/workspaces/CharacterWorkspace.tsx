@@ -1,22 +1,9 @@
-import { useAsset } from '../../store/assets'
-import { projectStore } from '../../store/project'
-import type { CharacterDefinition } from '../../types/project'
-import { arrayHead } from '../../utils/array'
-import { useSelector } from '../../utils/store'
 import { EntityWorkspace } from './EntityWorkspace'
 
 import styles from './CharacterWorkspace.module.css'
 
-const CharacterPreview = ({ character }: { character: CharacterDefinition }) => {
-    const getPortraits = useSelector(projectStore, s => s.portraits)
-    const characterPortraits = getPortraits().filter(p => p.characterID === character.id)
-    const defaultPortrait = arrayHead(characterPortraits)
-    const getPortraitImgSrc = useAsset(defaultPortrait?.image ?? null)
-    return getPortraitImgSrc() ? <img src={getPortraitImgSrc() ?? undefined} className={styles.preview} /> : null
-}
-
 export const CharacterWorkspace = () => {
-    return <EntityWorkspace type='character' preview={character => <CharacterPreview character={character} />}>{character => <>
+    return <EntityWorkspace type='character' getVariableScopes={character => [{ type: 'character', value: character.id }, { type: 'characters', value: [character.id] }, { type: 'allCharacters' }]}>{character => <>
 
     </>}</EntityWorkspace>
 }

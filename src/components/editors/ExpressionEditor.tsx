@@ -3,13 +3,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Fragment } from 'react'
 
-import { getEntityByID } from '../../store/operations'
+import { getEntityByID, getEntityDisplayName } from '../../store/operations'
 import { projectStore } from '../../store/project'
 import type { AnyExpr, ExprContext, ExprDefinition, ExprPrimitiveRawValueOfType, ExprPrimitiveValueType, ExprType, ExprValueType } from '../../types/expressions'
 import { createDefaultExpr, createDefaultExprChild, EXPR_DEFINITION_MAP, EXPR_DEFINITIONS, exprValueTypeAssignableTo, guessExprReturnType, validateExpr } from '../../types/expressions'
 import type { EntityIDOf, EntityOfType, EntityType } from '../../types/project'
 import { getProjectEntityKey } from '../../types/project'
 import { forEachMultiple } from '../../utils/array'
+import { classes } from '../../utils/display'
 import { throwIfNull } from '../../utils/guard'
 import { immAppend, immRemoveAt, immReplaceAt, immSet } from '../../utils/imm'
 import { useSelector } from '../../utils/store'
@@ -20,6 +21,7 @@ import { EditorButton } from '../common/EditorButton'
 import { EditorIcon } from '../common/EditorIcon'
 import { Field } from '../common/Field'
 import { COMMON_ICONS, EXPR_ICONS } from '../common/Icons'
+import { LocationField } from '../common/LocationField'
 import { NumberField } from '../common/NumberField'
 import { StringField } from '../common/StringField'
 
@@ -82,21 +84,14 @@ const EntityArgEditor = <T extends EntityType>({ type, value, setValue, label }:
     const getItems = useSelector(projectStore, s => s[getProjectEntityKey(type)]) as () => EntityOfType<T>[]
     return <>
         <EditorButton className={styles.argButton} style='text' onClick={openDropdown}>
-            {entity ? entity.name ? entity.name : 'Untitled' : 'None'}
+            {entity ? getEntityDisplayName(type, entity, true) : 'None'}
         </EditorButton>
-        <SearchDropdownMenu<EntityOfType<T>> {...dropdownProps} items={getItems()} filter={(e, search) => e.name.toLowerCase().includes(search.toLowerCase())}>{(entity: EntityOfType<T>) => <DropdownMenuItem key={entity.id} onClick={() => (setValue(entity.id as ExprPrimitiveRawValueOfType<T>), dropdownProps.onClose())}>{entity.name ? entity.name : 'Untitled'}</DropdownMenuItem>}</SearchDropdownMenu>
+        <SearchDropdownMenu<EntityOfType<T>> {...dropdownProps} items={getItems()} filter={(e, search) => e.name.toLowerCase().includes(search.toLowerCase())}>{(entity: EntityOfType<T>) => <DropdownMenuItem key={entity.id} onClick={() => (setValue(entity.id as ExprPrimitiveRawValueOfType<T>), dropdownProps.onClose())}>{getEntityDisplayName(type, entity, true)}</DropdownMenuItem>}</SearchDropdownMenu>
     </>
 }
 
 const LocationArgEditor = ({ value, setValue, label }: ArgSubEditorProps<'location'>) => {
-    return <>
-        <EditorIcon path={COMMON_ICONS.alignAuto} active={value === 'auto'} label='Auto' style='solid' onClick={() => setValue('auto')} />
-        <EditorIcon path={COMMON_ICONS.alignLeft} active={value === 'left'} label='Left' style='solid' onClick={() => setValue('left')} />
-        <EditorIcon path={COMMON_ICONS.alignCenter} active={value === 'center'} label='Center' style='solid' onClick={() => setValue('center')} />
-        <EditorIcon path={COMMON_ICONS.alignRight} active={value === 'right'} label='Right' style='solid' onClick={() => setValue('right')} />
-        <EditorIcon path={COMMON_ICONS.alignCustom} active={typeof value === 'number'} label='Custom' style='solid' onClick={() => setValue(0.5)} />
-        {typeof value === 'number' ? <NumberField className={styles.argTextInput} value={value} setValue={v => setValue(v)} /> : null}
-    </>
+    return <LocationField className={classes(styles.argButton, styles.argTextInput)} value={value} setValue={setValue} />
 }
 
 const ParamEditor = ({ label, types, expr, setExpr, ctx }: { label: string, types: ExprValueType[] | null, expr: AnyExpr, setExpr: (value: AnyExpr) => void, ctx: ExprContext }) => {

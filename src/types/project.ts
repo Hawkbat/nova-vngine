@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
+import { arrayHead } from '../utils/array'
 import type { ParseFunc } from '../utils/guard'
 import { defineParser, parsers as $ } from '../utils/guard'
 import type { RandState } from '../utils/rand'
 import type { Branded, OmitUndefined } from '../utils/types'
-import { hintTuple } from '../utils/types'
-import { type BooleanExpr, type ChapterExpr, type CharacterExpr, type IntegerExpr, type ListExpr, type NumberExpr, parseAnyExpr, type PortraitExpr, type SceneExpr, type StringExpr, type ValueExpr } from './expressions'
+import { assertExhaustive, hintTuple } from '../utils/types'
+import { type AnyExprValue, type BooleanExpr, type ChapterExpr, type CharacterExpr, type ExprContext, type ExprPrimitiveValueType, type ExprValueType, type IntegerExpr, isPrimitiveValue, type ListExpr, type LocationValue, type NumberExpr, parseAnyExpr, parseLocationHeight, type PortraitExpr, resolveExpr, type SceneExpr, type StringExpr, type ValueExpr } from './expressions'
 import { type AnyStep, parseAnyStep } from './steps'
 
 type EntityID<T extends EntityType> = Branded<string, T>
@@ -174,6 +175,7 @@ export type PortraitID = EntityID<'portrait'>
 export interface PortraitDefinition extends EntityDefinition<PortraitID> {
     characterID: CharacterID
     image: AssetDefinition | null
+    height: LocationValue['height']
 }
 
 export type BackdropID = EntityID<'backdrop'>
@@ -209,6 +211,7 @@ type VariableScopeMap = {
     allCharacters: undefined
     character: CharacterID
     characters: CharacterID[]
+    allMacros: undefined
     macro: MacroID
     macros: MacroID[]
 }
@@ -216,6 +219,51 @@ type VariableScopeMap = {
 export type VariableScopeType = keyof VariableScopeMap
 export type VariableScopeOfType<T extends VariableScopeType> = T extends VariableScopeType ? OmitUndefined<{ type: T, value: VariableScopeMap[T] }> : never
 export type AnyVariableScope = VariableScopeOfType<VariableScopeType>
+
+const VARIABLE_SCOPE_MAP = {
+    allStories: undefined,
+    story: '' as StoryID,
+    stories: [],
+    allChapters: undefined,
+    chapter: '' as ChapterID,
+    chapters: [],
+    allScenes: undefined,
+    scene: '' as SceneID,
+    scenes: [],
+    allCharacters: undefined,
+    character: '' as CharacterID,
+    characters: [],
+    allMacros: undefined,
+    macro: '' as MacroID,
+    macros: [],
+} satisfies { [K in VariableScopeType]: VariableScopeMap[K] }
+
+export const VARIABLE_SCOPE_TYPES = Object.keys(VARIABLE_SCOPE_MAP) as VariableScopeType[]
+
+export function getDefaultVariableScope<T extends VariableScopeType>(type: T): VariableScopeOfType<T> {
+    return { type, value: VARIABLE_SCOPE_MAP[type] } as VariableScopeOfType<T>
+}
+
+export function isVariableInScope(variable: AnyVariableDefinition, scope: AnyVariableScope) {
+    switch (scope.type) {
+        case 'allStories': return variable.scope.type === 'allStories'
+        case 'stories': return variable.scope.type === 'stories' && variable.scope.value.some(s => scope.value.includes(s))
+        case 'story': return variable.scope.type === 'story' && variable.scope.value === scope.value
+        case 'allChapters': return variable.scope.type === 'allChapters'
+        case 'chapters': return variable.scope.type === 'chapters' && variable.scope.value.some(s => scope.value.includes(s))
+        case 'chapter': return variable.scope.type === 'chapter'
+        case 'allScenes': return variable.scope.type === 'allScenes'
+        case 'scenes': return variable.scope.type === 'scenes' && variable.scope.value.some(s => scope.value.includes(s))
+        case 'scene': return variable.scope.type === 'scene' && variable.scope.value === scope.value
+        case 'allCharacters': return variable.scope.type === 'allCharacters'
+        case 'characters': return variable.scope.type === 'characters' && variable.scope.value.some(s => scope.value.includes(s))
+        case 'character': return variable.scope.type === 'character' && variable.scope.value === scope.value
+        case 'allMacros': return variable.scope.type === 'allMacros'
+        case 'macros': return variable.scope.type === 'macros' && variable.scope.value.some(s => scope.value.includes(s))
+        case 'macro': return variable.scope.type === 'macro' && variable.scope.value === scope.value
+        default: assertExhaustive(scope, `Unimplemented variable scope ${JSON.stringify(scope)}`)
+    }
+}
 
 type VariableDefinitionMap = {
     flag: {
@@ -264,21 +312,43 @@ type VariableDefinitionMap = {
 }
 
 const VARIABLE_TYPE_MAP = {
-    flag: true,
-    integer: true,
-    number: true,
-    text: true,
-    singleChoice: true,
-    multipleChoice: true,
-    chapter: true,
-    scene: true,
-    character: true,
-    portrait: true,
-    list: true,
-    lookup: true,
-} satisfies Record<VariableType, true>
+    flag: 'boolean',
+    integer: 'integer',
+    number: 'number',
+    text: 'string',
+    singleChoice: null,
+    multipleChoice: null,
+    chapter: 'chapter',
+    scene: 'scene',
+    character: 'character',
+    portrait: 'portrait',
+    list: null,
+    lookup: null,
+} satisfies Record<VariableType, ExprPrimitiveValueType | null>
 
 export const VARIABLE_TYPES = Object.keys(VARIABLE_TYPE_MAP) as VariableType[]
+
+export function getVariableValueType(variable: AnyVariableDefinition | AnyPartialVariableDefinition, ctx: ExprContext): ExprValueType {
+    const basicType = VARIABLE_TYPE_MAP[variable.type]
+    if (!basicType) {
+        if (variable.type === 'singleChoice') {
+            const expr = resolveExpr(variable.options, ctx)
+            if (isPrimitiveValue(expr)) {
+                return expr.type
+            }
+            const defaultType = 'default' in variable ? resolveExpr(variable.default, ctx).type : null
+            return arrayHead<AnyExprValue>(expr.values)?.type ?? defaultType ?? 'string'
+        } else if (variable.type === 'multipleChoice') {
+            return resolveExpr(variable.options, ctx).type
+        } else if (variable.type === 'list') {
+            return getVariableValueType(variable.elements, ctx)
+        } else if (variable.type === 'lookup') {
+            return getVariableValueType(variable.elements, ctx)
+        }
+        return 'list:string'
+    }
+    return basicType
+}
 
 export type PartialVariableDefinitionOfType<T extends VariableType> = T extends VariableType ? Omit<VariableDefinitionOfType<T>, 'id' | 'default' | 'name' | 'scope'> : never
 export type AnyPartialVariableDefinition = PartialVariableDefinitionOfType<VariableType>
@@ -334,6 +404,7 @@ const parsePortraitDefinition: ParseFunc<PortraitDefinition> = defineParser<Port
     name: $.string,
     characterID: $.id,
     image: (c, v, d) => $.either(c, v, parseAssetDefinition, $.null, d),
+    height: parseLocationHeight,
 }, d))
 
 const parseBackdropDefinition: ParseFunc<BackdropDefinition> = defineParser<BackdropDefinition>((c, v, d) => $.object(c, v, {
@@ -385,6 +456,7 @@ const parseAnyVariableDefinition: ParseFunc<AnyVariableDefinition> = defineParse
         allCharacters: {},
         character: { value: $.id },
         characters: { value: (c, v, d) => $.array(c, v, $.id, d) },
+        allMacros: {},
         macro: { value: $.id },
         macros: { value: (c, v, d) => $.array(c, v, $.id, d) },
     }, d),

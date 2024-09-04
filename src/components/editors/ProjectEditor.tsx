@@ -2,7 +2,7 @@ import { useCallback } from 'react'
 
 import { BUILD_COMMIT, BUILD_DATETIME } from '../../injected'
 import { platform } from '../../platform/platform'
-import { useViewStateScope, useViewStateTab } from '../../store/operations'
+import { getEntityDisplayName, useViewStateScope, useViewStateTab } from '../../store/operations'
 import { projectStore } from '../../store/project'
 import { viewStateStore } from '../../store/viewstate'
 import type { EntityType } from '../../types/project'
@@ -17,6 +17,7 @@ import { BackdropWorkspace } from '../workspaces/BackdropWorkspace'
 import { ChapterWorkspace } from '../workspaces/ChapterWorkspace'
 import { CharacterWorkspace } from '../workspaces/CharacterWorkspace'
 import { HomeWorkspace } from '../workspaces/HomeWorkspace'
+import { MacroWorkspace } from '../workspaces/MacroWorkspace'
 import { PortraitWorkspace } from '../workspaces/PortraitWorkspace'
 import { ProjectWorkspace } from '../workspaces/ProjectWorkspace'
 import { SceneWorkspace } from '../workspaces/SceneWorkspace'
@@ -31,16 +32,17 @@ import styles from './ProjectEditor.module.css'
 const Breadcrumb = ({ type }: { type: EntityType }) => {
     const tab = getProjectEntityKey(type)
     const [getScope, setScope] = useViewStateScope(type)
-    const getName = useSelector(projectStore, s => s[tab].find(i => i.id === getScope())?.name ?? null)
+    const getEntity = useSelector(projectStore, s => s[tab].find(i => i.id === getScope()) ?? null)
     const [getCurrentTab, setCurrentTab] = useViewStateTab()
-    if (getName() === null) return
+    const entity = getEntity()
+    if (entity === null) return
     const entityType = getEntityTypeByProjectKey(getCurrentTab())
     if (!isProjectEntityKey(getCurrentTab()) || !entityType || !getEntityTypeHierarchy(entityType).includes(type)) return
 
     return <>
         <EditorIcon path={COMMON_ICONS.breadcrumbArrow} />
         <EditorButton icon={EXPR_VALUE_ICONS[type]} style='text' active={getCurrentTab() === tab} onClick={() => setCurrentTab(tab)}>
-            <span>{getName() ? getName() : `Untitled ${prettyPrintIdentifier(type)}`}</span>
+            <span>{getEntityDisplayName(type, entity, false)}</span>
             <EditorIcon path={COMMON_ICONS.cancel} label={`Stop Filtering By ${prettyPrintIdentifier(type)}`} onClick={() => setScope(null)} />
         </EditorButton>
     </>
@@ -116,6 +118,7 @@ export const ProjectEditor = () => {
                 {getCurrentTab() === 'songs' ? <SongWorkspace /> : null}
                 {getCurrentTab() === 'sounds' ? <SoundWorkspace /> : null}
                 {getCurrentTab() === 'variables' ? <VariableWorkspace /> : null}
+                {getCurrentTab() === 'macros' ? <MacroWorkspace /> : null}
                 {getCurrentTab() === 'settings' ? <SettingsWorkspace /> : null}
             </div>
             <Footer />

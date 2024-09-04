@@ -18,6 +18,9 @@ export const chromiumStorageProvider: StorageProvider = {
     async loadAsset(root, path) {
         return await browserStorageProvider.loadAsset(root, path)
     },
+    async loadAssetThumbnail(root, asset) {
+        return await browserStorageProvider.loadAssetThumbnail(root, asset)
+    },
     async storeText(root, path, text) {
         return await browserStorageProvider.storeText?.(root, path, text)
     },

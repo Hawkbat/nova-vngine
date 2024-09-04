@@ -1,7 +1,8 @@
 import { filesystem as nFS, os as nOS } from '@neutralinojs/lib'
 
 import { LOG_FILE_WRITES } from '../../debug'
-import { type StorageDirectoryResult, StorageError, type StorageFileResult, type StorageProvider } from '../../types/storage'
+import { isStorageErrorCode, type StorageDirectoryResult, StorageError, type StorageFileResult, type StorageProvider } from '../../types/storage'
+import { createThumbnail } from '../../utils/media'
 import { getAbsolutePath, getPathFileName, getRelativePath } from '../../utils/path'
 import { ensureParentDirectories, isNeutralinoError, neutralinoPlatform, waitForNeutralinoInit } from '../neutralino'
 
@@ -41,6 +42,39 @@ export const neutralinoStorageProvider: StorageProvider = {
         return {
             url,
             unload,
+        }
+    },
+    async loadAssetThumbnail(root, asset) {
+        const path = root ? getAbsolutePath(asset.path, root.key) : asset.path
+        const thumbPath = `${path}_thumb`
+        try {
+            const buffer = await this.loadBinary(root, thumbPath)
+            const blob = new Blob([buffer], { type: asset.mimeType })
+            const url = URL.createObjectURL(blob)
+            const unload = () => {
+                URL.revokeObjectURL(url)
+            }
+            return {
+                url,
+                unload,
+            }
+        } catch (err) {
+            if (isStorageErrorCode(err, 'not-found')) {
+                const { url, unload } = await this.loadAsset(root, asset)
+                const blob = await createThumbnail(url)
+                unload()
+                const arrayBuffer = await blob.arrayBuffer()
+                await this.storeBinary?.(root, thumbPath, arrayBuffer)
+                const thumbUrl = URL.createObjectURL(blob)
+                const thumbUnload = () => {
+                    URL.revokeObjectURL(url)
+                }
+                return {
+                    url: thumbUrl,
+                    unload: thumbUnload,
+                }
+            }
+            throw err
         }
     },
     async storeText(root, path, text) {

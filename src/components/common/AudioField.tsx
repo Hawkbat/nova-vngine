@@ -13,7 +13,7 @@ import { UploadZone } from './UploadZone'
 
 export const AudioField = ({ className, label, value, setValue, validate, targetPath }: FieldProps<AssetDefinition | null> & { targetPath: string }) => {
     const { getRoot, storage } = useProjectStorage()
-    const getAudioSrc = useAsset(value)
+    const getAudioSrc = useAsset(value, false)
 
     const errorCheck = useCallback(() => {
         if (validate) return validate(value)

@@ -14,8 +14,9 @@ interface AssetCacheEntry {
 
 const cache: Map<string, AssetCacheEntry> = new Map()
 
-function getCacheEntry(asset: AssetDefinition | null) {
-    const existing = cache.get(asset?.path ?? '')
+function getCacheEntry(asset: AssetDefinition | null, thumbnail: boolean) {
+    const key = `${asset?.path ?? ''}${thumbnail ? '_THUMB' : ''}`
+    const existing = cache.get(key)
     if (existing) return existing
     const entry: AssetCacheEntry = {
         count: 0,
@@ -24,18 +25,18 @@ function getCacheEntry(asset: AssetDefinition | null) {
         promise: null,
         unload: null,
     }
-    cache.set(asset?.path ?? '', entry)
+    cache.set(key, entry)
     return entry
 }
 
-function incrementRefCount(asset: AssetDefinition | null) {
-    const entry = getCacheEntry(asset)
+function incrementRefCount(asset: AssetDefinition | null, thumbnail: boolean) {
+    const entry = getCacheEntry(asset, thumbnail)
     entry.count++
     entry.time = Date.now()
     if (entry.count >= 1 && entry.promise === null && asset) {
         entry.promise = (async () => {
             const { root, storage } = getProjectStorage()
-            const { url, unload } = await storage.loadAsset(root, asset)
+            const { url, unload } = thumbnail ? await storage.loadAssetThumbnail(root, asset) : await storage.loadAsset(root, asset)
             entry.unload = unload
             entry.store.setValue(() => url)
             return url
@@ -43,8 +44,8 @@ function incrementRefCount(asset: AssetDefinition | null) {
     }
 }
 
-function decrementRefCount(asset: AssetDefinition | null) {
-    const entry = getCacheEntry(asset)
+function decrementRefCount(asset: AssetDefinition | null, thumbnail: boolean) {
+    const entry = getCacheEntry(asset, thumbnail)
     entry.count--
     entry.time = Date.now()
     if (entry.count <= 0 && entry.promise !== null) {
@@ -55,14 +56,14 @@ function decrementRefCount(asset: AssetDefinition | null) {
     }
 }
 
-export function useAsset(asset: AssetDefinition | null) {
-    const entry = getCacheEntry(asset)
+export function useAsset(asset: AssetDefinition | null, thumbnail: boolean) {
+    const entry = getCacheEntry(asset, thumbnail)
     const [getURL] = useStore(entry.store)
     useEffect(() => {
-        incrementRefCount(asset)
+        incrementRefCount(asset, thumbnail)
         return () => {
-            decrementRefCount(asset)
+            decrementRefCount(asset, thumbnail)
         }
-    }, [asset])
+    }, [asset, thumbnail])
     return asset ? getURL : () => null
 }

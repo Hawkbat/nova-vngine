@@ -121,3 +121,12 @@ export function getRelativePath(to: string, from: string) {
     }
     return joinPathSegments(resultSegments)
 }
+
+export function getPathIsUrl(path: string) {
+    try {
+        new URL(path)
+        return true
+    } catch {
+        return false
+    }
+}

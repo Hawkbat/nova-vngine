@@ -5,12 +5,14 @@ import { platform } from '../platform/platform'
 import { getStorageProvider } from '../platform/storage/storage'
 import { createDefaultExpr, type ExprContext, resolveExpr } from '../types/expressions'
 import { DEFAULT_PROJECT_FILENAME, isPlatformErrorCode, PlatformError } from '../types/platform'
-import { type AnyVariableDefinition, type BackdropDefinition, type BackdropID, type ChapterDefinition, type ChapterID, type CharacterDefinition, type CharacterID, ENTITY_TYPES, type EntityIDOf, type EntityOfType, type EntityParentIDOf, type EntityParentOf, type EntityType, getEntityParentID, getEntityParentType, getEntityTypeHierarchy, getProjectEntityKey, type MacroDefinition, type MacroID, parseProjectDefinition, type PortraitDefinition, type PortraitID, type ProjectDefinition, type SceneDefinition, type SceneID, type SongDefinition, type SongID, type SoundDefinition, type SoundID, type StoryDefinition, type StoryID, type VariableID, type VariableType } from '../types/project'
+import { type AnyVariableDefinition, type AnyVariableScope, type AssetDefinition, type BackdropDefinition, type BackdropID, type ChapterDefinition, type ChapterID, type CharacterDefinition, type CharacterID, ENTITY_TYPES, type EntityIDOf, type EntityOfType, type EntityParentIDOf, type EntityParentOf, type EntityType, getEntityParentID, getEntityParentType, getEntityTypeHierarchy, getProjectEntityKey, type MacroDefinition, type MacroID, parseProjectDefinition, type PortraitDefinition, type PortraitID, type ProjectDefinition, type SceneDefinition, type SceneID, type SongDefinition, type SongID, type SoundDefinition, type SoundID, type StoryDefinition, type StoryID, type VariableID, type VariableType } from '../types/project'
 import type { StorageRootEntry } from '../types/storage'
 import type { ProjectEditorTab, ProjectMetaData } from '../types/viewstate'
-import { tryParseJson } from '../utils/guard'
+import { arrayHead } from '../utils/array'
+import { prettyPrintIdentifier } from '../utils/display'
+import { throwIfNull, tryParseJson } from '../utils/guard'
 import { immAppend, immSet } from '../utils/imm'
-import { randID, uncheckedRandID } from '../utils/rand'
+import { randFloat, randID, randInt, randSeedRandom, uncheckedRandID } from '../utils/rand'
 import { useSelector } from '../utils/store'
 import { assertExhaustive, hintTuple } from '../utils/types'
 import { createDefaultProject, projectStore } from './project'
@@ -190,6 +192,11 @@ export function getProjectExprContext(): ExprContext {
             macro: id => project.macros.find(e => e.id === id) ?? null,
             variable: id => project.variables.find(e => e.id === id) ?? null,
             variableValue: id => resolveExpr(project.variables.find(e => e.id === id)?.default ?? createDefaultExpr('unset', ctx), ctx),
+            characterVariableValue: (id, characterID) => resolveExpr(project.variables.find(e => e.id === id)?.default ?? createDefaultExpr('unset', ctx), ctx),
+        },
+        random: {
+            float: (min, max) => randFloat(randSeedRandom(), min, max)[1],
+            int: (min, max) => randInt(randSeedRandom(), min, max)[1],
         },
     }
     return ctx
@@ -223,6 +230,27 @@ export function getEntityByID<T extends EntityType>(type: T, id: EntityIDOf<T>):
     const entity = entities.find(e => e.id === id)
     if (entity) return entity as EntityOfType<T>
     return null
+}
+
+export function getEntityPrimaryAsset<T extends EntityType>(type: T, entity: EntityOfType<T>): AssetDefinition | null {
+    switch (type) {
+        case 'portrait': return (entity as PortraitDefinition).image
+        case 'backdrop': return (entity as BackdropDefinition).image
+        case 'character': {
+            const portraits = projectStore.getSnapshot().portraits.filter(p => p.characterID === entity.id)
+            const portrait = arrayHead(portraits)
+            return portrait?.image ?? null
+        }
+        default: return null
+    }
+}
+
+export function getEntityDisplayName<T extends EntityType>(type: T, entity: EntityOfType<T>, includeParent: boolean): string {
+    const entityName = entity.name ? entity.name : `Untitled ${prettyPrintIdentifier(type)}`
+    const parentType = getEntityParentType(type)
+    const parent = getEntityParent(type, entity)
+    if (includeParent && parentType && parent) return `${getEntityDisplayName(parentType, parent, false)} - ${entityName}`
+    return entityName
 }
 
 export function immGenerateID<T extends string>(project: ProjectDefinition): [ProjectDefinition, T] {
@@ -290,6 +318,7 @@ export function immCreatePortrait(project: ProjectDefinition, characterID: Chara
         name: '',
         characterID,
         image: null,
+        height: 'auto',
     }
 
     return hintTuple(immSet(project, 'portraits', immAppend(project.portraits, portrait)), portrait)
@@ -334,7 +363,7 @@ export function immCreateSound(project: ProjectDefinition): [ProjectDefinition, 
     return hintTuple(immSet(project, 'sounds', immAppend(project.sounds, sound)), sound)
 }
 
-export function immCreateVariable(project: ProjectDefinition): [ProjectDefinition, AnyVariableDefinition] {
+export function immCreateVariable(project: ProjectDefinition, scope?: AnyVariableScope): [ProjectDefinition, AnyVariableDefinition] {
     let id: VariableID;
     [project, id] = immGenerateID(project)
 
@@ -344,7 +373,7 @@ export function immCreateVariable(project: ProjectDefinition): [ProjectDefinitio
         id,
         name: '',
         type: 'flag',
-        scope: { type: 'allStories' },
+        scope: scope ?? { type: 'allStories' },
         default: createDefaultExpr('boolean', ctx),
         setValueLabel: createDefaultExpr('unset', ctx),
         unsetValueLabel: createDefaultExpr('unset', ctx),
@@ -366,13 +395,13 @@ export function immCreateMacro(project: ProjectDefinition): [ProjectDefinition, 
     return hintTuple(immSet(project, 'macros', immAppend(project.macros, macro)), macro)
 }
 
-export function immCreateEntity<T extends EntityType>(type: T, project: ProjectDefinition, parentID: EntityParentIDOf<T>): [ProjectDefinition, EntityOfType<T>] {
+export function immCreateEntity<T extends EntityType>(type: T, project: ProjectDefinition, parentID?: EntityParentIDOf<T> | null): [ProjectDefinition, EntityOfType<T>] {
     switch (type) {
         case 'story': return immCreateStory(project) as [ProjectDefinition, EntityOfType<T>]
-        case 'chapter': return immCreateChapter(project, parentID as StoryID) as [ProjectDefinition, EntityOfType<T>]
-        case 'scene': return immCreateScene(project, parentID as ChapterID) as [ProjectDefinition, EntityOfType<T>]
+        case 'chapter': return immCreateChapter(project, throwIfNull(parentID) as StoryID) as [ProjectDefinition, EntityOfType<T>]
+        case 'scene': return immCreateScene(project, throwIfNull(parentID) as ChapterID) as [ProjectDefinition, EntityOfType<T>]
         case 'character': return immCreateCharacter(project) as [ProjectDefinition, EntityOfType<T>]
-        case 'portrait': return immCreatePortrait(project, parentID as CharacterID) as [ProjectDefinition, EntityOfType<T>]
+        case 'portrait': return immCreatePortrait(project, throwIfNull(parentID) as CharacterID) as [ProjectDefinition, EntityOfType<T>]
         case 'backdrop': return immCreateBackdrop(project) as [ProjectDefinition, EntityOfType<T>]
         case 'song': return immCreateSong(project) as [ProjectDefinition, EntityOfType<T>]
         case 'sound': return immCreateSound(project) as [ProjectDefinition, EntityOfType<T>]
@@ -418,12 +447,12 @@ export function useViewStateScope<T extends EntityType>(type: T | null): [() => 
         if (!id) {
             const subTypes = ENTITY_TYPES.filter(e => getEntityTypeHierarchy(e).includes(type))
             const scopeValues = Object.fromEntries(subTypes.map(t => hintTuple(t, null)))
-            viewStateStore.setValue(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues } }))
+            viewStateStore.setValue(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues }, editor: null }))
             return
         }
         const hierarchy = getEntityHierarchy(type, id)
         const scopeValues = Object.fromEntries(hierarchy.map(h => hintTuple(h.type, h.entity.id)))
-        viewStateStore.setValue(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues } }))
+        viewStateStore.setValue(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues }, editor: null }))
     }, [type])
     return hintTuple(getScope, setScope)
 }

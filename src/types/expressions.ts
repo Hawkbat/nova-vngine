@@ -2,10 +2,18 @@ import { arrayHead, forEachMultiple } from '../utils/array'
 import type { ParseFunc } from '../utils/guard'
 import { defineParser, parsers as $, throwIfNull } from '../utils/guard'
 import type { OmitUndefined } from '../utils/types'
-import { assertExhaustive, hintTuple } from '../utils/types'
+import { assertExhaustive, hintTuple, inlineThrow } from '../utils/types'
 import type { AnyVariableDefinition, BackdropDefinition, BackdropID, ChapterDefinition, ChapterID, CharacterDefinition, CharacterID, MacroDefinition, MacroID, PortraitDefinition, PortraitID, SceneDefinition, SceneID, SongDefinition, SongID, SoundDefinition, SoundID, StoryDefinition, StoryID, VariableID } from './project'
 
-export type LocationValue = 'auto' | 'left' | 'center' | 'right' | number
+export type LocationPositionValue = 'auto' | 'left' | 'center' | 'right' | number
+export type LocationHeightValue = 'auto' | 'full' | 'knees' | 'thighs' | 'waist' | 'shoulder' | 'head' | number
+export type LocationScaleValue = 'auto' | 'near' | 'middle' | 'far' | number
+
+export interface LocationValue {
+    position: LocationPositionValue
+    height: LocationHeightValue
+    scale: LocationScaleValue
+}
 
 export interface ExprArgDefinition {
     label: string
@@ -63,6 +71,7 @@ const EXPRS = validateExprDefinitions({
     song: { label: 'Song', args: [{ label: 'Value', type: 'song' }], returnTypes: ['song'] },
     sound: { label: 'Sound', args: [{ label: 'Value', type: 'sound' }], returnTypes: ['sound'] },
     variable: { label: 'Variable', args: [{ label: 'Value', type: 'variable' }], returnTypes: ['variable'] },
+    characterVariable: { label: 'Character Variable', args: [{ label: 'Value', type: 'variable' }], params: [{ label: 'Character', types: ['character'] }], returnTypes: ['variable'] },
     macro: { label: 'Macro', args: [{ label: 'Macro', type: 'macro' }], returnTypes: ['macro'] },
 
     add: { label: 'Add', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
@@ -70,6 +79,9 @@ const EXPRS = validateExprDefinitions({
     multiply: { label: 'Multiply', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
     divide: { label: 'Divide', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
     modulo: { label: 'Remainder', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
+
+    randomFloat: { label: 'Random Number', params: [{ label: 'Min', types: ['number', 'integer'] }, { label: 'Max', types: ['number', 'integer'] }], returnTypes: ['number'] },
+    randomInt: { label: 'Random Integer', params: [{ label: 'Min', types: ['integer'] }, { label: 'Max', types: ['integer'] }], returnTypes: ['integer'] },
 
     format: { label: 'Formatted Text', returnTypes: ['string'], children: [{ label: 'Item', types: ['string'] }] },
 
@@ -138,7 +150,7 @@ const PRIMITIVE_DEFAULT_VALUES: ExprPrimitiveValueTypeMap = {
     sound: '' as SoundID,
     variable: '' as VariableID,
     macro: '' as MacroID,
-    location: 'auto',
+    location: { position: 'auto', height: 'auto', scale: 'auto' },
 }
 
 function getContextualDefaultPrimitiveValue<T extends ExprPrimitiveValueType>(type: T, ctx: ExprContext) {
@@ -207,14 +219,19 @@ export interface ExprContext {
         macro: (id: MacroID) => MacroDefinition | null
         variable: (id: VariableID) => AnyVariableDefinition | null
         variableValue: (id: VariableID) => AnyExprValue | null
+        characterVariableValue: (id: VariableID, characterID: CharacterID) => AnyExprValue | null
+    }
+    random: {
+        int: (min: number, max: number) => number
+        float: (min: number, max: number) => number
     }
 }
 
-function isPrimitiveValueType(type: ExprValueType): type is ExprPrimitiveValueType {
+export function isPrimitiveValueType(type: ExprValueType): type is ExprPrimitiveValueType {
     return !type.startsWith('list:')
 }
 
-function isPrimitiveValue(value: AnyExprValue): value is AnyExprPrimitiveValue {
+export function isPrimitiveValue(value: AnyExprValue): value is AnyExprPrimitiveValue {
     return isPrimitiveValueType(value.type)
 }
 
@@ -266,12 +283,15 @@ export function resolveExpr(expr: AnyExpr, ctx: ExprContext): AnyExprValue {
         case 'song': return { type: 'song', value: expr.args[0] }
         case 'sound': return { type: 'sound', value: expr.args[0] }
         case 'macro': return { type: 'macro', value: expr.args[0] }
+        case 'characterVariable': return throwIfNull(ctx.resolvers.characterVariableValue(expr.args[0], resolveExprAs(expr.params[0], 'character', ctx).value))
         case 'location': return { type: 'location', value: expr.args[0] }
         case 'add': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a + b, ctx)
         case 'subtract': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a - b, ctx)
         case 'multiply': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a * b, ctx)
         case 'divide': return resolveNumberOp(expr.params[0], expr.params[1], (a, b, i) => i ? Math.floor(a / b) : a / b, ctx)
         case 'modulo': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a % b, ctx)
+        case 'randomFloat': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => ctx.random.float(a, b), ctx)
+        case 'randomInt': return resolveNumberOp(expr.params[0], expr.params[1], (a, b, isInt) => isInt ? ctx.random.int(a, b) : inlineThrow(new Error('Parameters to Random Integer expression were not integers')), ctx)
         case 'format': return { type: 'string', value: expr.children.map(([part]) => resolveExprAs(part, 'string', ctx).value).join('') }
         case 'equal': return { type: 'boolean', value: exprValuesEqual(resolveExpr(expr.params[0], ctx), resolveExpr(expr.params[1], ctx), ctx) }
         case 'notEqual': return { type: 'boolean', value: !exprValuesEqual(resolveExpr(expr.params[0], ctx), resolveExpr(expr.params[1], ctx), ctx) }
@@ -465,7 +485,18 @@ export function prettyPrintExpr(expr: AnyExpr): string {
 const parseSingleExprTuple = defineParser<[AnyExpr]>((c, v, d) => $.tuple(c, v, hintTuple(parseAnyExpr), d))
 const parseDualExprTuple = defineParser<[AnyExpr, AnyExpr]>((c, v, d) => $.tuple(c, v, hintTuple(parseAnyExpr, parseAnyExpr), d))
 const parseTripleExprTuple = defineParser<[AnyExpr, AnyExpr, AnyExpr]>((c, v, d) => $.tuple(c, v, hintTuple(parseAnyExpr, parseAnyExpr, parseAnyExpr), d))
-const parseLocation = defineParser<LocationValue>((c, v, d) => $.either(c, v, (c, v, d) => $.enum<Extract<LocationValue, string>>(c, v, ['auto', 'left', 'center', 'right'], typeof d === 'string' ? d : undefined), $.number, d))
+
+export const parseLocationPosition = defineParser<LocationPositionValue>((c, v, d) => $.either(c, v, (c, v, d) => $.enum<Extract<LocationPositionValue, string>>(c, v, ['auto', 'left', 'center', 'right'], typeof d === 'string' ? d : undefined), $.number, d))
+
+export const parseLocationHeight = defineParser<LocationHeightValue>((c, v, d) => $.either(c, v, (c, v, d) => $.enum<Extract<LocationHeightValue, string>>(c, v, ['auto', 'full', 'knees', 'thighs', 'waist', 'shoulder', 'head'], typeof d === 'string' ? d : undefined), $.number, d))
+
+export const parseLocationScale = defineParser<LocationScaleValue>((c, v, d) => $.either(c, v, (c, v, d) => $.enum<Extract<LocationScaleValue, string>>(c, v, ['auto', 'near', 'middle', 'far'], typeof d === 'string' ? d : undefined), $.number, d))
+
+export const parseLocation = defineParser<LocationValue>((c, v, d) => $.object(c, v, {
+    position: parseLocationPosition,
+    height: parseLocationHeight,
+    scale: parseLocationScale,
+}, d))
 
 export const parseAnyExpr: ParseFunc<AnyExpr> = defineParser<AnyExpr>((c, v, d) => $.typed(c, v, {}, {
     unset: {},
@@ -488,12 +519,16 @@ export const parseAnyExpr: ParseFunc<AnyExpr> = defineParser<AnyExpr>((c, v, d) 
     sound: { args: (c, v, d) => $.tuple(c, v, hintTuple($.id), d) },
     variable: { args: (c, v, d) => $.tuple(c, v, hintTuple($.id), d) },
     macro: { args: (c, v, d) => $.tuple(c, v, hintTuple($.id), d) },
+    characterVariable: { args: (c, v, d) => $.tuple(c, v, hintTuple($.id), d), params: parseSingleExprTuple },
 
     add: { params: parseDualExprTuple },
     subtract: { params: parseDualExprTuple },
     multiply: { params: parseDualExprTuple },
     divide: { params: parseDualExprTuple },
     modulo: { params: parseDualExprTuple },
+
+    randomFloat: { params: parseDualExprTuple },
+    randomInt: { params: parseDualExprTuple },
 
     format: { children: (c, v, d) => $.array(c, v, parseSingleExprTuple, d) },
 

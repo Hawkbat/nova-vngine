@@ -27,6 +27,7 @@ export function prettyPrintIdentifier(s: string) {
             isWordBoundary = true
         } else {
             o += s[i++]!
+            isWordBoundary = false
         }
     }
     return o

@@ -4,9 +4,12 @@ import { hintTuple } from './types'
 
 export function useStateFromProps<T>(value: T) {
     const [state, setState] = useState(value)
-    useEffect(() => {
+    const previousState = useRef(value)
+    if (previousState.current !== value) {
+        previousState.current = value
         setState(value)
-    }, [value])
+        return hintTuple(value, setState)
+    }
     return hintTuple(state, setState)
 }
 
@@ -16,6 +19,17 @@ export function useLatest<T>(value: T) {
         ref.current = value
     }
     return useCallback(() => ref.current, [])
+}
+
+export function useDeltaEffect<T extends [...unknown[]]>(callback: (previousValues: T, newValues: T) => void, dependencies: T) {
+    const getLatestCallback = useLatest(callback)
+    const previousDependencies = useRef<T>(dependencies)
+    useEffect(() => {
+        const disposalFunc = getLatestCallback()(previousDependencies.current, dependencies)
+        previousDependencies.current = dependencies
+        return disposalFunc
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [getLatestCallback, ...dependencies])
 }
 
 export function useDebounce(ms: number, callback: () => void) {

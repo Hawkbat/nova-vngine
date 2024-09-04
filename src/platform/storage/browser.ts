@@ -3,6 +3,7 @@ import { createStore, entries, get, set } from 'idb-keyval'
 import type { StorageDirectoryResult, StorageFileResult, StorageProvider, StorageRootEntry } from '../../types/storage'
 import { StorageError } from '../../types/storage'
 import { getClassFilter, throwIfNull } from '../../utils/guard'
+import { createThumbnail } from '../../utils/media'
 import { getPathFileName, getPathParentPath, getPathSegments, joinPaths, joinPathSegments } from '../../utils/path'
 import { uncheckedRandID } from '../../utils/rand'
 
@@ -135,6 +136,36 @@ export const browserStorageProvider: StorageProvider = {
         return {
             url,
             unload,
+        }
+    },
+    async loadAssetThumbnail(root, asset) {
+        const thumbPath = `${asset.path}_thumb`
+        try {
+            const buffer = await this.loadBinary(root, thumbPath)
+            const blob = new Blob([buffer], { type: 'image/png' })
+            const url = URL.createObjectURL(blob)
+            const unload = () => {
+                URL.revokeObjectURL(url)
+            }
+            return {
+                url,
+                unload,
+            }
+        } catch (e) {
+            console.error(e)
+            const { url, unload } = await this.loadAsset(root, asset)
+            const blob = await createThumbnail(url)
+            unload()
+            const arrayBuffer = await blob.arrayBuffer()
+            await this.storeBinary?.(root, thumbPath, arrayBuffer)
+            const thumbUrl = URL.createObjectURL(blob)
+            const thumbUnload = () => {
+                URL.revokeObjectURL(url)
+            }
+            return {
+                url: thumbUrl,
+                unload: thumbUnload,
+            }
         }
     },
     async storeText(root, path, text) {

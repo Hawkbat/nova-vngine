@@ -16,12 +16,13 @@ import { useDrag, useDrop } from '../../utils/hooks'
 import { immAppend, immInsertAt, immRemoveAt, immReplaceAt, immReplaceBy, immSet, immSetProps } from '../../utils/imm'
 import { useSelector } from '../../utils/store'
 import { assertExhaustive } from '../../utils/types'
+import { DropdownField } from '../common/DropdownField'
 import { DropdownMenuItem, SearchDropdownMenu, useDropdownMenuState } from '../common/DropdownMenu'
 import { EditorIcon } from '../common/EditorIcon'
 import { Field } from '../common/Field'
 import { COMMON_ICONS, STEP_ICONS } from '../common/Icons'
 import { StringField } from '../common/StringField'
-import { SceneRenderer } from '../player/SceneRenderer'
+import { ScenePlayer } from '../player/ScenePlayer'
 import { ExpressionEditor, ExpressionField } from './ExpressionEditor'
 
 import styles from './StepSequenceEditor.module.css'
@@ -40,8 +41,13 @@ const StepEditor = ({ step, setStep, deleteStep, ctx }: { step: AnyStep, setStep
                 <ExpressionField label='Speaker' value={step.speaker} setValue={expr => setStep(s => isStepType(s, 'text') ? immSet(s, 'speaker', expr) : s)} paramTypes={['character']} ctx={ctx} />
                 <ExpressionField label='Text' value={step.text} setValue={expr => setStep(s => isStepType(s, 'text') ? immSet(s, 'text', expr) : s)} paramTypes={['string']} ctx={ctx} />
             </>
+            case 'narrate': return <>
+                <DropdownField<typeof step.mode> label='Mode' value={step.mode} setValue={mode => setStep(s => isStepType(s, 'narrate') ? immSet(s, 'mode', mode) : s)} options={['adv', 'nvl']} format={m => m.toUpperCase()} />
+                <ExpressionField label='Text' value={step.text} setValue={expr => setStep(s => isStepType(s, 'narrate') ? immSet(s, 'text', expr) : s)} paramTypes={['string']} ctx={ctx} />
+            </>
             case 'backdrop': return <>
                 <ExpressionField label='Backdrop' value={step.backdrop} setValue={expr => setStep(s => isStepType(s, 'backdrop') ? immSet(s, 'backdrop', expr) : s)} paramTypes={['backdrop']} ctx={ctx} />
+                <DropdownField<typeof step.mode> label='Mode' value={step.mode} setValue={mode => setStep(s => isStepType(s, 'backdrop') ? immSet(s, 'mode', mode) : s)} options={['replace', 'append', 'prepend']} format={m => prettyPrintIdentifier(m)} />
             </>
             case 'enter': return <>
                 <ExpressionField label='Character' value={step.character} setValue={expr => setStep(s => isStepType(s, 'enter') ? immSet(s, 'character', expr) : s)} paramTypes={['character']} ctx={ctx} />
@@ -89,6 +95,11 @@ const StepEditor = ({ step, setStep, deleteStep, ctx }: { step: AnyStep, setStep
                     <EditorIcon path={COMMON_ICONS.addItem} label='Add Option' onClick={() => setStep(s => isStepType(s, 'branch') ? immSet(s, 'options', immAppend(s.options, { condition: createDefaultExpr('boolean', ctx), steps: [] })) : s)} />
                 </Field>
             </>
+            case 'prompt': return <>
+                <StringField label='Label' value={step.label} setValue={label => setStep(s => isStepType(s, 'prompt') ? immSet(s, 'label', label) : s)} />
+                <ExpressionField label='Variable' value={step.variable} setValue={expr => setStep(s => isStepType(s, 'prompt') ? immSet(s, 'variable', expr) : s)} paramTypes={['variable']} ctx={ctx} />
+                <ExpressionField label='Initial Value' value={step.initialValue} setValue={expr => setStep(s => isStepType(s, 'prompt') ? immSet(s, 'initialValue', expr) : s)} paramTypes={null} ctx={ctx} />
+            </>
             case 'set': return <>
                 <ExpressionField label='Variable' value={step.variable} setValue={expr => setStep(s => isStepType(s, 'set') ? immSet(s, 'variable', expr) : s)} paramTypes={['variable']} ctx={ctx} />
                 <ExpressionField label='Value' value={step.value} setValue={expr => setStep(s => isStepType(s, 'set') ? immSet(s, 'value', expr) : s)} paramTypes={null} ctx={ctx} />
@@ -97,6 +108,9 @@ const StepEditor = ({ step, setStep, deleteStep, ctx }: { step: AnyStep, setStep
                 <ExpressionField label='Macro' value={step.macro} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'macro', expr) : s)} paramTypes={['macro']} ctx={ctx} />
                 {step.inputs.map((input, i) => <ExpressionField key={i} label={`Input ${String(i)}`} value={input} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'inputs', immReplaceAt(s.inputs, i, expr)) : s)} paramTypes={null} ctx={ctx} />)}
                 {step.outputs.map((output, i) => <ExpressionField key={i} label={`Output ${String(i)}`} value={output} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'outputs', immReplaceAt(s.outputs, i, expr)) : s)} paramTypes={['variable']} ctx={ctx} />)}
+            </>
+            case 'goto': return <>
+                <ExpressionField label='Scene' value={step.scene} setValue={expr => setStep(s => isStepType(s, 'goto') ? immSet(s, 'scene', expr) : s)} paramTypes={['scene']} ctx={ctx} />
             </>
             default: assertExhaustive(step, `Unhandled step type ${JSON.stringify(step)}`)
         }
@@ -114,7 +128,7 @@ const StepEditor = ({ step, setStep, deleteStep, ctx }: { step: AnyStep, setStep
     </div>
 }
 
-const StepList = ({ steps, setSteps, selected, setSelected, ctx, rootSteps, setRootSteps }: { steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, selected: StepID, setSelected: (id: StepID) => void, ctx: ExprContext, rootSteps: AnyStep[], setRootSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void }) => {
+const StepList = ({ steps, setSteps, selected, setSelected, ctx, rootSteps, setRootSteps }: { steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, selected: StepID | null, setSelected: (id: StepID | null) => void, ctx: ExprContext, rootSteps: AnyStep[], setRootSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void }) => {
     const [dropdownProps, openDropdown] = useDropdownMenuState()
 
     const onAddStep = (e: React.MouseEvent, type: StepType) => {
@@ -165,7 +179,7 @@ const StepList = ({ steps, setSteps, selected, setSelected, ctx, rootSteps, setR
     </div>
 }
 
-const StepBubble = ({ step, setStep, selected, setSelected, ctx, rootSteps, setRootSteps }: { step: AnyStep, setStep: (setter: (step: AnyStep) => AnyStep) => void, deleteStep: () => void, selected: StepID, setSelected: (id: StepID) => void, ctx: ExprContext, rootSteps: AnyStep[], setRootSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void }) => {
+const StepBubble = ({ step, setStep, selected, setSelected, ctx, rootSteps, setRootSteps }: { step: AnyStep, setStep: (setter: (step: AnyStep) => AnyStep) => void, deleteStep: () => void, selected: StepID | null, setSelected: (id: StepID | null) => void, ctx: ExprContext, rootSteps: AnyStep[], setRootSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void }) => {
     const [dragProps, dragging] = useDrag(step)
 
     const onSelect = (e: React.MouseEvent) => {
@@ -209,7 +223,8 @@ const StepBubble = ({ step, setStep, selected, setSelected, ctx, rootSteps, setR
     }
 }
 
-function getDeepStep(stepID: StepID, steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, previousSteps: AnyStep[]): [AnyStep, (setter: (step: AnyStep) => AnyStep) => void, () => void, AnyStep[]] | [null, null, null, null] {
+function getDeepStep(stepID: StepID | null, steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, previousSteps: AnyStep[]): [AnyStep, (setter: (step: AnyStep) => AnyStep) => void, () => void, AnyStep[]] | [null, null, null, null] {
+    if (!stepID) return [null, null, null, null]
     const index = steps.findIndex(s => s.id === stepID)
     if (index >= 0) {
         return [
@@ -231,21 +246,20 @@ function getDeepStep(stepID: StepID, steps: AnyStep[], setSteps: (setter: (steps
 }
 
 export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void }) => {
-    const selectedStepID = useSelector(viewStateStore, s => s.scopes.step ?? '' as StepID)
-    const setSelectedStepID = useCallback((value: StepID) => {
-        viewStateStore.setValue(s => immSet(s, 'scopes', immSet(s.scopes, 'step', value)))
+    const getEditorState = useSelector(viewStateStore, s => s.editor?.type === 'sceneSteps' ? s.editor : null)
+    const getSelectedStepID = useCallback(() => getEditorState()?.stepID ?? null, [getEditorState])
+    const setSelectedStepID = useCallback((value: StepID | null) => {
+        viewStateStore.setValue(s => immSet(s, 'editor', s.editor?.type === 'sceneSteps' ? immSet(s.editor, 'stepID', value) : s.editor))
     }, [])
 
     const ctx = getProjectExprContext()
 
-    const [selectedStep, setSelectedStep, deleteSelectedStep, selectedPreviousSteps] = useMemo(() => getDeepStep(selectedStepID(), steps, setSteps, []), [selectedStepID, steps, setSteps])
+    const [selectedStep, setSelectedStep, deleteSelectedStep, selectedPreviousSteps] = useMemo(() => getDeepStep(getSelectedStepID(), steps, setSteps, []), [getSelectedStepID, steps, setSteps])
 
     const sceneState: ScenePlayerState = useMemo(() => {
         let state = getInitialRenderSceneState()
         state = immSet(state, 'settings', immSetProps(state.settings, {
             musicVolume: 0,
-            soundVolume: 1,
-            uiVolume: 1,
         }))
         if (!selectedStep) return state
 
@@ -268,9 +282,9 @@ export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setS
     }, [ctx, selectedPreviousSteps, selectedStep])
 
     return <div className={styles.sequenceEditor}>
-        <SceneRenderer state={sceneState} />
+        <ScenePlayer state={sceneState} onClose={() => viewStateStore.setValue(s => immSet(s, 'editor', null))} />
         <div className={styles.timeline}>
-            <StepList steps={steps} setSteps={setSteps} selected={selectedStepID()} setSelected={setSelectedStepID} ctx={ctx} rootSteps={steps} setRootSteps={setSteps} />
+            <StepList steps={steps} setSteps={setSteps} selected={getSelectedStepID()} setSelected={setSelectedStepID} ctx={ctx} rootSteps={steps} setRootSteps={setSteps} />
         </div>
         {selectedStep ? <StepEditor key={selectedStep.id} step={selectedStep} setStep={setSelectedStep} deleteStep={deleteSelectedStep} ctx={ctx} /> : null}
     </div>

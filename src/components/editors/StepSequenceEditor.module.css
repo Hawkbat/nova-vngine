@@ -3,6 +3,7 @@
     display: flex;
     flex-direction: column;
     flex: 1 0 auto;
+    width: 100%;
 }
 
 .timeline {
@@ -10,12 +11,10 @@
     overflow: scroll;
     flex: 0 1 auto;
     align-items: center;
-    padding: 0.25em;
 }
 
 .timeline .timeline {
     overflow: visible;
-    padding: 0;
 }
 
 .stepEditor {
@@ -23,6 +22,7 @@
     flex-direction: row;
     flex-wrap: wrap;
     gap: 0.5em;
+    overflow: auto;
 }
 
 .optionEditor {

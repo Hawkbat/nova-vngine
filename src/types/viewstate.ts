@@ -7,6 +7,8 @@ import { parseStorageRootEntry, type StorageRootEntry } from './storage'
 
 export type ProjectEditorTab = 'home' | 'manual' | 'settings' | 'project' | ProjectEntityKeyOf<EntityType>
 
+export type SubEditorViewState = { type: 'player', storyID: StoryID, chapterID: ChapterID, sceneID: SceneID } | { type: 'sceneSteps', sceneID: SceneID, stepID: StepID | null }
+
 export interface ProjectMetaData {
     id: string
     name: string
@@ -18,13 +20,26 @@ export interface ViewState {
     currentTab: ProjectEditorTab
     loadedProject: ProjectMetaData | null
     recentProjects: ProjectMetaData[]
-    scopes: { [K in EntityType]: EntityOfType<K>['id'] | null } & { step: StepID | null }
+    scopes: { [K in EntityType]: EntityOfType<K>['id'] | null }
+    editor: SubEditorViewState | null
 }
 
 const parseProjectMetaData: ParseFunc<ProjectMetaData> = defineParser<ProjectMetaData>((c, v, d) => $.object(c, v, {
     id: $.string,
     name: $.string,
     root: parseStorageRootEntry,
+}, d))
+
+export const parseSubEditorViewState: ParseFunc<SubEditorViewState> = defineParser<SubEditorViewState>((c, v, d) => $.typed(c, v, {}, {
+    player: {
+        storyID: $.id,
+        chapterID: $.id,
+        sceneID: $.id,
+    },
+    sceneSteps: {
+        sceneID: $.id,
+        stepID: (c, v, d) => $.either<StepID, null>(c, v, $.id, $.null, d),
+    },
 }, d))
 
 export const parseViewState: ParseFunc<ViewState> = defineParser<ViewState>((c, v, d) => $.object(c, v, {
@@ -43,6 +58,6 @@ export const parseViewState: ParseFunc<ViewState> = defineParser<ViewState>((c, 
         sound: (c, v, d) => $.either<SoundID, null>(c, v, $.id, $.null, d),
         variable: (c, v, d) => $.either<VariableID, null>(c, v, $.id, $.null, d),
         macro: (c, v, d) => $.either<MacroID, null>(c, v, $.id, $.null, d),
-        step: (c, v, d) => $.either<StepID, null>(c, v, $.id, $.null, d),
     }, d),
+    editor: (c, v, d) => $.either(c, v, parseSubEditorViewState, $.null, d),
 }, d))

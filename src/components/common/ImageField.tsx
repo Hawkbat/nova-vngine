@@ -18,7 +18,8 @@ import styles from './ImageField.module.css'
 
 export const ImageField = ({ className, label, value, setValue, validate, targetPath }: FieldProps<AssetDefinition | null> & { targetPath: string }) => {
     const { getRoot, storage } = useProjectStorage()
-    const getImgSrc = useAsset(value)
+    const getImgSrc = useAsset(value, false)
+    const getThumbImgSrc = useAsset(value, true)
     const [previewOpen, setPreviewOpen] = useState(false)
 
     const errorCheck = useCallback(() => {
@@ -52,9 +53,9 @@ export const ImageField = ({ className, label, value, setValue, validate, target
 
     return <Field label={label} error={errorCheck()}>
         {value ? <>
-            {getImgSrc() ? <>
-                <img className={classes(styles.preview, className)} src={getImgSrc() ?? undefined} onClick={onPreview} />
-                <ImagePreview open={previewOpen} src={throwIfNull(getImgSrc())} onClose={() => setPreviewOpen(false)} />
+            {getThumbImgSrc() ? <>
+                <img className={classes(styles.preview, className)} src={getThumbImgSrc() ?? undefined} onClick={onPreview} />
+                <ImagePreview open={previewOpen} src={throwIfNull(getImgSrc() ?? getThumbImgSrc())} onClose={() => setPreviewOpen(false)} />
             </> : <span>Loading...</span>}
             <EditorIcon path={COMMON_ICONS.deleteItem} label='Delete Image' onClick={onDelete} />
         </> : <>

@@ -1,4 +1,4 @@
-import { mdiAccount, mdiAccountMinus, mdiAccountPlus, mdiAlert, mdiApplicationVariable, mdiArchive, mdiArchiveEdit, mdiArchivePlus, mdiArrowExpandHorizontal, mdiBookMultipleOutline, mdiBookOpenVariantOutline, mdiCheckboxBlankOutline, mdiCheckboxMarked, mdiCheckCircle, mdiChevronDown, mdiChevronRight, mdiClose, mdiCog, mdiCreation, mdiDotsHorizontal, mdiEmoticon, mdiEqual, mdiFlag, mdiFormatHorizontalAlignCenter, mdiFormatHorizontalAlignLeft, mdiFormatHorizontalAlignRight, mdiFormatListCheckbox, mdiFormatListChecks, mdiFormatListGroup, mdiFormatListText, mdiFormatText, mdiGreaterThan, mdiGreaterThanOrEqual, mdiHome, mdiImageArea, mdiLessThan, mdiLessThanOrEqual, mdiMapSearch, mdiMinus, mdiMusic, mdiNotEqualVariant, mdiPercent, mdiPlus, mdiPlusBox, mdiPound, mdiPoundBox, mdiScriptText, mdiScriptTextPlay, mdiSignatureText, mdiSlashForward, mdiSourceBranch, mdiSquareOutline, mdiText, mdiTextBoxOutline, mdiTrashCan, mdiUpload, mdiVariable, mdiVolumeHigh } from '@mdi/js'
+import { mdiAccount, mdiAccountMinus, mdiAccountPlus, mdiAccountVoice, mdiAlert, mdiApplicationVariable, mdiArchive, mdiArchiveEdit, mdiArchivePlus, mdiArrowExpandHorizontal, mdiArrowRightBox, mdiBookMultipleOutline, mdiBookOpenVariantOutline, mdiCheckboxBlankOutline, mdiCheckboxMarked, mdiCheckCircle, mdiChevronDown, mdiChevronRight, mdiClose, mdiCloseCircleOutline, mdiCog, mdiCreation, mdiDice3, mdiDiceMultiple, mdiDotsCircle, mdiDotsHorizontal, mdiEmoticon, mdiEqual, mdiFlag, mdiFormatHorizontalAlignCenter, mdiFormatHorizontalAlignLeft, mdiFormatHorizontalAlignRight, mdiFormatListCheckbox, mdiFormatListChecks, mdiFormatListGroup, mdiFormatListText, mdiFormatText, mdiFormTextbox, mdiGreaterThan, mdiGreaterThanOrEqual, mdiHome, mdiImageArea, mdiLessThan, mdiLessThanOrEqual, mdiMapSearch, mdiMenuDown, mdiMinus, mdiMusic, mdiNotEqualVariant, mdiPercent, mdiPlus, mdiPlusBox, mdiPound, mdiPoundBox, mdiScriptText, mdiScriptTextPlay, mdiSignatureText, mdiSlashForward, mdiSourceBranch, mdiSquareOutline, mdiText, mdiTextBoxOutline, mdiTrashCan, mdiUpload, mdiVariable, mdiVolumeHigh } from '@mdi/js'
 
 import type { ExprPrimitiveValueType, ExprType } from '../../types/expressions'
 import type { StepType } from '../../types/steps'
@@ -10,6 +10,7 @@ export const COMMON_ICONS = {
     newProject: mdiArchivePlus,
     openProject: mdiArchiveEdit,
     cancel: mdiClose,
+    close: mdiCloseCircleOutline,
     checkboxChecked: mdiCheckboxMarked,
     checkboxUnchecked: mdiCheckboxBlankOutline,
     addItem: mdiPlusBox,
@@ -22,7 +23,9 @@ export const COMMON_ICONS = {
     alignAuto: mdiCreation,
     alignCustom: mdiPercent,
     upload: mdiUpload,
+    continue: mdiMenuDown,
     more: mdiDotsHorizontal,
+    loading: mdiDotsCircle,
 } satisfies Record<string, string>
 
 export const EXPR_ICONS: Record<ExprType, string> = {
@@ -41,12 +44,16 @@ export const EXPR_ICONS: Record<ExprType, string> = {
     backdrop: mdiImageArea,
     song: mdiMusic,
     sound: mdiVolumeHigh,
+    macro: mdiScriptText,
+    characterVariable: mdiApplicationVariable,
     location: mdiArrowExpandHorizontal,
     add: mdiPlus,
     subtract: mdiMinus,
     multiply: mdiClose,
     divide: mdiSlashForward,
     modulo: mdiPercent,
+    randomFloat: mdiDiceMultiple,
+    randomInt: mdiDice3,
     format: mdiSignatureText,
     equal: mdiEqual,
     notEqual: mdiNotEqualVariant,
@@ -56,7 +63,6 @@ export const EXPR_ICONS: Record<ExprType, string> = {
     greaterThanOrEqual: mdiGreaterThanOrEqual,
     pick: mdiFormatListChecks,
     switch: mdiFormatListCheckbox,
-    macro: mdiScriptText,
 }
 
 export const EXPR_VALUE_ICONS: Record<ExprPrimitiveValueType, string> = {
@@ -95,7 +101,8 @@ export const PROJECT_TAB_ICONS: Record<ProjectEditorTab, string> = {
 }
 
 export const STEP_ICONS: Record<StepType, string> = {
-    text: mdiText,
+    text: mdiAccountVoice,
+    narrate: mdiText,
     backdrop: EXPR_ICONS['backdrop'],
     enter: mdiAccountPlus,
     exit: mdiAccountMinus,
@@ -105,6 +112,8 @@ export const STEP_ICONS: Record<StepType, string> = {
     sound: EXPR_ICONS['sound'],
     decision: mdiFormatListText,
     branch: mdiSourceBranch,
+    prompt: mdiFormTextbox,
     set: mdiApplicationVariable,
     macro: mdiScriptTextPlay,
+    goto: mdiArrowRightBox,
 }

@@ -17,6 +17,10 @@ export function isClass<T>(value: unknown, constructor: { new (...args: unknown[
 
 export const getClassFilter = <T>(constructor: { new (...args: unknown[]): T }) => (value: unknown) => isClass(value, constructor)
 
+export const existsFilter = <T>(value: T | null | undefined): value is NonNullable<T> => {
+    return value !== null && value !== undefined
+}
+
 export interface ParseContext {
     path: string
     warnings: string[]
@@ -50,7 +54,7 @@ function parseEnum<T extends string>(ctx: ParseContext, value: unknown, validVal
         if (validValues.includes(value as T)) {
             return value as T
         } else {
-            ctx.errors.push(`${ctx.path}.type is not a valid string enum value; it must be one of the following: ${validValues.map(v => JSON.stringify(v)).join(', ')}`)
+            ctx.errors.push(`${ctx.path} is not a valid string enum value; it must be one of the following: ${validValues.map(v => JSON.stringify(v)).join(', ')}`)
             return arrayHead(validValues) ?? '' as T
         }
     } else if (defaultValue !== undefined) {

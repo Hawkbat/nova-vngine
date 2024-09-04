@@ -1,5 +1,7 @@
 import { useCallback, useRef } from 'react'
 
+import { loadImage } from './async'
+import { throwIfNull } from './guard'
 import { useAnimationLoop, useLatest } from './hooks'
 import { moveTowards } from './math'
 import { getPathExtension } from './path'
@@ -69,4 +71,27 @@ export function useSmoothAudio(props: { playing?: boolean, looping?: boolean, vo
         }
     }, [latestProps]))
     return audioRef
+}
+
+export async function createThumbnail(src: string): Promise<Blob> {
+    const img = await loadImage(src)
+    const canvas = new OffscreenCanvas(100, 100)
+    const ctx = throwIfNull(canvas.getContext('2d'))
+    if (img.width > img.height) {
+        const w = img.width * (canvas.height / img.height)
+        const h = canvas.height
+        const x = -(w - canvas.width) / 2
+        const y = 0
+        ctx.drawImage(img, x, y, w, h)
+    } else {
+        const w = canvas.width
+        const h = img.height * (canvas.width / img.width)
+        const x = 0
+        //const y = -(h - canvas.height) / 2
+        const y = 0 // Show top of portrait-style images, not center
+        ctx.drawImage(img, x, y, w, h)
+    }
+    const blob = await canvas.convertToBlob({ type: 'image/png' })
+    img.src = ''
+    return blob
 }

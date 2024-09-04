@@ -1,6 +1,7 @@
 import type { StorageDirectoryResult, StorageFileResult, StorageProvider } from '../../types/storage'
 import { parseStorageDirectoryListing, StorageError } from '../../types/storage'
 import { tryParseJson } from '../../utils/guard'
+import { createThumbnail } from '../../utils/media'
 import { getAbsolutePath, getRelativePath, joinPaths } from '../../utils/path'
 import { platform } from '../platform'
 
@@ -30,6 +31,27 @@ export const fetchStorageProvider: StorageProvider = {
         if (!res.ok) throw new StorageError('not-found', 'File coult not be fetched at the provided URL.')
         return {
             url: path,
+            unload() { },
+        }
+    },
+    async loadAssetThumbnail(root, asset) {
+        const path = root ? getAbsolutePath(asset.path, root.key) : asset.path
+        const thumbPath = `${path}_thumb`
+        const res = await fetch(thumbPath)
+        if (!res.ok) {
+            const { url } = await this.loadAsset(root, asset)
+            const blob = await createThumbnail(url)
+            const thumbUrl = URL.createObjectURL(blob)
+            const thumbUnload = () => {
+                URL.revokeObjectURL(url)
+            }
+            return {
+                url: thumbUrl,
+                unload: thumbUnload,
+            }
+        }
+        return {
+            url: thumbPath,
             unload() { },
         }
     },

@@ -41,6 +41,7 @@ export interface StorageProvider {
     loadText(root: StorageRootEntry | null, path: string): Promise<string>
     loadBinary(root: StorageRootEntry | null, path: string): Promise<ArrayBuffer>
     loadAsset(root: StorageRootEntry | null, asset: AssetDefinition): Promise<{ url: string, unload: () => void }>
+    loadAssetThumbnail(root: StorageRootEntry | null, asset: AssetDefinition): Promise<{ url: string, unload: () => void }>
     listDirectory(root: StorageRootEntry | null, path: string): Promise<{ directories: StorageDirectoryResult[], files: StorageFileResult[] }>
     pickFiles?(root: StorageRootEntry | null, options: { title?: string, fileType: string, extensions: string[], multi?: boolean, startIn?: string }): Promise<StorageFileResult[] | null>
     pickDirectory?(root: StorageRootEntry | null, options: { title?: string, startIn?: string }): Promise<StorageDirectoryResult | null>

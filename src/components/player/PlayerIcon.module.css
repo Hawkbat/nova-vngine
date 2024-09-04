@@ -1,0 +1,73 @@
+
+.icon {
+    display: inline-flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    opacity: 0.8;
+    border-radius: 0.25em;
+    pointer-events: none;
+    color: var(--text-color);
+    filter: drop-shadow(0.1em 0.1em 0.2em #0008);
+    vertical-align: middle;
+}
+
+.iconImage {
+    width: 1em;
+    height: 1em;
+    box-sizing: content-box;
+    border-radius: 0.25em;
+    border: 1px solid var(--text-color);
+}
+
+.icon.inactive {
+    opacity: 0.8;
+}
+
+.icon.active {
+    opacity: 1;
+}
+
+.icon.active > .iconImage {
+    border: 1px solid var(--primary-color);
+}
+
+.icon.active {
+    color: var(--primary-color);
+}
+
+.icon.clickable:hover {
+    opacity: 1;
+}
+
+.icon.clickable {
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+.icon.spinning {
+    animation: spin infinite linear 2s;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.icon.bobbing {
+    animation: bob infinite ease-in-out alternate 2s;
+}
+
+@keyframes bob {
+    from {
+        transform: translateY(0.25em);
+    }
+    to {
+        transform: translateY(-0.125em);
+    }
+}
+

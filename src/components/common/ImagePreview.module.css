@@ -8,6 +8,7 @@
     background: var(--backsplash-color);
     display: flex;
     overflow: auto;
+    backdrop-filter: blur(20px);
 }
 
 .preview {

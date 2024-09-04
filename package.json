@@ -11,6 +11,7 @@
     "lint": "npx eslint .",
     "lint:fix": "npm run lint -- --fix",
     "neu:start": "neu run -- --window-enable-inspector",
+    "neu:start-browser": "neu run -- --mode=browser",
     "neu:build": "neu build --release"
   },
   "author": "Nova",
