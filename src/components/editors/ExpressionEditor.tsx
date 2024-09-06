@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Fragment } from 'react'
 
-import { getEntityByID, getEntityDisplayName } from '../../store/operations'
+import { getEntityByID, getEntityDisplayName } from '../../operations/project'
 import { projectStore } from '../../store/project'
 import type { AnyExpr, ExprContext, ExprDefinition, ExprPrimitiveRawValueOfType, ExprPrimitiveValueType, ExprType, ExprValueType } from '../../types/expressions'
 import { createDefaultExpr, createDefaultExprChild, EXPR_DEFINITION_MAP, EXPR_DEFINITIONS, exprValueTypeAssignableTo, guessExprReturnType, validateExpr } from '../../types/expressions'
@@ -86,7 +86,7 @@ const EntityArgEditor = <T extends EntityType>({ type, value, setValue, label }:
         <EditorButton className={styles.argButton} style='text' onClick={openDropdown}>
             {entity ? getEntityDisplayName(type, entity, true) : 'None'}
         </EditorButton>
-        <SearchDropdownMenu<EntityOfType<T>> {...dropdownProps} items={getItems()} filter={(e, search) => e.name.toLowerCase().includes(search.toLowerCase())}>{(entity: EntityOfType<T>) => <DropdownMenuItem key={entity.id} onClick={() => (setValue(entity.id as ExprPrimitiveRawValueOfType<T>), dropdownProps.onClose())}>{getEntityDisplayName(type, entity, true)}</DropdownMenuItem>}</SearchDropdownMenu>
+        <SearchDropdownMenu<EntityOfType<T>> {...dropdownProps} items={getItems().sort((a, b) => a.name.localeCompare(b.name))} filter={(e, search) => e.name.toLowerCase().includes(search.toLowerCase())}>{(entity: EntityOfType<T>) => <DropdownMenuItem key={entity.id} onClick={() => (setValue(entity.id as ExprPrimitiveRawValueOfType<T>), dropdownProps.onClose())}>{getEntityDisplayName(type, entity, true)}</DropdownMenuItem>}</SearchDropdownMenu>
     </>
 }
 

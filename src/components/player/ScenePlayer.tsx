@@ -1,31 +1,32 @@
 import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 
+import clickSrc from '../../sounds/click.mp3'
 import { useAsset } from '../../store/assets'
 import { projectStore } from '../../store/project'
 import type { LocationHeightValue, LocationPositionValue, LocationScaleValue } from '../../types/expressions'
 import type { BackdropPlayerState, CharacterPlayerState, DialoguePlayerState, OptionPlayerState, PromptPlayerState, ScenePlayerState, SongPlayerState, SoundPlayerState } from '../../types/player'
 import { classes } from '../../utils/display'
 import { throwIfNull } from '../../utils/guard'
-import { useAnimationLoop, useLatest } from '../../utils/hooks'
+import { createEventContext, useAnimationLoop, useDOMEventListener, useLatest, useLatestIfValid, useStateFromProps } from '../../utils/hooks'
 import { useSmoothAudio } from '../../utils/media'
 import { useSelector } from '../../utils/store'
 import { COMMON_ICONS } from '../common/Icons'
-import { TransitionGroup, useTransitionAnimationRef } from '../common/TransitionGroup'
+import { TransitionGroup, useTransitionAnimationRef, useTransitionState } from '../common/TransitionGroup'
 import { PlayerIcon } from './PlayerIcon'
 
 import styles from './ScenePlayer.module.css'
 
 const POSITION_VALUES = {
     auto: 0.5,
-    left: 0.125,
+    left: 0.15,
     center: 0.5,
-    right: 0.875,
+    right: 0.85,
 } satisfies Record<Extract<LocationPositionValue, string>, number>
 
 const HEIGHT_VALUES = {
     auto: 0.6,
     full: 1.0,
-    knees: 0.7,
+    knees: 0.8,
     thighs: 0.6,
     waist: 0.4,
     shoulder: 0.3,
@@ -39,85 +40,37 @@ const SCALE_VALUES = {
     far: 0.5,
 } satisfies Record<Extract<LocationScaleValue, string>, number>
 
-const Character = ({ characterID, portraitID, location }: CharacterPlayerState) => {
-    const getCharacter = useSelector(projectStore, s => s.characters.find(c => c.id === characterID) ?? null)
-    const getPortrait = useSelector(projectStore, s => {
-        let portrait = s.portraits.find(p => p.id === portraitID)
-        if (portrait && portrait.characterID !== getCharacter()?.id) {
-            portrait = s.portraits.find(p => p.characterID === getCharacter()?.id && p.name === portrait?.name)
-        }
-        return portrait ?? null
-    })
-    const getImgUrl = useAsset(getPortrait()?.image ?? null, false)
-
-    const position = typeof location.position === 'string' ? POSITION_VALUES[location.position] : location.position
-    const height = typeof location.height === 'string' ? HEIGHT_VALUES[location.height] : location.height
-    const scale = typeof location.scale === 'string' ? SCALE_VALUES[location.scale] : location.scale
-
-    const portraitHeightValue = getPortrait()?.height ?? 'auto'
-    const portraitHeight = typeof portraitHeightValue === 'string' ? HEIGHT_VALUES[portraitHeightValue] : portraitHeightValue
-
-    const h = (1 / portraitHeight) * height
-    const x = position
-    const y = (1 - height) * 0.2
-    const s = scale * (1 / h)
-
-    return <div className={styles.characterPivot} style={{ left: `${String(x * 100)}%` }}>
-        {getImgUrl() ? <img src={getImgUrl() ?? undefined} className={styles.character} style={{ top: `${String(y * 100)}%`, height: `${String(s * 100)}%` }} /> : null}
-    </div>
+const playClick = () => {
+    const audio = new Audio(clickSrc)
+    void audio.play()
 }
 
-const Backdrop = ({ backdropID }: BackdropPlayerState) => {
-    const getBackdrop = useSelector(projectStore, s => s.backdrops.find(b => b.id === backdropID) ?? null)
-    const getImgUrl = useAsset(getBackdrop()?.image ?? null, false)
-    const imgUrl = getImgUrl()
-
-    const ref = useTransitionAnimationRef(!!imgUrl, {
-        in: [{ flexGrow: 0 }, { flexGrow: 1 }],
-        inT: {},
-        out: [{ flexGrow: 1 }, { flexGrow: 0 }],
-        outT: {},
-    })
-    return <div ref={ref} className={styles.backdropPivot}>{imgUrl ? <div className={styles.backdropContainer}><img src={imgUrl} className={styles.backdrop} /></div> : null}</div>
+const getDedupedKey = <T,>(arr: T[], selector: (item: T) => string, item: T) => {
+    const search = selector(item)
+    const index = arr.findIndex(o => o === item)
+    const count = index <= 0 ? 0 : arr.slice(0, index).reduce((p, c) => selector(c) === search ? p + 1 : p, 0)
+    const key = `${search}#${String(count)}`
+    return key
 }
 
-const Backdrops = ({ backdrops }: { backdrops: BackdropPlayerState[] }) => {
-    return <div className={styles.backdrops}>
-        <TransitionGroup values={backdrops} getKey={b => b.backdropID}>
-            {props => <Backdrop key={props.backdropID} backdropID={props.backdropID} />}
-        </TransitionGroup>
-    </div>
-}
-
-const Song = ({ songID, volume }: SongPlayerState & { volume: number }) => {
-    const getSong = useSelector(projectStore, s => s.songs.find(s => s.id === songID) ?? null)
-    const getAudioUrl = useAsset(getSong()?.audio ?? null, false)
-    const audioRef = useSmoothAudio({ playing: true, looping: true, volume })
-    return getAudioUrl() ? <audio src={getAudioUrl() ?? undefined} ref={audioRef} /> : null
-}
-
-const Sound = ({ soundID, volume }: SoundPlayerState & { volume: number }) => {
-    const getSound = useSelector(projectStore, s => s.sounds.find(s => s.id === soundID) ?? null)
-    const getAudioUrl = useAsset(getSound()?.audio ?? null, false)
-    const audioRef = useSmoothAudio({ playing: true, volume })
-    return getAudioUrl() ? <audio src={getAudioUrl() ?? undefined} ref={audioRef} /> : null
-}
-
-const Letter = ({ children }: { children: string }) => {
-    const [animDone, setAnimDone] = useState(false)
-    const ref = useRef<HTMLSpanElement>(null)
-    useLayoutEffect(() => {
-        throwIfNull(ref.current).animate([{ offset: 0, transform: 'scale(0)', opacity: 0 }, { offset: 0.8, transform: 'scale(1.2)', opacity: 1 }, { offset: 1.0, transform: 'scale(1)', opacity: 1 }], { duration: 1000 / 30 * 4 }).addEventListener('finish', () => setAnimDone(true))
-    }, [])
-    return animDone ? <>{children}</> : <i className={classes('l')} ref={ref}>{children}</i>
-}
-
-const textToContent = (text: string, start: number = 0, end: number = text.length) => {
+const textToContent = (text: string, animate: boolean, start: number = 0, end: number = text.length) => {
     const content: React.ReactNode[] = []
+    let italic = false
+    let bold = false
     let i = 0
-    const commitText = () => content.push(<span key={start}>{[...text.substring(start, i)].map((c, j) => <Letter key={`${String(start)}_${String(j)}`}>{c}</Letter>)}</span>)
+    const commitText = () => content.push(<span key={start} className={classes({ b: bold, i: italic })}>{[...text.substring(start, i)].map((c, j) => animate ? <Letter key={`${String(start)}_${String(j)}`}>{c}</Letter> : c)}</span>)
     while (i < Math.min(text.length, end)) {
-        if (text[i] === '\\') {
+        if (text[i] === '/' && text[i + 1] === '/') {
+            if (i > start) commitText()
+            italic = !italic
+            i += 2
+            start = i
+        } if (text[i] === '\'' && text[i + 1] === '\'') {
+            if (i > start) commitText()
+            bold = !bold
+            i += 2
+            start = i
+        } else if (text[i] === '\\') {
             if (i > start) commitText()
             i++
             if (i < text.length) {
@@ -153,10 +106,134 @@ const getTextLengthAtTime = (text: string, time: number) => {
     return i
 }
 
-const DialogueText = ({ text, textSpeed }: { text: string, textSpeed: number }) => {
+interface PortraitProps {
+    src: string
+    y: number
+    s: number
+}
+
+const PortraitImage = ({ src, y, s }: PortraitProps) => {
+    const ref = useTransitionAnimationRef(true, {
+        in: [{ opacity: 0 }, { opacity: 1 }],
+        inT: {},
+        out: [{ opacity: 1 }, { opacity: 0 }],
+        outT: {},
+    })
+
+    return <img ref={ref} src={src} className={styles.character} style={{ top: `${String(y * 100)}%`, height: `${String(s * 100)}%` }} />
+}
+
+const Character = ({ characterID, portraitID, location }: CharacterPlayerState) => {
+    const getCharacter = useSelector(projectStore, s => s.characters.find(c => c.id === characterID) ?? null)
+    const getPortrait = useSelector(projectStore, s => {
+        let portrait = s.portraits.find(p => p.id === portraitID)
+        if (portrait && portrait.characterID !== getCharacter()?.id) {
+            portrait = s.portraits.find(p => p.characterID === getCharacter()?.id && p.name === portrait?.name)
+        }
+        return portrait ?? null
+    })
+    const getImgUrl = useAsset(getPortrait()?.image ?? null, false)
+    const currentImgUrl = getImgUrl()
+    const lastGoodImgUrl = useLatestIfValid(currentImgUrl)
+    const imgUrl = lastGoodImgUrl()
+
+    const ref = useTransitionAnimationRef(!!imgUrl, {
+        in: [{ opacity: 0 }, { opacity: 1 }],
+        inT: {},
+        out: [{ opacity: 1 }, { opacity: 0 }],
+        outT: {},
+    })
+
+    const position = typeof location.position === 'string' ? POSITION_VALUES[location.position] : location.position
+    const height = typeof location.height === 'string' ? HEIGHT_VALUES[location.height] : location.height
+    const scale = typeof location.scale === 'string' ? SCALE_VALUES[location.scale] : location.scale
+
+    const portraitHeightValue = getPortrait()?.height ?? 'auto'
+    const portraitHeight = typeof portraitHeightValue === 'string' ? HEIGHT_VALUES[portraitHeightValue] : portraitHeightValue
+
+    const h = (1 / portraitHeight) * height
+    const x = position
+    const y = (1 - height) * 0.2
+    const s = scale * (1 / h)
+
+    return <div ref={ref} className={styles.characterPivot} style={{ left: `${String(x * 100)}%` }}>
+        <TransitionGroup<PortraitProps> values={imgUrl ? [{ src: imgUrl, s, y }] : []} getKey={v => v.src}>
+            {props => <PortraitImage key={props.src} {...props} />}
+        </TransitionGroup>
+    </div>
+}
+
+const Characters = ({ characters }: { characters: CharacterPlayerState[] }) => {
+    return <div className={styles.characters}>
+        <TransitionGroup values={characters} getKey={c => getDedupedKey(characters, c => c.characterID, c)}>
+            {props => <Character key={props.characterID} {...props} />}
+        </TransitionGroup>
+    </div>
+}
+
+const Backdrop = ({ backdropID, dir }: BackdropPlayerState) => {
+    const getBackdrop = useSelector(projectStore, s => s.backdrops.find(b => b.id === backdropID) ?? null)
+    const getImgUrl = useAsset(getBackdrop()?.image ?? null, false)
+    const imgUrl = getImgUrl()
+
+    const first = dir === 0
+
+    const ref = useTransitionAnimationRef(!!imgUrl, {
+        in: first ? [{ opacity: 0, flexGrow: 0 }, { opacity: 1, flexGrow: 1 }] : [{ flexGrow: 0 }, { flexGrow: 1 }],
+        inT: { easing: 'ease-in-out', duration: 500 },
+        out: first ? [{ opacity: 1, flexGrow: 1 }, { opacity: 0, flexGrow: 0 }] : [{ flexGrow: 1 }, { flexGrow: 0 }],
+        outT: { easing: 'ease-in-out', duration: 500 },
+    })
+    return <div ref={ref} className={classes(styles.backdropPivot, { [styles.before ?? '']: dir === -1, [styles.after ?? '']: dir === 1 })}>{imgUrl ? <div className={styles.backdropContainer}><img src={imgUrl} className={styles.backdrop} /></div> : null}</div>
+}
+
+const Backdrops = ({ backdrops }: { backdrops: BackdropPlayerState[] }) => {
+    return <div className={styles.backdrops}>
+        <TransitionGroup values={backdrops} getKey={b => `${b.backdropID}_${String(b.dir)}`} sort={(a, b) => a.dir - b.dir}>
+            {props => <Backdrop key={props.backdropID} {...props} />}
+        </TransitionGroup>
+    </div>
+}
+
+const Song = ({ songID, volume }: SongPlayerState & { volume: number }) => {
+    const getSong = useSelector(projectStore, s => s.songs.find(s => s.id === songID) ?? null)
+    const getAudioUrl = useAsset(getSong()?.audio ?? null, false)
+    const audioRef = useSmoothAudio({ playing: true, looping: true, volume })
+    return getAudioUrl() ? <audio src={getAudioUrl() ?? undefined} ref={audioRef} /> : null
+}
+
+const Sound = ({ soundID, volume }: SoundPlayerState & { volume: number }) => {
+    const transition = useTransitionState()
+    if (transition.state === 'in') transition.end(transition.key)
+    const getSound = useSelector(projectStore, s => s.sounds.find(s => s.id === soundID) ?? null)
+    const getAudioUrl = useAsset(getSound()?.audio ?? null, false)
+    const audioRef = useSmoothAudio({ playing: true, volume })
+    const onEnded = useCallback(() => {
+        transition.end(transition.key)
+    }, [transition])
+    return getAudioUrl() ? <audio src={getAudioUrl() ?? undefined} ref={audioRef} onEnded={onEnded} /> : null
+}
+
+const Sounds = ({ sounds, volume }: { sounds: SoundPlayerState[], volume: number }) => {
+    return <TransitionGroup values={sounds} getKey={s => s.soundID}>
+        {props => <Sound {...props} volume={volume} />}
+    </TransitionGroup>
+}
+
+const Letter = ({ children }: { children: string }) => {
+    const [animDone, setAnimDone] = useState(false)
+    const ref = useRef<HTMLSpanElement>(null)
+    useLayoutEffect(() => {
+        throwIfNull(ref.current).animate([{ offset: 0, transform: 'scale(0)', opacity: 0 }, { offset: 0.8, transform: 'scale(1.2)', opacity: 1 }, { offset: 1.0, transform: 'scale(1)', opacity: 1 }], { duration: 1000 / 30 * 4 }).addEventListener('finish', () => setAnimDone(true))
+    }, [])
+    return animDone ? <>{children}</> : <i className={classes('l')} ref={ref}>{children}</i>
+}
+
+const DialogueText = ({ text, textSpeed, canAdvance }: { text: string, textSpeed: number, canAdvance: boolean }) => {
     const [textLength, setTextLength] = useState(1)
+    const [skipped, setSkipped] = useState(false)
     const latestTextLength = useLatest(textLength)
-    useAnimationLoop(true, useCallback((dt, et) => {
+    useAnimationLoop(textLength < text.length, useCallback((dt, et) => {
         const newLength = getTextLengthAtTime(text, et * textSpeed * 25)
         if (newLength <= text.length && newLength > latestTextLength()) {
             setTextLength(newLength)
@@ -168,12 +245,22 @@ const DialogueText = ({ text, textSpeed }: { text: string, textSpeed: number }) 
             divRef.current.scrollIntoView({ block: 'end' })
         }
     }, [textLength])
-    return <div ref={divRef} className={styles.dialogue}>{textToContent(text, 0, textLength)}&nbsp;{textLength >= text.length ? <PlayerIcon path={COMMON_ICONS.continue} anim='bob' /> : null}</div>
+
+    advanceEvent.useListener(useCallback(() => {
+        if (latestTextLength() < text.length) {
+            setTextLength(text.length)
+            setSkipped(true)
+            return false
+        }
+        return true
+    }, [latestTextLength, text.length]))
+
+    return <div ref={divRef} className={styles.dialogue}>{textToContent(text, !skipped, 0, textLength)}&nbsp;{textLength >= text.length && canAdvance ? <PlayerIcon path={COMMON_ICONS.continue} anim='bob' /> : null}</div>
 }
 
-type DialogueBoxProps = DialoguePlayerState & { textSpeed: number }
+type DialogueBoxProps = DialoguePlayerState & { textSpeed: number, canAdvance: boolean }
 
-const DialogueBox = ({ text, speakerAlias, speakerID, mode, textSpeed }: DialogueBoxProps) => {
+const DialogueBox = ({ text, speakerAlias, speakerID, mode, textSpeed, canAdvance }: DialogueBoxProps) => {
     const getSpeaker = useSelector(projectStore, s => s.characters.find(c => c.id === speakerID) ?? null)
     const speakerName = speakerAlias ?? getSpeaker()?.name ?? null
     const animRef = useTransitionAnimationRef(true, {
@@ -183,75 +270,142 @@ const DialogueBox = ({ text, speakerAlias, speakerID, mode, textSpeed }: Dialogu
         outT: { duration: 200 },
     })
 
-    return <div ref={animRef} className={styles.dialogueBox}>
-        {text ? <DialogueText text={text} textSpeed={textSpeed} /> : null}
-        {speakerName ? <div className={styles.speaker}>{textToContent(speakerName)}</div> : null}
+    return <div ref={animRef} className={classes(styles.dialogueBox, { [styles.adv ?? '']: mode === 'adv', [styles.nvl ?? '']: mode === 'nvl' })}>
+        {text ? <DialogueText text={text} textSpeed={textSpeed} canAdvance={canAdvance} /> : null}
+        {speakerName ? <div className={styles.speaker}>{textToContent(speakerName, false)}</div> : null}
     </div>
 }
 
-const DialoguePivot = (props: DialoguePlayerState & { textSpeed: number }) => {
-    return <div className={classes(styles.dialoguePivot, { [styles.adv ?? '']: props.mode === 'adv', [styles.nvl ?? '']: props.mode === 'nvl' })}>
+const Dialogue = (props: DialogueBoxProps) => {
+    return <div className={classes(styles.dialoguePivot)}>
         <TransitionGroup values={props.text ? [props] : []} getKey={t => t.text ?? ''}>{(props, tran) => <DialogueBox {...props} />}</TransitionGroup>
     </div>
 }
 
-const Option = ({ enabled, text, index }: OptionPlayerState & { index: number }) => {
-    return <div className={classes(styles.option, { [styles.enabled ?? '']: enabled })}>{index + 1}. {textToContent(text)}</div>
+const Option = ({ enabled, text, index, onSelectOption }: OptionPlayerState & { onSelectOption: (index: number) => void }) => {
+    const animRef = useTransitionAnimationRef(true, {
+        in: [{ opacity: 0, transform: 'translateX(-2em)' }, { opacity: 1, transform: 'translateX(0em)' }],
+        inT: { duration: 200 },
+        out: [{ opacity: 1, transform: 'translateX(0em)' }, { opacity: 0, transform: 'translateX(-2em)' }],
+        outT: { duration: 200 },
+    })
+    const onClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation()
+        if (!enabled) return
+        onSelectOption(index)
+        playClick()
+    }, [enabled, index, onSelectOption])
+    return <div ref={animRef} className={classes(styles.option, { [styles.enabled ?? '']: enabled })} onClick={onClick}>{index + 1}. {textToContent(text, false)}</div>
 }
 
-const StringPromptField = ({ initialValue }: { initialValue: string }) => {
-    return <input defaultValue={initialValue} />
+const Options = ({ options, onSelectOption }: { options: OptionPlayerState[], onSelectOption: (index: number) => void }) => {
+    return <div className={styles.options}>
+        <TransitionGroup values={options} getKey={o => `${String(o.index)}_${o.text}`} sort={(a, b) => a.index - b.index}>
+            {props => <Option {...props} onSelectOption={onSelectOption} />}
+        </TransitionGroup>
+    </div>
 }
 
-const Prompt = ({ label, type, initialValue }: PromptPlayerState) => {
+const StringPromptField = ({ value, setValue }: { value: unknown, setValue: (value: unknown) => void }) => {
+    const onKeyDown = useCallback((e: React.KeyboardEvent) => {
+        if (e.key !== 'Enter') e.stopPropagation()
+        if (e.key === ' ') e.preventDefault()
+    }, [])
+    return <input autoFocus value={String(value)} onChange={e => setValue(e.target.value)} onKeyDown={onKeyDown} />
+}
+
+const Prompt = ({ label, type, initialValue, onSubmitPrompt }: PromptPlayerState & { onSubmitPrompt: (value: unknown) => void }) => {
+    const [value, setValue] = useStateFromProps(initialValue)
+
+    const animRef = useTransitionAnimationRef(true, {
+        in: [{ opacity: 0, transform: 'translateX(2em)' }, { opacity: 1, transform: 'translateX(0em)' }],
+        inT: { duration: 200 },
+        out: [{ opacity: 1, transform: 'translateX(0em)' }, { opacity: 0, transform: 'translateX(-2em)' }],
+        outT: { duration: 200 },
+    })
+
+    const onSubmitPromptsClick = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        onSubmitPrompt(value)
+        playClick()
+    }
+
     const subField = () => {
         switch (type) {
-            case 'string': return <StringPromptField initialValue={String(initialValue)} />
+            case 'string': return <StringPromptField value={value} setValue={setValue} />
             default: throw new Error(`Unimplemented prompt type ${type}`)
         }
     }
-    return <div className={styles.prompt}>
-        <div className={styles.promptLabel}>{textToContent(label)}</div>
-        <div className={styles.promptField}>{subField()}</div>
-    </div>
-}
 
-function getKey<T>(arr: T[], selector: (item: T) => string, item: T) {
-    const search = selector(item)
-    const index = arr.findIndex(o => o === item)
-    const count = arr.slice(0, index).reduce((p, c) => selector(c) === search ? p + 1 : p, 0)
-    const key = `${search}#${String(count)}`
-    return key
-}
-
-export const ScenePlayer = ({ state, onClose }: { state: ScenePlayerState, onClose?: () => void }) => {
-
-    const onSubmitPrompts = (e: React.MouseEvent) => {
+    const onClick = (e: React.MouseEvent) => {
         e.stopPropagation()
     }
 
-    const onCloseClick = useCallback((e: React.MouseEvent) => {
-        e.stopPropagation()
-        onClose?.()
-    }, [onClose])
+    const onKeyDown = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.preventDefault()
+            e.stopPropagation()
+            playClick()
+            onSubmitPrompt(value)
+        }
+    }
 
-    return <div className={styles.scene}>
-        <div className={styles.viewbox}>
-            <Backdrops backdrops={state.backdrops} />
-            <div className={styles.characters}>
-                {state.characters.map(c => <Character key={getKey(state.characters, c => c.characterID, c)} {...c} />)}
-            </div>
+    return <div ref={animRef} className={styles.prompt} onClick={onClick} onKeyDown={onKeyDown}>
+        <div className={styles.promptBox}>
+            <div className={styles.promptLabel}>{textToContent(label, false)}</div>
+            <div className={styles.promptField}>{subField()}</div>
         </div>
-        <DialoguePivot {...state.dialogue} textSpeed={state.settings.textSpeed} />
-        {state.options.length ? <div className={styles.options}>
-            {state.options.map((o, i) => <Option key={i} {...o} index={i} />)}
-        </div> : null}
-        {state.prompts.length ? <div className={styles.prompts}>
-            {state.prompts.map((p, i) => <Prompt key={`${String(i)}_${p.label}`} {...p} />)}
-            <PlayerIcon size={3} path={COMMON_ICONS.success} label='Confirm' onClick={onSubmitPrompts} />
-        </div> : null}
-        <Song {...state.song} volume={state.settings.musicVolume} />
-        {state.sounds.map(s => <Sound key={s.soundID} {...s} volume={state.settings.soundVolume} />)}
-        {onClose ? <PlayerIcon className={styles.closer} path={COMMON_ICONS.close} onClick={onCloseClick} /> : null}
+        <PlayerIcon size={3} path={COMMON_ICONS.success} label='Confirm' onClick={onSubmitPromptsClick} />
     </div>
+}
+
+const Prompts = ({ prompt, onSubmitPrompt }: { prompt: PromptPlayerState | null, onSubmitPrompt: (value: unknown) => void }) => {
+    return <div className={styles.prompts}>
+        <TransitionGroup values={prompt ? [prompt] : []} getKey={p => p.label}>
+            {props => <Prompt {...props} onSubmitPrompt={onSubmitPrompt} />}
+        </TransitionGroup>
+    </div>
+}
+
+const advanceEvent = createEventContext<boolean>('advance')
+
+export const ScenePlayer = ({ state, onAdvance, onSubmitPrompt, onSelectOption }: { state: ScenePlayerState, onAdvance: () => void, onSubmitPrompt: (value: unknown) => void, onSelectOption: (index: number) => void }) => {
+    const [EventProvider, dispatch] = advanceEvent.useEmitter()
+    const canAdvance = !state.options.length && !state.prompt
+    const latestCanAdvance = useLatest(canAdvance)
+
+    useDOMEventListener(window, 'keydown', useCallback(e => {
+        if (e.key === ' ' || e.key === 'Enter') {
+            playClick()
+            const shouldAdvance = dispatch(latestCanAdvance())
+            if (shouldAdvance && latestCanAdvance()) onAdvance()
+        } else {
+            const n = parseInt(e.key, 10)
+            if (!Number.isNaN(n) && n > 0) {
+                playClick()
+                onSelectOption(n - 1)
+            }
+        }
+    }, [dispatch, latestCanAdvance, onAdvance, onSelectOption]))
+
+    const onClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation()
+        playClick()
+        const shouldAdvance = dispatch(latestCanAdvance())
+        if (shouldAdvance && latestCanAdvance()) onAdvance()
+    }, [dispatch, latestCanAdvance, onAdvance])
+
+    return <EventProvider>
+        <div className={styles.scene} onClick={onClick}>
+            <div className={styles.viewbox}>
+                <Backdrops backdrops={state.backdrops} />
+                <Characters characters={state.characters} />
+            </div>
+            <Dialogue {...state.dialogue} textSpeed={state.settings.textSpeed} canAdvance={canAdvance} />
+            <Options options={state.options} onSelectOption={onSelectOption} />
+            <Prompts prompt={state.prompt} onSubmitPrompt={onSubmitPrompt} />
+            <Song {...state.song} volume={state.settings.musicVolume} />
+            <Sounds sounds={state.sounds} volume={state.settings.soundVolume} />
+        </div>
+    </EventProvider>
 }

@@ -38,6 +38,7 @@ export interface StorageProvider {
     isSupported(): boolean
     storeText?(root: StorageRootEntry | null, path: string, text: string): Promise<void>
     storeBinary?(root: StorageRootEntry | null, path: string, buffer: ArrayBuffer): Promise<void>
+    storeAsset?(root: StorageRootEntry | null, asset: AssetDefinition, buffer: ArrayBuffer): Promise<void>
     loadText(root: StorageRootEntry | null, path: string): Promise<string>
     loadBinary(root: StorageRootEntry | null, path: string): Promise<ArrayBuffer>
     loadAsset(root: StorageRootEntry | null, asset: AssetDefinition): Promise<{ url: string, unload: () => void }>

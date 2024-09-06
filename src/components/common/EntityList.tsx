@@ -1,7 +1,8 @@
 import { Fragment } from 'react/jsx-dev-runtime'
 
+import { getEntityByID, getEntityDisplayName, getEntityPrimaryAsset, immCreateEntity, immCreateVariable } from '../../operations/project'
+import { useViewStateScope, useViewStateTab } from '../../operations/viewState'
 import { useAsset } from '../../store/assets'
-import { getEntityDisplayName, getEntityPrimaryAsset, immCreateEntity, immCreateVariable, useViewStateScope, useViewStateTab } from '../../store/operations'
 import { projectStore } from '../../store/project'
 import { type AnyVariableScope, type EntityIDOf, type EntityOfType, type EntityParentIDOf, type EntityParentOf, type EntityType, getEntityParentID, getEntityParentType, getProjectEntityKey, isVariableInScope, type ProjectDefinition } from '../../types/project'
 import { prettyPrintIdentifier } from '../../utils/display'
@@ -12,8 +13,24 @@ import { COMMON_ICONS, EXPR_VALUE_ICONS } from './Icons'
 
 import styles from './EntityList.module.css'
 
-export const VariableList = ({ scope }: { scope: AnyVariableScope }) => {
-    return <EntityList<'variable'> type='variable' label={`Variables (${prettyPrintIdentifier(scope.type)})`} filter={v => isVariableInScope(v, scope)} createEntity={project => immCreateVariable(project, { ...scope })} />
+export const VariableList = ({ scope, hideEmpty }: { scope: AnyVariableScope, hideEmpty?: boolean }) => {
+    const getLabel = (scope: AnyVariableScope) => {
+        switch (scope.type) {
+            case 'stories':
+            case 'chapters':
+            case 'scenes':
+            case 'characters':
+            case 'macros':
+                return `Multiple ${prettyPrintIdentifier(scope.type)}`
+            case 'story': return getEntityDisplayName('story', getEntityByID('story', scope.value), true)
+            case 'chapter': return getEntityDisplayName('chapter', getEntityByID('chapter', scope.value), true)
+            case 'scene': return getEntityDisplayName('scene', getEntityByID('scene', scope.value), true)
+            case 'character': return getEntityDisplayName('character', getEntityByID('character', scope.value), true)
+            case 'macro': return getEntityDisplayName('macro', getEntityByID('macro', scope.value), true)
+            default: return prettyPrintIdentifier(scope.type)
+        }
+    }
+    return <EntityList<'variable'> type='variable' label={`Variables (${getLabel(scope)})`} filter={v => isVariableInScope(v, scope)} createEntity={project => immCreateVariable(project, { ...scope })} hideEmpty={hideEmpty} />
 }
 
 const Item = <T extends EntityType>({ type, item }: { type: T, item: EntityOfType<T> }) => {
@@ -31,11 +48,12 @@ const Item = <T extends EntityType>({ type, item }: { type: T, item: EntityOfTyp
     return <EditorIcon key={item.id} path={getAssetUrl() ?? EXPR_VALUE_ICONS[type]} label={getEntityDisplayName(type, item, false)} active={false} showLabel onClick={() => onSelectItem(item.id as EntityIDOf<T>)} />
 }
 
-export const EntityList = <T extends EntityType>({ type, label, filter, createEntity }: {
+export const EntityList = <T extends EntityType>({ type, label, filter, createEntity, hideEmpty }: {
     type: T
     label?: string
     filter?: (entity: EntityOfType<T>) => boolean
     createEntity?: (project: ProjectDefinition, parentID?: EntityParentIDOf<T> | null) => [ProjectDefinition, EntityOfType<T>]
+    hideEmpty?: boolean
 }) => {
     const parentType = getEntityParentType(type)
     const projectKey = getProjectEntityKey(type)
@@ -57,11 +75,13 @@ export const EntityList = <T extends EntityType>({ type, label, filter, createEn
         setCurrentTab(projectKey)
     }
 
-    return <div className={styles.list}>
+    const items = getItems().filter(i => filter ? filter(i) : true).sort((a, b) => a.name.localeCompare(b.name))
+
+    return !hideEmpty || items.length ? <div className={styles.list}>
         <div className={styles.heading}>{label ? label : prettyPrintIdentifier(projectKey)}</div>
         {parentType && getScopedParentID() ? <>
             <div className={styles.items}>
-                {getItems().filter(i => filter ? filter(i) : true).filter(i => getEntityParentID(type, i as EntityOfType<T>) === getScopedParentID() as EntityParentIDOf<T> | null).map(item => <Item key={item.id} type={type} item={item} />)}
+                {items.filter(i => getEntityParentID(type, i as EntityOfType<T>) === getScopedParentID() as EntityParentIDOf<T> | null).map(item => <Item key={item.id} type={type} item={item} />)}
                 <EditorIcon path={COMMON_ICONS.addItem} label={`New ${prettyPrintIdentifier(type)}`} showLabel onClick={() => onNewItem(getScopedParentID() as EntityParentIDOf<T> | null)} />
             </div>
         </> : parentType ? getParentItems()?.map(p => <Fragment key={p.id}>
@@ -69,12 +89,12 @@ export const EntityList = <T extends EntityType>({ type, label, filter, createEn
                 <EditorButton icon={EXPR_VALUE_ICONS[parentType]} style='text' onClick={() => onSelectParent(p.id as EntityParentIDOf<T>)}>{getEntityDisplayName(parentType, p, true)}</EditorButton>
             </div>
             <div className={styles.items}>
-                {getItems().filter(i => filter ? filter(i) : true).filter(i => getEntityParentID(type, i as EntityOfType<T>) === p.id).map(item => <Item key={item.id} type={type} item={item} />)}
+                {items.filter(i => getEntityParentID(type, i as EntityOfType<T>) === p.id).map(item => <Item key={item.id} type={type} item={item} />)}
                 <EditorIcon path={COMMON_ICONS.addItem} label={`New ${prettyPrintIdentifier(type)}`} showLabel onClick={() => onNewItem(p.id as EntityParentIDOf<T>)} />
             </div>
         </Fragment>) ?? null : <div className={styles.items}>
-            {getItems().filter(i => filter ? filter(i) : true).map(item => <Item key={item.id} type={type} item={item} />)}
+            {items.map(item => <Item key={item.id} type={type} item={item} />)}
             <EditorIcon path={COMMON_ICONS.addItem} label={`New ${prettyPrintIdentifier(type)}`} showLabel onClick={() => onNewItem(getScopedParentID() as EntityParentIDOf<T> | null)} />
         </div>}
-    </div>
+    </div> : <></>
 }

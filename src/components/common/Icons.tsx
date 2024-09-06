@@ -1,4 +1,4 @@
-import { mdiAccount, mdiAccountMinus, mdiAccountPlus, mdiAccountVoice, mdiAlert, mdiApplicationVariable, mdiArchive, mdiArchiveEdit, mdiArchivePlus, mdiArrowExpandHorizontal, mdiArrowRightBox, mdiBookMultipleOutline, mdiBookOpenVariantOutline, mdiCheckboxBlankOutline, mdiCheckboxMarked, mdiCheckCircle, mdiChevronDown, mdiChevronRight, mdiClose, mdiCloseCircleOutline, mdiCog, mdiCreation, mdiDice3, mdiDiceMultiple, mdiDotsCircle, mdiDotsHorizontal, mdiEmoticon, mdiEqual, mdiFlag, mdiFormatHorizontalAlignCenter, mdiFormatHorizontalAlignLeft, mdiFormatHorizontalAlignRight, mdiFormatListCheckbox, mdiFormatListChecks, mdiFormatListGroup, mdiFormatListText, mdiFormatText, mdiFormTextbox, mdiGreaterThan, mdiGreaterThanOrEqual, mdiHome, mdiImageArea, mdiLessThan, mdiLessThanOrEqual, mdiMapSearch, mdiMenuDown, mdiMinus, mdiMusic, mdiNotEqualVariant, mdiPercent, mdiPlus, mdiPlusBox, mdiPound, mdiPoundBox, mdiScriptText, mdiScriptTextPlay, mdiSignatureText, mdiSlashForward, mdiSourceBranch, mdiSquareOutline, mdiText, mdiTextBoxOutline, mdiTrashCan, mdiUpload, mdiVariable, mdiVolumeHigh } from '@mdi/js'
+import { mdiAccount, mdiAccountMinus, mdiAccountPlus, mdiAccountVoice, mdiAlert, mdiApplicationVariable, mdiArchive, mdiArchiveEdit, mdiArchivePlus, mdiArrowExpandDown, mdiArrowExpandHorizontal, mdiArrowExpandUp, mdiArrowExpandVertical, mdiArrowRightBox, mdiArrowULeftTop, mdiBookMultipleOutline, mdiBookOpenVariantOutline, mdiCheckboxBlankOutline, mdiCheckboxMarked, mdiCheckCircle, mdiChevronDown, mdiChevronRight, mdiClose, mdiCloseCircleOutline, mdiCog, mdiCreation, mdiDice3, mdiDiceMultiple, mdiDotsCircle, mdiDotsHorizontal, mdiEmoticon, mdiEqual, mdiFlag, mdiFormatHorizontalAlignCenter, mdiFormatHorizontalAlignLeft, mdiFormatHorizontalAlignRight, mdiFormatLetterCaseLower, mdiFormatLetterCaseUpper, mdiFormatListCheckbox, mdiFormatListChecks, mdiFormatListGroup, mdiFormatListText, mdiFormatText, mdiFormTextbox, mdiGreaterThan, mdiGreaterThanOrEqual, mdiHome, mdiImageArea, mdiLessThan, mdiLessThanOrEqual, mdiMapSearch, mdiMenuDown, mdiMinus, mdiMusic, mdiNotEqualVariant, mdiPause, mdiPercent, mdiPlay, mdiPlus, mdiPlusBox, mdiPound, mdiPoundBox, mdiRestart, mdiScriptText, mdiScriptTextPlay, mdiSignatureText, mdiSlashForward, mdiSourceBranch, mdiSquareOutline, mdiText, mdiTextBoxOutline, mdiTrashCan, mdiUpload, mdiVariable, mdiVolumeHigh } from '@mdi/js'
 
 import type { ExprPrimitiveValueType, ExprType } from '../../types/expressions'
 import type { StepType } from '../../types/steps'
@@ -26,6 +26,9 @@ export const COMMON_ICONS = {
     continue: mdiMenuDown,
     more: mdiDotsHorizontal,
     loading: mdiDotsCircle,
+    play: mdiPlay,
+    pause: mdiPause,
+    restart: mdiRestart,
 } satisfies Record<string, string>
 
 export const EXPR_ICONS: Record<ExprType, string> = {
@@ -52,8 +55,13 @@ export const EXPR_ICONS: Record<ExprType, string> = {
     multiply: mdiClose,
     divide: mdiSlashForward,
     modulo: mdiPercent,
+    round: mdiArrowExpandVertical,
+    roundUp: mdiArrowExpandUp,
+    roundDown: mdiArrowExpandDown,
     randomFloat: mdiDiceMultiple,
     randomInt: mdiDice3,
+    lowerCase: mdiFormatLetterCaseLower,
+    upperCase: mdiFormatLetterCaseUpper,
     format: mdiSignatureText,
     equal: mdiEqual,
     notEqual: mdiNotEqualVariant,
@@ -115,5 +123,6 @@ export const STEP_ICONS: Record<StepType, string> = {
     prompt: mdiFormTextbox,
     set: mdiApplicationVariable,
     macro: mdiScriptTextPlay,
+    returnTo: mdiArrowULeftTop,
     goto: mdiArrowRightBox,
 }

@@ -80,8 +80,15 @@ const EXPRS = validateExprDefinitions({
     divide: { label: 'Divide', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
     modulo: { label: 'Remainder', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
 
+    round: { label: 'Round', params: [{ label: 'Number', types: ['number', 'integer'] }], returnTypes: ['integer'] },
+    roundUp: { label: 'Round Up', params: [{ label: 'Number', types: ['number', 'integer'] }], returnTypes: ['integer'] },
+    roundDown: { label: 'Round Down', params: [{ label: 'Number', types: ['number', 'integer'] }], returnTypes: ['integer'] },
+
     randomFloat: { label: 'Random Number', params: [{ label: 'Min', types: ['number', 'integer'] }, { label: 'Max', types: ['number', 'integer'] }], returnTypes: ['number'] },
     randomInt: { label: 'Random Integer', params: [{ label: 'Min', types: ['integer'] }, { label: 'Max', types: ['integer'] }], returnTypes: ['integer'] },
+
+    lowerCase: { label: 'To Lowercase', params: [{ label: 'Text', types: ['string'] }], returnTypes: ['string'] },
+    upperCase: { label: 'To Uppercase', params: [{ label: 'Text', types: ['string'] }], returnTypes: ['string'] },
 
     format: { label: 'Formatted Text', returnTypes: ['string'], children: [{ label: 'Item', types: ['string'] }] },
 
@@ -153,11 +160,11 @@ const PRIMITIVE_DEFAULT_VALUES: ExprPrimitiveValueTypeMap = {
     location: { position: 'auto', height: 'auto', scale: 'auto' },
 }
 
-function getContextualDefaultPrimitiveValue<T extends ExprPrimitiveValueType>(type: T, ctx: ExprContext) {
+function getContextualDefaultPrimitiveValue<T extends ExprPrimitiveValueType>(type: T, ctx: ExprContext): ExprPrimitiveRawValueOfType<T> {
     if (type in ctx.suggestions) {
-        return arrayHead(ctx.suggestions[type as keyof ExprContext['suggestions']]() as unknown[]) as T | null
+        return (arrayHead(ctx.suggestions[type as keyof ExprContext['suggestions']]() as unknown[]) ?? '') as ExprPrimitiveRawValueOfType<T>
     }
-    return PRIMITIVE_DEFAULT_VALUES[type]
+    return PRIMITIVE_DEFAULT_VALUES[type] as ExprPrimitiveRawValueOfType<T>
 }
 
 export type ExprPrimitiveRawValueOfType<T extends ExprPrimitiveValueType> = ExprPrimitiveValueTypeMap[T]
@@ -218,8 +225,14 @@ export interface ExprContext {
         sound: (id: SoundID) => SoundDefinition | null
         macro: (id: MacroID) => MacroDefinition | null
         variable: (id: VariableID) => AnyVariableDefinition | null
-        variableValue: (id: VariableID) => AnyExprValue | null
-        characterVariableValue: (id: VariableID, characterID: CharacterID) => AnyExprValue | null
+    }
+    variables: {
+        getValue: (id: VariableID) => AnyExprValue | null
+        setValue: (id: VariableID, value: AnyExprValue) => void
+        getCharacterValue: (id: VariableID, characterID: CharacterID) => AnyExprValue | null
+        setCharacterValue: (id: VariableID, characterID: CharacterID, value: AnyExprValue) => void
+        getMacroValue: (id: VariableID, macroID: MacroID) => AnyExprValue | null
+        setMacroValue: (id: VariableID, macroID: MacroID, value: AnyExprValue) => void
     }
     random: {
         int: (min: number, max: number) => number
@@ -283,15 +296,20 @@ export function resolveExpr(expr: AnyExpr, ctx: ExprContext): AnyExprValue {
         case 'song': return { type: 'song', value: expr.args[0] }
         case 'sound': return { type: 'sound', value: expr.args[0] }
         case 'macro': return { type: 'macro', value: expr.args[0] }
-        case 'characterVariable': return throwIfNull(ctx.resolvers.characterVariableValue(expr.args[0], resolveExprAs(expr.params[0], 'character', ctx).value))
+        case 'characterVariable': return throwIfNull(ctx.variables.getCharacterValue(expr.args[0], resolveExprAs(expr.params[0], 'character', ctx).value))
         case 'location': return { type: 'location', value: expr.args[0] }
         case 'add': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a + b, ctx)
         case 'subtract': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a - b, ctx)
         case 'multiply': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a * b, ctx)
         case 'divide': return resolveNumberOp(expr.params[0], expr.params[1], (a, b, i) => i ? Math.floor(a / b) : a / b, ctx)
         case 'modulo': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a % b, ctx)
+        case 'round': return { type: 'integer', value: Math.round(resolveExprAs(expr.params[0], 'number', ctx).value) }
+        case 'roundUp': return { type: 'integer', value: Math.ceil(resolveExprAs(expr.params[0], 'number', ctx).value) }
+        case 'roundDown': return { type: 'integer', value: Math.floor(resolveExprAs(expr.params[0], 'number', ctx).value) }
         case 'randomFloat': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => ctx.random.float(a, b), ctx)
         case 'randomInt': return resolveNumberOp(expr.params[0], expr.params[1], (a, b, isInt) => isInt ? ctx.random.int(a, b) : inlineThrow(new Error('Parameters to Random Integer expression were not integers')), ctx)
+        case 'lowerCase': return { type: 'string', value: resolveExprAs(expr.params[0], 'string', ctx).value.toLowerCase() }
+        case 'upperCase': return { type: 'string', value: resolveExprAs(expr.params[0], 'string', ctx).value.toUpperCase() }
         case 'format': return { type: 'string', value: expr.children.map(([part]) => resolveExprAs(part, 'string', ctx).value).join('') }
         case 'equal': return { type: 'boolean', value: exprValuesEqual(resolveExpr(expr.params[0], ctx), resolveExpr(expr.params[1], ctx), ctx) }
         case 'notEqual': return { type: 'boolean', value: !exprValuesEqual(resolveExpr(expr.params[0], ctx), resolveExpr(expr.params[1], ctx), ctx) }
@@ -378,7 +396,7 @@ export function castExprValue<T extends ExprValueType>(expr: AnyExprValue, type:
         return expr as ExprValueOfType<T>
     }
     if (expr.type === 'variable') {
-        return castExprValue(throwIfNull(ctx.resolvers.variableValue(expr.value)), type, ctx)
+        return castExprValue(throwIfNull(ctx.variables.getValue(expr.value)), type, ctx)
     }
     switch (type) {
         case 'string': {
@@ -430,8 +448,8 @@ export function exprValuesEqual(left: AnyExprValue, right: AnyExprValue, ctx: Ex
         return exprValuesEqual(left, rightValue, ctx)
     }
     if (left.type === 'variable' && right.type === 'variable') {
-        const leftValue = throwIfNull(ctx.resolvers.variableValue(left.value))
-        const rightValue = throwIfNull(ctx.resolvers.variableValue(right.value))
+        const leftValue = throwIfNull(ctx.variables.getValue(left.value))
+        const rightValue = throwIfNull(ctx.variables.getValue(right.value))
         return exprValuesEqual(leftValue, rightValue, ctx)
     }
     if (left.type === 'number' && right.type === 'integer') {
@@ -527,8 +545,15 @@ export const parseAnyExpr: ParseFunc<AnyExpr> = defineParser<AnyExpr>((c, v, d) 
     divide: { params: parseDualExprTuple },
     modulo: { params: parseDualExprTuple },
 
+    round: { params: parseSingleExprTuple },
+    roundUp: { params: parseSingleExprTuple },
+    roundDown: { params: parseSingleExprTuple },
+
     randomFloat: { params: parseDualExprTuple },
     randomInt: { params: parseDualExprTuple },
+
+    lowerCase: { params: parseSingleExprTuple },
+    upperCase: { params: parseSingleExprTuple },
 
     format: { children: (c, v, d) => $.array(c, v, parseSingleExprTuple, d) },
 

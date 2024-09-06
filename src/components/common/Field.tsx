@@ -12,8 +12,8 @@ export interface FieldProps<T> {
     validate?: FieldValidateFunc<T>
 }
 
-export const Field = ({ label, children, error }: { label?: string, children: React.ReactNode, error?: string | null }) => {
-    return <div className={classes(styles.field, { [styles.invalid ?? '']: !!error })}>
+export const Field = ({ className, label, children, error }: { className?: string, label?: string, children: React.ReactNode, error?: string | null }) => {
+    return <div className={classes(styles.field, { [styles.invalid ?? '']: !!error, className })}>
         <label>
             {label ? <span className={styles.name}>{label}</span> : null}
             <div className={styles.contents}>

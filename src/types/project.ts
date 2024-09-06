@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-empty-object-type */
 import { arrayHead } from '../utils/array'
 import type { ParseFunc } from '../utils/guard'
 import { defineParser, parsers as $ } from '../utils/guard'
@@ -31,6 +30,7 @@ type EntityTypeMap = {
 export type EntityType = keyof EntityTypeMap
 export type EntityOfType<T extends EntityType> = T extends EntityType ? EntityTypeMap[T] : never
 export type EntityIDOf<T extends EntityType> = T extends EntityType ? EntityOfType<T>['id'] : never
+export type AnyEntity = EntityOfType<EntityType>
 
 export type ProjectID = Branded<string, 'project'>
 
@@ -148,13 +148,14 @@ export function getEntityChildTypes(type: EntityType): EntityType[] {
 export type StoryID = EntityID<'story'>
 
 export interface StoryDefinition extends EntityDefinition<StoryID> {
-
+    firstChapterID: ChapterID | null
 }
 
 export type ChapterID = EntityID<'chapter'>
 
 export interface ChapterDefinition extends EntityDefinition<ChapterID> {
     storyID: StoryID
+    firstSceneID: SceneID | null
 }
 
 export type SceneID = EntityID<'scene'>
@@ -167,7 +168,7 @@ export interface SceneDefinition extends EntityDefinition<SceneID> {
 export type CharacterID = EntityID<'character'>
 
 export interface CharacterDefinition extends EntityDefinition<CharacterID> {
-
+    mainPortraitID: PortraitID | null
 }
 
 export type PortraitID = EntityID<'portrait'>
@@ -379,12 +380,14 @@ const parseAssetDefinition: ParseFunc<AssetDefinition> = defineParser<AssetDefin
 const parseStoryDefinition: ParseFunc<StoryDefinition> = defineParser<StoryDefinition>((c, v, d) => $.object(c, v, {
     id: $.id,
     name: $.string,
+    firstChapterID: (c, v, d) => $.either<ChapterID, null>(c, v, $.id, $.null, d ?? null),
 }, d))
 
 const parseChapterDefinition: ParseFunc<ChapterDefinition> = defineParser<ChapterDefinition>((c, v, d) => $.object(c, v, {
     id: $.id,
     name: $.string,
     storyID: $.id,
+    firstSceneID: (c, v, d) => $.either<SceneID, null>(c, v, $.id, $.null, d ?? null),
 }, d))
 
 const parseSceneDefinition: ParseFunc<SceneDefinition> = defineParser<SceneDefinition>((c, v, d) => $.object(c, v, {
@@ -397,6 +400,7 @@ const parseSceneDefinition: ParseFunc<SceneDefinition> = defineParser<SceneDefin
 const parseCharacterDefinition: ParseFunc<CharacterDefinition> = defineParser<CharacterDefinition>((c, v, d) => $.object(c, v, {
     id: $.id,
     name: $.string,
+    mainPortraitID: (c, v, d) => $.either<PortraitID, null>(c, v, $.id, $.null, d ?? null),
 }, d))
 
 const parsePortraitDefinition: ParseFunc<PortraitDefinition> = defineParser<PortraitDefinition>((c, v, d) => $.object(c, v, {

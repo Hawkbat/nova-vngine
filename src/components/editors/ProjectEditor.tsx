@@ -1,8 +1,9 @@
 import { useCallback } from 'react'
 
 import { BUILD_COMMIT, BUILD_DATETIME } from '../../injected'
+import { getEntityDisplayName } from '../../operations/project'
+import { useViewStateScope, useViewStateTab } from '../../operations/viewState'
 import { platform } from '../../platform/platform'
-import { getEntityDisplayName, useViewStateScope, useViewStateTab } from '../../store/operations'
 import { projectStore } from '../../store/project'
 import { viewStateStore } from '../../store/viewstate'
 import type { EntityType } from '../../types/project'

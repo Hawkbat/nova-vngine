@@ -4,6 +4,11 @@
     flex-direction: column;
     flex: 1 0 auto;
     width: 100%;
+    position: relative;
+}
+
+.sequenceEditor.field {
+    flex: 0 0 auto;
 }
 
 .timeline {
@@ -15,6 +20,7 @@
 
 .timeline .timeline {
     overflow: visible;
+    min-width: max-content;
 }
 
 .stepEditor {
@@ -147,4 +153,23 @@
 
 .dragging {
     opacity: 0.5;
+}
+
+.playerIcons {
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    right: 0.25em;
+    top: 0.25em;
+    color: var(--text-color);
+    font-size: 3em;
+    z-index: 200;
+}
+
+.stepField {
+    display: flex;
+}
+
+.stepField > span {
+    font-size: 0.5em;
 }

@@ -1,21 +1,33 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 
 import { hintTuple } from './types'
 
-export function useStateFromProps<T>(value: T) {
+export function useStateFromProps<T>(value: T, equalityCheck?: (a: T, b: T) => boolean) {
     const [state, setState] = useState(value)
     const previousState = useRef(value)
-    if (previousState.current !== value) {
-        previousState.current = value
-        setState(value)
-        return hintTuple(value, setState)
-    }
+    useEffect(() => {
+        if (previousState.current !== value && !equalityCheck?.(previousState.current, value)) {
+            previousState.current = value
+            setState(value)
+        }
+    }, [equalityCheck, value])
     return hintTuple(state, setState)
 }
 
 export function useLatest<T>(value: T) {
     const ref = useRef<T>(value)
     if (ref.current !== value) {
+        ref.current = value
+    }
+    return useCallback(() => ref.current, [])
+}
+
+export function useLatestIfValid<T>(value: T | null, equalityCheck?: (a: T, b: T) => boolean) {
+    const ref = useRef<T | null>(value)
+    if (value && ref.current === null) {
+        ref.current = value
+    }
+    if (value && ref.current && ref.current !== value && !equalityCheck?.(ref.current, value)) {
         ref.current = value
     }
     return useCallback(() => ref.current, [])
@@ -28,7 +40,7 @@ export function useDeltaEffect<T extends [...unknown[]]>(callback: (previousValu
         const disposalFunc = getLatestCallback()(previousDependencies.current, dependencies)
         previousDependencies.current = dependencies
         return disposalFunc
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [getLatestCallback, ...dependencies])
 }
 
@@ -130,6 +142,7 @@ export function useDrop(effect: DataTransfer['dropEffect'], dropCallback: (drops
     const onDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault()
         e.stopPropagation()
+        setDragOver(false)
         dropCallback(getDropValues(e.dataTransfer))
     }, [dropCallback])
     const props: React.HTMLAttributes<HTMLElement> = useMemo(() => ({
@@ -139,4 +152,62 @@ export function useDrop(effect: DataTransfer['dropEffect'], dropCallback: (drops
         onDrop,
     }), [onDragEnter, onDragLeave, onDragOver, onDrop])
     return hintTuple(props, dragOver)
+}
+
+export function createEventContext<T>(event: string) {
+    const context = createContext<EventTarget | null>(null)
+    const useEmitter = () => {
+        const target = useMemo(() => new EventTarget(), [])
+
+        const Provider = useCallback(({ children }: { children: React.ReactNode }) => <context.Provider value={target}>
+            {children}
+        </context.Provider>, [target])
+
+        const dispatch = useCallback((value: T) => {
+            return target.dispatchEvent(new CustomEvent(event, { detail: value, cancelable: true }))
+        }, [target])
+
+        return hintTuple(Provider, dispatch)
+    }
+    const useListener = (callback: (value: T, event: CustomEvent<T>) => void) => {
+        const target = useContext(context)
+        useEffect(() => {
+            const handler = (event: Event) => {
+                const customEvent = event as CustomEvent<T>
+                const result: unknown = callback(customEvent.detail, customEvent)
+                if (typeof result === 'boolean' && !result) event.preventDefault()
+            }
+            target?.addEventListener(event, handler)
+
+            return () => {
+                target?.removeEventListener(event, handler)
+            }
+        }, [callback, target])
+    }
+    return {
+        context,
+        useEmitter,
+        useListener,
+    }
+}
+
+// Adapted from https://github.com/JLarky/rad-event-listener (MIT license)
+export function useDOMEventListener<
+    TElement extends EventTarget,
+    TEvent extends { [K in keyof TElement]-?: K extends `on${infer E}` ? E : never }[keyof TElement],
+>(
+    element: TElement,
+    ...args: [
+        type: TEvent,
+        listener: TElement extends Record<`on${TEvent}`, null | ((...args: infer Args) => infer Return)> ? (this: TElement, ...args: Args) => Return : never,
+        options?: boolean | AddEventListenerOptions,
+    ]
+) {
+    const [type, listener, options] = args
+    useEffect(() => {
+        element.addEventListener(type, listener, options)
+        return () => {
+            element.removeEventListener(type, listener, options)
+        }
+    }, [element, listener, options, type])
 }

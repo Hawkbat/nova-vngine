@@ -7,7 +7,7 @@ import { parseStorageRootEntry, type StorageRootEntry } from './storage'
 
 export type ProjectEditorTab = 'home' | 'manual' | 'settings' | 'project' | ProjectEntityKeyOf<EntityType>
 
-export type SubEditorViewState = { type: 'player', storyID: StoryID, chapterID: ChapterID, sceneID: SceneID } | { type: 'sceneSteps', sceneID: SceneID, stepID: StepID | null }
+export type SubEditorViewState = { type: 'player', storyID: StoryID } | { type: 'sceneSteps', sceneID: SceneID, stepID: StepID | null } | { type: 'macroSteps', macroID: MacroID, stepID: StepID | null }
 
 export interface ProjectMetaData {
     id: string
@@ -33,11 +33,13 @@ const parseProjectMetaData: ParseFunc<ProjectMetaData> = defineParser<ProjectMet
 export const parseSubEditorViewState: ParseFunc<SubEditorViewState> = defineParser<SubEditorViewState>((c, v, d) => $.typed(c, v, {}, {
     player: {
         storyID: $.id,
-        chapterID: $.id,
-        sceneID: $.id,
     },
     sceneSteps: {
         sceneID: $.id,
+        stepID: (c, v, d) => $.either<StepID, null>(c, v, $.id, $.null, d),
+    },
+    macroSteps: {
+        macroID: $.id,
         stepID: (c, v, d) => $.either<StepID, null>(c, v, $.id, $.null, d),
     },
 }, d))

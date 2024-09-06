@@ -14,12 +14,12 @@
     height: 1em;
     box-sizing: content-box;
     border-radius: 0.25em;
-    border: 1px solid var(--text-color);
+    border: 2px solid var(--text-color);
 }
 
 .icon > span {
     font-size: 0.25em;
-    max-width: 8em;
+    width: 5em;
     text-align: center;
 }
 

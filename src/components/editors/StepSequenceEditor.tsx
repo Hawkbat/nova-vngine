@@ -1,33 +1,62 @@
-import { Fragment, useCallback, useMemo } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 
+import { getProjectExprContext, immGenerateID } from '../../operations/project'
 import { platform } from '../../platform/platform'
-import { getProjectExprContext, immGenerateID } from '../../store/operations'
 import { projectStore } from '../../store/project'
 import { settingsStore } from '../../store/settings'
 import { viewStateStore } from '../../store/viewstate'
 import { createDefaultExpr, type ExprContext } from '../../types/expressions'
-import { applyStepToRenderSceneState, getInitialRenderSceneState, type ScenePlayerState } from '../../types/player'
+import { applyStepToScenePlayerState, getInitialScenePlayerState, type ScenePlayerState } from '../../types/player'
 import type { AnyStep, StepID, StepType } from '../../types/steps'
-import { createStep, isStepType, parseAnyStep, STEP_TYPES } from '../../types/steps'
-import { arrayHead } from '../../utils/array'
+import { createStep, getDeepStep, isStepType, parseAnyStep, STEP_TYPES } from '../../types/steps'
+import { arrayHead, arrayTail } from '../../utils/array'
 import { classes, prettyPrintIdentifier } from '../../utils/display'
 import { throwIfNull, tryParseValue } from '../../utils/guard'
 import { useDrag, useDrop } from '../../utils/hooks'
-import { immAppend, immInsertAt, immRemoveAt, immReplaceAt, immReplaceBy, immSet, immSetProps } from '../../utils/imm'
+import { immAppend, immInsertAt, immRemoveAt, immReplaceAt, immSet, immSetProps } from '../../utils/imm'
 import { useSelector } from '../../utils/store'
 import { assertExhaustive } from '../../utils/types'
 import { DropdownField } from '../common/DropdownField'
 import { DropdownMenuItem, SearchDropdownMenu, useDropdownMenuState } from '../common/DropdownMenu'
 import { EditorIcon } from '../common/EditorIcon'
-import { Field } from '../common/Field'
+import { Field, type FieldProps } from '../common/Field'
 import { COMMON_ICONS, STEP_ICONS } from '../common/Icons'
 import { StringField } from '../common/StringField'
+import { PlayerIcon } from '../player/PlayerIcon'
 import { ScenePlayer } from '../player/ScenePlayer'
 import { ExpressionEditor, ExpressionField } from './ExpressionEditor'
 
 import styles from './StepSequenceEditor.module.css'
 
-const StepEditor = ({ step, setStep, deleteStep, ctx }: { step: AnyStep, setStep: (setter: (step: AnyStep) => AnyStep) => void, deleteStep: () => void, ctx: ExprContext }) => {
+const StepField = ({ className, label, value, setValue, steps, setSteps, selected, setSelected }: FieldProps<StepID> & { steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, selected: StepID | null, setSelected: (id: StepID | null) => void }) => {
+    const [dropProps, dragOver] = useDrop('move', useCallback(values => {
+        if (values.type === 'json') {
+            const parsed = tryParseValue(values.value, 'step', parseAnyStep)
+            if (parsed.success) {
+                const deepStep = getDeepStep(parsed.value.id, steps, setSteps, [], null)
+                if (deepStep) {
+                    setValue?.(deepStep.step.id)
+                }
+            }
+        }
+    }, [setSteps, setValue, steps]))
+
+    const deepStep = getDeepStep(value, steps, setSteps, [], null)
+
+    return <Field label={label}>
+        <div className={classes(styles.stepField, className)}>
+            {deepStep ? <div className={classes(styles.simpleBubble)} onClick={() => setSelected(value)}>
+                <EditorIcon path={STEP_ICONS[deepStep.step.type]} label={prettyPrintIdentifier(deepStep.step.type)} />
+            </div> : null}
+            <div {...dropProps} className={classes(styles.stepGap, { [styles.dragOver ?? '']: dragOver })}>
+                <div className={styles.stepLine} />
+            </div>
+            <span>Drag step here</span>
+        </div>
+    </Field>
+}
+
+const StepEditor = ({ step, setStep, deleteStep, steps, setSteps, selected, setSelected, ctx }: { step: AnyStep, setStep: (setter: (step: AnyStep) => AnyStep) => void, deleteStep: () => void, steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, selected: StepID | null, setSelected: (id: StepID | null) => void, ctx: ExprContext }) => {
     const getDeveloperMode = useSelector(settingsStore, s => s.developerMode)
 
     const onDeleteStep = (e: React.MouseEvent) => {
@@ -55,8 +84,8 @@ const StepEditor = ({ step, setStep, deleteStep, ctx }: { step: AnyStep, setStep
                 <ExpressionField label='Location' value={step.location} setValue={expr => setStep(s => isStepType(s, 'enter') ? immSet(s, 'location', expr) : s)} paramTypes={['location']} ctx={ctx} />
             </>
             case 'exit': return <>
-                <ExpressionField label='Character' value={step.character} setValue={expr => setStep(s => isStepType(s, 'enter') ? immSet(s, 'character', expr) : s)} paramTypes={['character']} ctx={ctx} />
-                <ExpressionField label='Location' value={step.location} setValue={expr => setStep(s => isStepType(s, 'enter') ? immSet(s, 'location', expr) : s)} paramTypes={['location']} ctx={ctx} />
+                <ExpressionField label='Character' value={step.character} setValue={expr => setStep(s => isStepType(s, 'exit') ? immSet(s, 'character', expr) : s)} paramTypes={['character']} ctx={ctx} />
+                <ExpressionField label='Location' value={step.location} setValue={expr => setStep(s => isStepType(s, 'exit') ? immSet(s, 'location', expr) : s)} paramTypes={['location']} ctx={ctx} />
             </>
             case 'move': return <>
                 <ExpressionField label='Character' value={step.character} setValue={expr => setStep(s => isStepType(s, 'move') ? immSet(s, 'character', expr) : s)} paramTypes={['character']} ctx={ctx} />
@@ -109,6 +138,9 @@ const StepEditor = ({ step, setStep, deleteStep, ctx }: { step: AnyStep, setStep
                 {step.inputs.map((input, i) => <ExpressionField key={i} label={`Input ${String(i)}`} value={input} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'inputs', immReplaceAt(s.inputs, i, expr)) : s)} paramTypes={null} ctx={ctx} />)}
                 {step.outputs.map((output, i) => <ExpressionField key={i} label={`Output ${String(i)}`} value={output} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'outputs', immReplaceAt(s.outputs, i, expr)) : s)} paramTypes={['variable']} ctx={ctx} />)}
             </>
+            case 'returnTo': return <>
+                <StepField label='Target Step' value={step.stepID} setValue={stepID => setStep(s => isStepType(s, 'returnTo') ? immSet(s, 'stepID', stepID) : s)} steps={steps} setSteps={setSteps} selected={selected} setSelected={setSelected} />
+            </>
             case 'goto': return <>
                 <ExpressionField label='Scene' value={step.scene} setValue={expr => setStep(s => isStepType(s, 'goto') ? immSet(s, 'scene', expr) : s)} paramTypes={['scene']} ctx={ctx} />
             </>
@@ -128,6 +160,28 @@ const StepEditor = ({ step, setStep, deleteStep, ctx }: { step: AnyStep, setStep
     </div>
 }
 
+const StepGap = ({ before, after, setSteps, rootSteps, setRootSteps }: { before: StepID | null, after: StepID | null, setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, rootSteps: AnyStep[], setRootSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void }) => {
+    const [dropProps, dragOver] = useDrop('move', useCallback(values => {
+        if (values.type === 'json') {
+            const parsed = tryParseValue(values.value, 'step', parseAnyStep)
+            if (parsed.success) {
+                const deepStep = getDeepStep(parsed.value.id, rootSteps, setRootSteps, [], null)
+                if (deepStep) {
+                    deepStep.deleteStep()
+                    setSteps(s => {
+                        let index = s.findIndex(step => step.id === after)
+                        if (index <= 0) index = s.findIndex(step => step.id === before) + 1
+                        return immInsertAt(s, index, deepStep.step)
+                    })
+                }
+            }
+        }
+    }, [rootSteps, setRootSteps, setSteps, after, before]))
+    return <div {...dropProps} className={classes(styles.stepGap, { [styles.dragOver ?? '']: dragOver })}>
+        <div className={styles.stepLine} />
+    </div>
+}
+
 const StepList = ({ steps, setSteps, selected, setSelected, ctx, rootSteps, setRootSteps }: { steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, selected: StepID | null, setSelected: (id: StepID | null) => void, ctx: ExprContext, rootSteps: AnyStep[], setRootSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void }) => {
     const [dropdownProps, openDropdown] = useDropdownMenuState()
 
@@ -139,33 +193,11 @@ const StepList = ({ steps, setSteps, selected, setSelected, ctx, rootSteps, setR
         setSelected(id)
     }
 
-    const StepGap = ({ before, after }: { before: StepID | null, after: StepID | null }) => {
-        const [dropProps, dragOver] = useDrop('move', useCallback(values => {
-            if (values.type === 'json') {
-                const parsed = tryParseValue(values.value, 'step', parseAnyStep)
-                if (parsed.success) {
-                    const [step, , deleteStep] = getDeepStep(parsed.value.id, rootSteps, setRootSteps, [])
-                    if (step) {
-                        deleteStep()
-                        setSteps(s => {
-                            let index = s.findIndex(step => step.id === after)
-                            if (index <= 0) index = s.findIndex(step => step.id === before) + 1
-                            return immInsertAt(s, index, step)
-                        })
-                    }
-                }
-            }
-        }, [before, after]))
-        return <div {...dropProps} className={classes(styles.stepGap, { [styles.dragOver ?? '']: dragOver })}>
-            <div className={styles.stepLine} />
-        </div>
-    }
-
     return <div className={styles.timeline}>
-        <StepGap before={null} after={arrayHead(steps)?.id ?? null} />
+        <StepGap before={null} after={arrayHead(steps)?.id ?? null} setSteps={setSteps} rootSteps={rootSteps} setRootSteps={setRootSteps} />
         {steps.map((s, i) => <Fragment key={s.id}>
             <StepBubble key={s.id} step={s} setStep={setter => setSteps(steps => immReplaceAt(steps, i, setter(throwIfNull(steps[i]))))} deleteStep={() => setSteps(steps => immRemoveAt(steps, i))} selected={selected} setSelected={setSelected} ctx={ctx} rootSteps={rootSteps} setRootSteps={setRootSteps} />
-            <StepGap before={s.id} after={steps[i + 1]?.id ?? null} />
+            <StepGap before={s.id} after={steps[i + 1]?.id ?? null} setSteps={setSteps} rootSteps={rootSteps} setRootSteps={setRootSteps} />
         </Fragment>)}
         <div className={styles.outlineBubble} onClick={openDropdown}>
             <EditorIcon path={COMMON_ICONS.addItem} />
@@ -223,49 +255,38 @@ const StepBubble = ({ step, setStep, selected, setSelected, ctx, rootSteps, setR
     }
 }
 
-function getDeepStep(stepID: StepID | null, steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, previousSteps: AnyStep[]): [AnyStep, (setter: (step: AnyStep) => AnyStep) => void, () => void, AnyStep[]] | [null, null, null, null] {
-    if (!stepID) return [null, null, null, null]
-    const index = steps.findIndex(s => s.id === stepID)
-    if (index >= 0) {
-        return [
-            throwIfNull(steps[index]),
-            setter => setSteps(steps => immReplaceAt(steps, index, setter(throwIfNull(steps[index])))),
-            () => setSteps(steps => steps.filter(s => s.id !== stepID)),
-            previousSteps.concat(steps.slice(0, index)),
-        ]
-    }
-    for (const s of steps) {
-        if (s.type === 'decision' || s.type === 'branch') {
-            for (let i = 0; i < s.options.length; i++) {
-                const [step, setStep, deleteStep, childPreviousSteps] = getDeepStep(stepID, throwIfNull(s.options[i]).steps, setter => setSteps(steps => immReplaceBy(steps, s => s.id, immSet(s, 'options', immReplaceAt(s.options, i, immSet(throwIfNull(s.options[i]), 'steps', setter(throwIfNull(s.options[i]).steps)))))), previousSteps.concat(steps.slice(0, steps.findIndex(o => o.id === s.id))))
-                if (step) return [step, setStep, deleteStep, childPreviousSteps]
-            }
-        }
-    }
-    return [null, null, null, null]
-}
-
 export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void }) => {
-    const getEditorState = useSelector(viewStateStore, s => s.editor?.type === 'sceneSteps' ? s.editor : null)
+    const [autoPlay, setAutoPlay] = useState(false)
+
+    const getEditorState = useSelector(viewStateStore, s => s.editor?.type === 'sceneSteps' || s.editor?.type === 'macroSteps' ? s.editor : null)
     const getSelectedStepID = useCallback(() => getEditorState()?.stepID ?? null, [getEditorState])
     const setSelectedStepID = useCallback((value: StepID | null) => {
-        viewStateStore.setValue(s => immSet(s, 'editor', s.editor?.type === 'sceneSteps' ? immSet(s.editor, 'stepID', value) : s.editor))
+        viewStateStore.setValue(s => immSet(s, 'editor', s.editor?.type === 'sceneSteps' || s.editor?.type === 'macroSteps' ? immSet(s.editor, 'stepID', value) : s.editor))
     }, [])
 
     const ctx = getProjectExprContext()
 
-    const [selectedStep, setSelectedStep, deleteSelectedStep, selectedPreviousSteps] = useMemo(() => getDeepStep(getSelectedStepID(), steps, setSteps, []), [getSelectedStepID, steps, setSteps])
+    const selected = useMemo(() => getDeepStep(getSelectedStepID(), steps, setSteps, [], null), [getSelectedStepID, steps, setSteps])
 
     const sceneState: ScenePlayerState = useMemo(() => {
-        let state = getInitialRenderSceneState()
+        let state = getInitialScenePlayerState()
         state = immSet(state, 'settings', immSetProps(state.settings, {
             musicVolume: 0,
         }))
-        if (!selectedStep) return state
+        if (!selected) return state
 
-        state = selectedPreviousSteps.reduce((p, c) => {
+        const previousSteps = selected.previousSteps.flatMap(s => {
+            if (s.type === 'decision' && s.options.length) {
+                return [s, ...throwIfNull(arrayTail(s.options)).steps]
+            } else if (s.type === 'branch' && s.options.length) {
+                return [s, ...throwIfNull(arrayTail(s.options)).steps]
+            }
+            return [s]
+        })
+
+        state = previousSteps.reduce((p, c) => {
             try {
-                return applyStepToRenderSceneState(p, c, ctx)
+                return applyStepToScenePlayerState(p, c, ctx)
             } catch (err) {
                 void platform.error(err)
                 return p
@@ -273,19 +294,102 @@ export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setS
         }, state)
 
         try {
-            state = applyStepToRenderSceneState(state, selectedStep, ctx)
+            state = applyStepToScenePlayerState(state, selected.step, ctx)
             return state
         } catch (err) {
             void platform.error(err)
             return state
         }
-    }, [ctx, selectedPreviousSteps, selectedStep])
+    }, [ctx, selected])
+
+    const onAdvance = useCallback(() => {
+        if (selected && selected.step.type === 'returnTo') {
+            setSelectedStepID(selected.step.stepID)
+        } else if (selected && selected.step.type === 'branch') {
+            setSelectedStepID(arrayTail(selected.step.options)?.steps[0]?.id ?? selected.nextStep?.id ?? null)
+        } else if (selected && selected.nextStep) {
+            setSelectedStepID(selected.nextStep.id)
+            setAutoPlay(true)
+        }
+    }, [selected, setSelectedStepID])
+
+    const onSelectOption = (index: number) => {
+        if (selected && selected.step.type === 'decision') {
+            setSelectedStepID(selected.step.options[index]?.steps[0]?.id ?? selected.nextStep?.id ?? null)
+        }
+    }
+
+    const onSubmitPrompt = (promptValue: unknown) => {
+        onAdvance()
+    }
+
+    useEffect(() => {
+        if (!autoPlay) return
+        switch (selected?.step.type) {
+            case 'backdrop':
+            case 'enter':
+            case 'exit':
+            case 'move':
+            case 'portrait':
+            case 'set':
+            case 'branch':
+            case 'returnTo':
+            case 'goto':
+            case 'music':
+            case 'sound':
+            case 'macro':
+                onAdvance()
+                break
+            default:
+                break
+        }
+    }, [selected?.step, onAdvance, autoPlay])
+
+    const onRestartClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation()
+        setSelectedStepID(steps[0]?.id ?? null)
+        setAutoPlay(true)
+    }, [setSelectedStepID, steps])
+
+    const onAutoPlayClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation()
+        if (!selected) {
+            setSelectedStepID(steps[0]?.id ?? null)
+        }
+        setAutoPlay(v => !v)
+    }, [selected, steps, setSelectedStepID])
+
+    const onCloseClick = useCallback((e: React.MouseEvent) => {
+        e.stopPropagation()
+        viewStateStore.setValue(s => immSet(s, 'editor', null))
+    }, [])
 
     return <div className={styles.sequenceEditor}>
-        <ScenePlayer state={sceneState} onClose={() => viewStateStore.setValue(s => immSet(s, 'editor', null))} />
+        <ScenePlayer state={sceneState} onAdvance={onAdvance} onSelectOption={onSelectOption} onSubmitPrompt={onSubmitPrompt} />
+        <div className={styles.playerIcons}>
+            <PlayerIcon path={COMMON_ICONS.restart} onClick={onRestartClick} />
+            <PlayerIcon path={autoPlay ? COMMON_ICONS.pause : COMMON_ICONS.play} onClick={onAutoPlayClick} />
+            <PlayerIcon path={COMMON_ICONS.close} onClick={onCloseClick} />
+        </div>
         <div className={styles.timeline}>
             <StepList steps={steps} setSteps={setSteps} selected={getSelectedStepID()} setSelected={setSelectedStepID} ctx={ctx} rootSteps={steps} setRootSteps={setSteps} />
         </div>
-        {selectedStep ? <StepEditor key={selectedStep.id} step={selectedStep} setStep={setSelectedStep} deleteStep={deleteSelectedStep} ctx={ctx} /> : null}
+        {selected ? <StepEditor key={selected.step.id} step={selected.step} setStep={selected.setStep} deleteStep={selected.deleteStep} steps={steps} setSteps={setSteps} selected={getSelectedStepID()} setSelected={setSelectedStepID} ctx={ctx} /> : null}
+    </div>
+}
+
+
+export const StepSequenceField = ({ steps, setSteps }: { steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void }) => {
+    const [selectedStepID, setSelectedStepID] = useState<StepID | null>(null)
+
+    const ctx = getProjectExprContext()
+
+    const selected = useMemo(() => getDeepStep(selectedStepID, steps, setSteps, [], null), [selectedStepID, setSteps, steps])
+
+    return <div className={classes(styles.sequenceEditor, styles.field)}>
+        <div className={styles.timeline}>
+            <StepList steps={steps} setSteps={setSteps} selected={selectedStepID} setSelected={setSelectedStepID} ctx={ctx} rootSteps={steps} setRootSteps={setSteps} />
+        </div>
+        {selected ? <StepEditor key={selected.step.id} step={selected.step} setStep={selected.setStep} deleteStep={selected.deleteStep} steps={steps} setSteps={setSteps} selected={selectedStepID} setSelected={setSelectedStepID} ctx={ctx} /> : null}
     </div>
 }

@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react'
 
+import { useProjectStorage } from '../../operations/project'
 import { useAsset } from '../../store/assets'
-import { useProjectStorage } from '../../store/operations'
 import type { AssetDefinition } from '../../types/project'
 import { classes } from '../../utils/display'
 import { throwIfNull } from '../../utils/guard'
@@ -32,12 +32,13 @@ export const ImageField = ({ className, label, value, setValue, validate, target
         if (!file) return
         void (async () => {
             const buffer = await file.binary()
-            if (!storage.storeBinary) throw new Error(`Storage ${storage.type} does not support saving binary files`)
+            if (!storage.storeAsset) throw new Error(`Storage ${storage.type} does not support saving asset files`)
             const mimeType = getMimeType(file.name)
             if (!mimeType) throw new Error('File did not have a recognized file extension')
             const path = targetPath
-            await storage.storeBinary(getRoot(), path, buffer)
-            setValue?.({ mimeType, path })
+            const asset: AssetDefinition = { mimeType, path }
+            await storage.storeAsset(getRoot(), asset, buffer)
+            setValue?.(asset)
         })()
     }, [targetPath, getRoot, setValue, storage])
 

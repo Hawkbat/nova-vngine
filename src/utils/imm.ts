@@ -19,13 +19,17 @@ export function immRemoveAt<T>(arr: T[], index: number, count: number = 1): T[] 
     return arr.slice(0, index).concat(arr.slice(index + count))
 }
 
+export function immRemoveWhere<T>(arr: T[], where: (value: T) => boolean): T[] {
+    return arr.filter(v => !where(v))
+}
+
 export function immReplaceBy<T>(arr: T[], getKey: (value: T) => unknown, value: T): T[] {
     const key = getKey(value)
     return arr.map(v => getKey(v) === key ? value : v)
 }
 
-export function immReplaceWhere<T>(arr: T[], filter: (value: T) => boolean, setter: (value: T) => T): T[] {
-    return arr.map(v => filter(v) ? setter(v) : v)
+export function immReplaceWhere<T>(arr: T[], where: (value: T) => boolean, setter: (value: T) => T): T[] {
+    return arr.map(v => where(v) ? setter(v) : v)
 }
 
 export function immKeepWhile<T>(arr: T[], shouldKeep: (value: T, i: number, arr: T[]) => boolean): T[] {
@@ -42,6 +46,29 @@ export function immSet<T extends Record<string, any>, K extends keyof T>(obj: T,
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function immSetProps<T extends Record<string, any>>(obj: T, values: Partial<T>): T {
     return { ...obj, ...values }
+}
+
+export function shallowEquals<T>(a: T, b: T): boolean {
+    if (a === b) return true
+    if (typeof a !== typeof b) return false
+    if (a === null || b === null) return a === b
+    if (Array.isArray(a) && Array.isArray(b)) {
+        if (a.length !== b.length) return false
+        for (let i = 0; i < a.length; i++) {
+            if (a[i] !== b[i]) return false
+        }
+        return true
+    }
+    if (typeof a === 'object' && typeof b === 'object') {
+        for (const [k, v] of Object.entries(a)) {
+            if (b[k as keyof T] !== v) return false
+        }
+        for (const [k, v] of Object.entries(b)) {
+            if (a[k as keyof T] !== v) return false
+        }
+        return true
+    }
+    return false
 }
 
 export function deepDiff<T>(a: T, b: T, path: string, diffs: [path: string, before: unknown, after: unknown][] = []) {

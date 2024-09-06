@@ -1,0 +1,238 @@
+import { gamePlayerStore } from '../store/player'
+import { viewStateStore } from '../store/viewstate'
+import { type AnyExprValue, resolveExpr, resolveExprAs } from '../types/expressions'
+import type { GamePlayerActionOfType, GamePlayerActionType, GamePlayerEvaluationState, GamePlayerState } from '../types/player'
+import { applyStepToScenePlayerState, getExprContext, getInitialGamePlayerState, getInitialScenePlayerState, GoToSceneGamePlayerSignal, ReturnToStepGamePlayerSignal, SceneEndGamePlayerSignal, StopGamePlayerSignal } from '../types/player'
+import { type ChapterID, getVariableValueType, type MacroID, type SceneID, type StoryID } from '../types/project'
+import type { AnyStep, StepID } from '../types/steps'
+import { arrayHead } from '../utils/array'
+import { throwIfNull } from '../utils/guard'
+import { immSet } from '../utils/imm'
+import { hintTuple } from '../utils/types'
+import { getEntityByID } from './project'
+
+export function userPlayStory(storyID: StoryID) {
+    gamePlayerStore.setValue(() => getInitialGamePlayerState(storyID))
+    viewStateStore.setValue(s => immSet(s, 'editor', { type: 'player', storyID }))
+}
+
+export function getCurrentPlayerState(gameState: GamePlayerState) {
+    let evalState: GamePlayerEvaluationState = {
+        randState: gameState.randState,
+        story: null,
+        macros: [],
+        stoppedAt: null,
+    }
+    let sceneState = getInitialScenePlayerState()
+    const exprContext = getExprContext(() => evalState, setter => evalState = setter(evalState))
+    const actions = [...gameState.actions]
+    const stepHistory: AnyStep[] = []
+    let stopNext = false
+
+    const tryPopAction = <T extends GamePlayerActionType>(type: T, stepID: StepID): GamePlayerActionOfType<T> | null => {
+        const head = arrayHead(actions)
+        if (head?.type === type && head.stepID === stepID) {
+            actions.shift()
+            return head as GamePlayerActionOfType<T>
+        }
+        return null
+    }
+
+    const processStory = (storyID: StoryID, chapterID?: ChapterID, sceneID?: SceneID) => {
+        const story = throwIfNull(getEntityByID('story', storyID))
+        if (evalState.story?.id !== storyID) {
+            evalState.story = {
+                id: story.id,
+                variables: {},
+                chapter: null,
+                characters: {},
+            }
+        }
+        try {
+            processChapter(chapterID ?? throwIfNull(story.firstChapterID), sceneID)
+            popStory()
+        } catch (err) {
+            if (err instanceof GoToSceneGamePlayerSignal) {
+                const scene = throwIfNull(exprContext.resolvers.scene(err.sceneID))
+                const chapter = throwIfNull(exprContext.resolvers.chapter(scene.chapterID))
+                if (chapter.storyID === storyID) return processStory(storyID, chapter.id, scene.id)
+            }
+            throw err
+        }
+    }
+
+    const processChapter = (chapterID: ChapterID, sceneID?: SceneID) => {
+        const chapter = throwIfNull(getEntityByID('chapter', chapterID))
+        if (evalState.story?.chapter?.id !== chapterID) {
+            throwIfNull(evalState.story).chapter = {
+                id: chapterID,
+                variables: {},
+                scene: null,
+            }
+        }
+        try {
+            processScene(sceneID ?? throwIfNull(chapter.firstSceneID))
+            popChapter()
+        } catch (err) {
+            if (err instanceof GoToSceneGamePlayerSignal) {
+                const scene = throwIfNull(exprContext.resolvers.scene(err.sceneID))
+                if (scene.chapterID === chapterID) return processChapter(chapterID, scene.id)
+            }
+            throw err
+        }
+    }
+
+    const processScene = (sceneID: SceneID) => {
+        const scene = throwIfNull(getEntityByID('scene', sceneID))
+        if (evalState.story?.chapter?.scene?.id !== scene.id) {
+            throwIfNull(evalState.story?.chapter).scene = {
+                id: scene.id,
+                variables: {},
+            }
+        }
+        sceneState = getInitialScenePlayerState()
+        try {
+            processSteps(scene.steps)
+            popScene()
+            throw new SceneEndGamePlayerSignal(scene.id)
+        } catch (err) {
+            if (err instanceof GoToSceneGamePlayerSignal) {
+                if (err.sceneID === scene.id) return processScene(sceneID)
+                popScene()
+                throw err
+            }
+            throw err
+        }
+    }
+
+    const processMacro = (macroID: MacroID) => {
+        const macro = throwIfNull(getEntityByID('macro', macroID))
+        evalState.macros.push({
+            id: macro.id,
+            variables: {},
+        })
+        try {
+            processSteps(macro.steps)
+            popMacro()
+        } catch (err) {
+            if (err instanceof GoToSceneGamePlayerSignal) {
+                popMacro()
+            }
+            throw err
+        }
+    }
+
+    const processStep = (step: AnyStep) => {
+        stepHistory.push(step)
+        sceneState = applyStepToScenePlayerState(sceneState, step, exprContext)
+        switch (step.type) {
+            case 'text':
+            case 'narrate':
+            case 'prompt':
+            case 'decision': {
+                if (!gameState.stopAfter || stopNext) {
+                    throw new StopGamePlayerSignal(step)
+                }
+                break
+            }
+            default: break
+        }
+        if (step.id === gameState.stopAfter) {
+            stopNext = true
+        }
+        switch (step.type) {
+            case 'prompt': {
+                const action = tryPopAction('prompt', step.id)
+                if (!action) throw new StopGamePlayerSignal(step)
+                const variableID = resolveExprAs(step.variable, 'variable', exprContext).value
+                const variable = throwIfNull(exprContext.resolvers.variable(variableID))
+                const type = getVariableValueType(variable, exprContext)
+                const value = { type, value: action.value } as AnyExprValue
+                exprContext.variables.setValue(variableID, value)
+                break
+            }
+            case 'decision': {
+                const action = tryPopAction('decision', step.id)
+                if (!action) throw new StopGamePlayerSignal(step)
+                processSteps(throwIfNull(step.options[action.index]).steps)
+                break
+            }
+            case 'branch': {
+                for (const option of step.options) {
+                    const conditionMet = resolveExprAs(option.condition, 'boolean', exprContext).value
+                    if (conditionMet) {
+                        processSteps(option.steps)
+                        break
+                    }
+                }
+                break
+            }
+            case 'set': {
+                const variableID = resolveExprAs(step.variable, 'variable', exprContext).value
+                const value = resolveExpr(step.variable, exprContext)
+                exprContext.variables.setValue(variableID, value)
+                break
+            }
+            case 'macro': {
+                const macroID = resolveExprAs(step.macro, 'macro', exprContext).value
+                processMacro(macroID)
+                break
+            }
+            case 'goto': {
+                const sceneID = resolveExprAs(step.scene, 'scene', exprContext).value
+                throw new GoToSceneGamePlayerSignal(sceneID)
+            }
+            case 'returnTo': {
+                throw new ReturnToStepGamePlayerSignal(step.stepID)
+            }
+            default: break
+        }
+    }
+
+    const processSteps = (steps: AnyStep[]) => {
+        try {
+            for (const step of steps) {
+                processStep(step)
+            }
+        } catch (err) {
+            if (err instanceof ReturnToStepGamePlayerSignal) {
+                const index = steps.findIndex(s => s.id === err.stepID)
+                if (index < 0) throw err
+                return processSteps(steps.slice(index))
+            }
+            throw err
+        }
+    }
+
+    const popScene = () => {
+        throwIfNull(evalState.story?.chapter).scene = null
+    }
+
+    const popChapter = () => {
+        throwIfNull(evalState.story).chapter = null
+    }
+
+    const popStory = () => {
+        throwIfNull(evalState.story)
+        evalState.story = null
+    }
+
+    const popMacro = () => {
+        evalState.macros.pop()
+    }
+
+    try {
+        if (gameState.storyID) {
+            processStory(gameState.storyID)
+        }
+    } catch (err) {
+        if (err instanceof StopGamePlayerSignal) {
+            evalState.stoppedAt = err.step
+        } else {
+            throw err
+        }
+    }
+
+    return hintTuple(evalState, sceneState)
+}
+

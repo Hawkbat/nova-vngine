@@ -1,5 +1,6 @@
 import type { ParseFunc } from '../utils/guard'
-import { defineParser, parsers as $ } from '../utils/guard'
+import { defineParser, parsers as $, throwIfNull } from '../utils/guard'
+import { immReplaceAt, immReplaceBy, immSet } from '../utils/imm'
 import type { Branded } from '../utils/types'
 import { assertExhaustive } from '../utils/types'
 import type { AnyExpr, BackdropExpr, BooleanExpr, CharacterExpr, ExprContext, LocationExpr, MacroExpr, PortraitExpr, SceneExpr, SongExpr, SoundExpr, StringExpr, ValueExpr, VariableExpr } from './expressions'
@@ -70,6 +71,9 @@ type StepMap = {
         inputs: AnyExpr[]
         outputs: VariableExpr[]
     }
+    returnTo: {
+        stepID: StepID
+    }
     goto: {
         scene: SceneExpr
     }
@@ -90,6 +94,7 @@ const STEP_TYPE_MAP = {
     prompt: true,
     set: true,
     macro: true,
+    returnTo: true,
     goto: true,
 } satisfies Record<StepType, true>
 
@@ -123,9 +128,42 @@ export function createStep<T extends StepType>(id: StepID, type: T, ctx: ExprCon
         case 'prompt': return validateStep('prompt', { id, type, label: '', variable: createDefaultExpr('variable', ctx), initialValue: createDefaultExpr('unset', ctx) }) as StepOfType<T>
         case 'set': return validateStep('set', { id, type, variable: createDefaultExpr('variable', ctx), value: createDefaultExpr('unset', ctx) }) as StepOfType<T>
         case 'macro': return validateStep('macro', { id, type, macro: createDefaultExpr('macro', ctx), inputs: [], outputs: [] }) as StepOfType<T>
+        case 'returnTo': return validateStep('returnTo', { id, type, stepID: '' as StepID }) as StepOfType<T>
         case 'goto': return validateStep('goto', { id, type, scene: createDefaultExpr('scene', ctx) }) as StepOfType<T>
         default: return assertExhaustive(type, `Could not create step of type ${JSON.stringify(type)}`)
     }
+}
+
+
+
+export function getDeepStep(stepID: StepID | null, steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, previousSteps: AnyStep[], nextStep: AnyStep | null): {
+    step: AnyStep
+    setStep: (setter: (step: AnyStep) => AnyStep) => void
+    deleteStep: () => void
+    previousSteps: AnyStep[]
+    nextStep: AnyStep | null
+} | null {
+    if (!stepID) return null
+    const index = steps.findIndex(s => s.id === stepID)
+    if (index >= 0) {
+        return {
+            step: throwIfNull(steps[index]),
+            setStep: setter => setSteps(steps => immReplaceAt(steps, index, setter(throwIfNull(steps[index])))),
+            deleteStep: () => setSteps(steps => steps.filter(s => s.id !== stepID)),
+            previousSteps: previousSteps.concat(steps.slice(0, index)),
+            nextStep: steps[index + 1] ?? nextStep,
+        }
+    }
+    for (const s of steps) {
+        if (s.type === 'decision' || s.type === 'branch') {
+            const index = steps.findIndex(o => s.id === o.id)
+            for (let i = 0; i < s.options.length; i++) {
+                const result = getDeepStep(stepID, throwIfNull(s.options[i]).steps, setter => setSteps(steps => immReplaceBy(steps, s => s.id, immSet(s, 'options', immReplaceAt(s.options, i, immSet(throwIfNull(s.options[i]), 'steps', setter(throwIfNull(s.options[i]).steps)))))), previousSteps.concat(steps.slice(0, steps.findIndex(o => o.id === s.id))), steps[index + 1] ?? null)
+                if (result) return result
+            }
+        }
+    }
+    return null
 }
 
 export const parseAnyStep: ParseFunc<AnyStep> = defineParser<AnyStep>((c, v, d) => $.typed(c, v, { id: $.id }, {
@@ -143,5 +181,6 @@ export const parseAnyStep: ParseFunc<AnyStep> = defineParser<AnyStep>((c, v, d) 
     prompt: { label: $.string, variable: parseAnyExpr, initialValue: parseAnyExpr },
     set: { variable: parseAnyExpr, value: parseAnyExpr },
     macro: { macro: parseAnyExpr, inputs: (c, v, d) => $.array(c, v, parseAnyExpr, d), outputs: (c, v, d) => $.array(c, v, parseAnyExpr, d) },
+    returnTo: { stepID: $.id },
     goto: { scene: parseAnyExpr },
 }, d))

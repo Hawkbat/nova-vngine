@@ -23,6 +23,7 @@ export const buildContext = await esbuild.context({
         '.png': 'file',
         '.svg': 'file',
         '.ttf': 'file',
+        '.mp3': 'file',
     },
     define: {
         COMMIT_SHORT_HASH: JSON.stringify(commit.shortHash),

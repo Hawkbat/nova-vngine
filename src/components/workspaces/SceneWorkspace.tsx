@@ -4,7 +4,7 @@ import type { SceneDefinition } from '../../types/project'
 import { immReplaceWhere, immSet } from '../../utils/imm'
 import { useSelector } from '../../utils/store'
 import { EditorButton, EditorButtonGroup } from '../common/EditorButton'
-import { StepSequenceEditor } from '../editors/StepSequenceEditor'
+import { StepSequenceEditor, StepSequenceField } from '../editors/StepSequenceEditor'
 import { EntityWorkspace } from './EntityWorkspace'
 
 const SceneEditor = () => {
@@ -21,8 +21,9 @@ export const SceneWorkspace = () => {
         <SceneEditor />
     </> : <>
         <EntityWorkspace type='scene' getVariableScopes={scene => [{ type: 'scene', value: scene.id }, { type: 'scenes', value: [scene.id] }, { type: 'allScenes' }]}>{(scene, setScene) => <>
+            <StepSequenceField steps={scene.steps} setSteps={setter => setScene(s => immSet(s, 'steps', setter(s.steps)))} />
             <EditorButtonGroup side='left'>
-                <EditorButton onClick={() => viewStateStore.setValue(s => immSet(s, 'editor', { type: 'sceneSteps', sceneID: scene.id, stepID: null }))}>Edit Scene</EditorButton>
+                <EditorButton onClick={() => viewStateStore.setValue(s => immSet(s, 'editor', { type: 'sceneSteps', sceneID: scene.id, stepID: null }))}>Open Scene in  Sequence Editor</EditorButton>
             </EditorButtonGroup>
         </>}</EntityWorkspace>
     </>

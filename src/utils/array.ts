@@ -21,3 +21,14 @@ export function arrayHead<T>(array: T[]): T | null {
 export function arrayTail<T>(array: T[]): T | null {
     return array[array.length - 1] ?? null
 }
+
+export function arrayMin<T>(array: T[], selector: (value: T) => number, defaultValue: number = 0) {
+    if (!array.length) return defaultValue
+    return array.reduce((p, c) => Math.min(p, selector(c)), Infinity)
+}
+
+export function arrayMax<T>(array: T[], selector: (value: T) => number, defaultValue: number = 0) {
+    if (!array.length) return defaultValue
+    return array.reduce((p, c) => Math.max(p, selector(c)), -Infinity)
+}
+

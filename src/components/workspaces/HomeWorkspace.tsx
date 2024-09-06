@@ -1,5 +1,6 @@
 import faviconSvgUrl from '../../favicon.svg'
-import { userCreateNewProject, userOpenRecentProject, userSelectProject, useViewStateTab } from '../../store/operations'
+import { userCreateNewProject, userOpenRecentProject, userSelectProject } from '../../operations/project'
+import { useViewStateTab } from '../../operations/viewState'
 import { viewStateStore } from '../../store/viewstate'
 import { useSelector } from '../../utils/store'
 import { EditorIcon } from '../common/EditorIcon'

@@ -1,13 +1,14 @@
-import { useCallback } from 'react'
 
 import { openDialog } from '../components/common/Dialog'
 import { platform } from '../platform/platform'
 import { getStorageProvider } from '../platform/storage/storage'
+import { createDefaultProject, projectStore } from '../store/project'
+import { viewStateStore } from '../store/viewstate'
 import { createDefaultExpr, type ExprContext, resolveExpr } from '../types/expressions'
 import { DEFAULT_PROJECT_FILENAME, isPlatformErrorCode, PlatformError } from '../types/platform'
-import { type AnyVariableDefinition, type AnyVariableScope, type AssetDefinition, type BackdropDefinition, type BackdropID, type ChapterDefinition, type ChapterID, type CharacterDefinition, type CharacterID, ENTITY_TYPES, type EntityIDOf, type EntityOfType, type EntityParentIDOf, type EntityParentOf, type EntityType, getEntityParentID, getEntityParentType, getEntityTypeHierarchy, getProjectEntityKey, type MacroDefinition, type MacroID, parseProjectDefinition, type PortraitDefinition, type PortraitID, type ProjectDefinition, type SceneDefinition, type SceneID, type SongDefinition, type SongID, type SoundDefinition, type SoundID, type StoryDefinition, type StoryID, type VariableID, type VariableType } from '../types/project'
+import { type AnyVariableDefinition, type AnyVariableScope, type AssetDefinition, type BackdropDefinition, type BackdropID, type ChapterDefinition, type ChapterID, type CharacterDefinition, type CharacterID, type EntityIDOf, type EntityOfType, type EntityParentIDOf, type EntityParentOf, type EntityType, getEntityParentID, getEntityParentType, getEntityTypeByProjectKey, getProjectEntityKey, type MacroDefinition, type MacroID, parseProjectDefinition, type PortraitDefinition, type PortraitID, PROJECT_ENTITY_KEYS, type ProjectDefinition, type SceneDefinition, type SceneID, type SongDefinition, type SongID, type SoundDefinition, type SoundID, type StoryDefinition, type StoryID, type VariableID, type VariableType } from '../types/project'
 import type { StorageRootEntry } from '../types/storage'
-import type { ProjectEditorTab, ProjectMetaData } from '../types/viewstate'
+import type { ProjectMetaData } from '../types/viewstate'
 import { arrayHead } from '../utils/array'
 import { prettyPrintIdentifier } from '../utils/display'
 import { throwIfNull, tryParseJson } from '../utils/guard'
@@ -15,16 +16,13 @@ import { immAppend, immSet } from '../utils/imm'
 import { randFloat, randID, randInt, randSeedRandom, uncheckedRandID } from '../utils/rand'
 import { useSelector } from '../utils/store'
 import { assertExhaustive, hintTuple } from '../utils/types'
-import { createDefaultProject, projectStore } from './project'
-import { settingsStore } from './settings'
-import { viewStateStore } from './viewstate'
 
 function parseProjectFromJson(text: string) {
     const parsed = tryParseJson(text, 'project', parseProjectDefinition)
     if (parsed.ctx.warnings.length) void platform.warn(parsed.ctx.warnings)
     if (!parsed.success) {
         void platform.error('Failed to parse project', text, parsed.ctx.errors)
-        throw new PlatformError('bad-project', 'The project file was outdated or corrupted in a manner that has prevented it from loading.')
+        throw new PlatformError('bad-project', `The project file was outdated or corrupted in a manner that has prevented it from loading.\n\n${parsed.ctx.errors.join('\n')}`)
     }
     return parsed.value
 }
@@ -51,33 +49,6 @@ export async function loadProject(root: StorageRootEntry) {
     projectStore.clearHistory()
     projectStore.setDirty(false)
     return true
-}
-
-export async function loadInitialViewState() {
-    const viewState = await platform.loadViewState()
-    viewStateStore.setValue(() => viewState)
-    try {
-        if (viewState.loadedProject && await loadProject(viewState.loadedProject.root)) {
-            return
-        }
-    } catch (err) {
-        if (isPlatformErrorCode(err, 'bad-project')) {
-            void platform.error('Failed to load previously loaded project', err)
-        } else {
-            throw err
-        }
-    }
-    viewStateStore.setValue(s => ({
-        ...s,
-        currentTab: 'home',
-        loadedProject: null,
-        loaded: true,
-    }))
-}
-
-export async function loadInitialSettings() {
-    const viewState = await platform.loadSettings()
-    settingsStore.setValue(() => viewState)
 }
 
 async function tryLoadProject(root: StorageRootEntry) {
@@ -191,8 +162,14 @@ export function getProjectExprContext(): ExprContext {
             sound: id => project.sounds.find(e => e.id === id) ?? null,
             macro: id => project.macros.find(e => e.id === id) ?? null,
             variable: id => project.variables.find(e => e.id === id) ?? null,
-            variableValue: id => resolveExpr(project.variables.find(e => e.id === id)?.default ?? createDefaultExpr('unset', ctx), ctx),
-            characterVariableValue: (id, characterID) => resolveExpr(project.variables.find(e => e.id === id)?.default ?? createDefaultExpr('unset', ctx), ctx),
+        },
+        variables: {
+            getValue: id => resolveExpr(project.variables.find(e => e.id === id)?.default ?? createDefaultExpr('unset', ctx), ctx),
+            setValue: () => {},
+            getCharacterValue: (id, characterID) => resolveExpr(project.variables.find(e => e.id === id)?.default ?? createDefaultExpr('unset', ctx), ctx),
+            setCharacterValue: () => {},
+            getMacroValue: (id, macroID) => resolveExpr(project.variables.find(e => e.id === id)?.default ?? createDefaultExpr('unset', ctx), ctx),
+            setMacroValue: () => {},
         },
         random: {
             float: (min, max) => randFloat(randSeedRandom(), min, max)[1],
@@ -238,19 +215,41 @@ export function getEntityPrimaryAsset<T extends EntityType>(type: T, entity: Ent
         case 'backdrop': return (entity as BackdropDefinition).image
         case 'character': {
             const portraits = projectStore.getSnapshot().portraits.filter(p => p.characterID === entity.id)
-            const portrait = arrayHead(portraits)
+            const portrait = portraits.find(p => (entity as CharacterDefinition).mainPortraitID === p.id) ?? arrayHead(portraits)
             return portrait?.image ?? null
         }
         default: return null
     }
 }
 
-export function getEntityDisplayName<T extends EntityType>(type: T, entity: EntityOfType<T>, includeParent: boolean): string {
+export function getEntityDisplayName<T extends EntityType>(type: T, entity: EntityOfType<T> | null, includeParent: boolean): string {
+    if (!entity) return 'None'
     const entityName = entity.name ? entity.name : `Untitled ${prettyPrintIdentifier(type)}`
     const parentType = getEntityParentType(type)
     const parent = getEntityParent(type, entity)
     if (includeParent && parentType && parent) return `${getEntityDisplayName(parentType, parent, false)} - ${entityName}`
     return entityName
+}
+
+export function getEntityReferences(id: string): { type: EntityType, id: string }[] {
+    const existsInTree = (v: unknown): boolean => {
+        if (typeof v === 'string') return v === id
+        else if (typeof v !== 'object') return false
+        else if (v === null) return false
+        else if (Array.isArray(v)) {
+            if (v.length && v.some(e => existsInTree(e))) return true
+        } else {
+            for (const k of Object.keys(v)) {
+                if (existsInTree(k)) return true
+            }
+            for (const e of Object.values(v)) {
+                if (existsInTree(e)) return true
+            }
+        }
+        return false
+    }
+
+    return PROJECT_ENTITY_KEYS.flatMap(k => projectStore.getSnapshot()[k].filter(e => e.id !== id).flatMap(e => existsInTree(e) ? [{ type: throwIfNull(getEntityTypeByProjectKey(k)), id: e.id }] : []))
 }
 
 export function immGenerateID<T extends string>(project: ProjectDefinition): [ProjectDefinition, T] {
@@ -265,6 +264,7 @@ export function immCreateStory(project: ProjectDefinition): [ProjectDefinition, 
     const story: StoryDefinition = {
         id,
         name: '',
+        firstChapterID: null,
     }
 
     return hintTuple(immSet(project, 'stories', immAppend(project.stories, story)), story)
@@ -278,6 +278,7 @@ export function immCreateChapter(project: ProjectDefinition, storyID: StoryID): 
         id,
         name: '',
         storyID,
+        firstSceneID: null,
     }
 
     return hintTuple(immSet(project, 'chapters', immAppend(project.chapters, chapter)), chapter)
@@ -304,6 +305,7 @@ export function immCreateCharacter(project: ProjectDefinition): [ProjectDefiniti
     const character: CharacterDefinition = {
         id,
         name: '',
+        mainPortraitID: null,
     }
 
     return hintTuple(immSet(project, 'characters', immAppend(project.characters, character)), character)
@@ -429,32 +431,6 @@ export function immConvertVariable(variable: AnyVariableDefinition, type: Variab
         case 'lookup': return { id, name, type, scope, keys: { type: 'flag', setValueLabel: createDefaultExpr('string', ctx), unsetValueLabel: createDefaultExpr('string', ctx) }, elements: { type: 'flag', setValueLabel: createDefaultExpr('string', ctx), unsetValueLabel: createDefaultExpr('string', ctx) }, default: createDefaultExpr('unset', ctx) }
         default: assertExhaustive(type, `Unhandled variable type ${String(type)}`)
     }
-}
-
-export function useViewStateTab() {
-    const getTab = useSelector(viewStateStore, s => s.currentTab)
-    const setTab = useCallback((tab: ProjectEditorTab) => {
-        viewStateStore.setValue(s => immSet(s, 'currentTab', tab))
-    }, [])
-    return hintTuple(getTab, setTab)
-}
-
-export function useViewStateScope<T extends EntityType>(type: T | null): [() => EntityIDOf<T> | null, (id: EntityIDOf<T> | null) => void] {
-    const getScopes = useSelector(viewStateStore, s => s.scopes)
-    const getScope = useCallback(() => type ? getScopes()[type] as EntityIDOf<T> | null : null, [getScopes, type])
-    const setScope = useCallback((id: EntityIDOf<T> | null) => {
-        if (!type) return
-        if (!id) {
-            const subTypes = ENTITY_TYPES.filter(e => getEntityTypeHierarchy(e).includes(type))
-            const scopeValues = Object.fromEntries(subTypes.map(t => hintTuple(t, null)))
-            viewStateStore.setValue(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues }, editor: null }))
-            return
-        }
-        const hierarchy = getEntityHierarchy(type, id)
-        const scopeValues = Object.fromEntries(hierarchy.map(h => hintTuple(h.type, h.entity.id)))
-        viewStateStore.setValue(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues }, editor: null }))
-    }, [type])
-    return hintTuple(getScope, setScope)
 }
 
 export function getProjectStorage() {

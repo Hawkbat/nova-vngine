@@ -105,6 +105,11 @@ export const neutralinoStorageProvider: StorageProvider = {
             throw err
         }
     },
+    async storeAsset(root, asset, buffer) {
+        await this.storeBinary?.(root, asset.path, buffer)
+        const path = root ? getAbsolutePath(asset.path, root.key) : asset.path
+        await nFS.remove(`${path}_thumb`)
+    },
     async listDirectory(root, path) {
         await waitForNeutralinoInit()
         path = root ? getAbsolutePath(path, root.key) : path
