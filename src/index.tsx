@@ -10,6 +10,7 @@ import { platform } from './platform/platform'
 import { projectStore } from './store/project'
 import { settingsStore } from './store/settings'
 import { viewStateStore } from './store/viewstate'
+import { isPlatformErrorCode } from './types/platform'
 import { wait } from './utils/async'
 import { openErrorDialog } from './utils/debug'
 import { immReplaceBy, immSet } from './utils/imm'
@@ -59,9 +60,15 @@ async function initializeAll() {
         const viewState = viewStateStore.getSnapshot()
         if (viewState.loadedProject) {
             const root = viewState.loadedProject.root
-            await saveProject(root, state)
-            await wait(1000)
-            projectStore.setDirty(false)
+            try {
+                await saveProject(root, state)
+                await wait(1000)
+                projectStore.setDirty(false)
+            } catch (err) {
+                if (isPlatformErrorCode(err, 'not-supported')) {
+                    await wait(1000)
+                }
+            }
         }
     })
 

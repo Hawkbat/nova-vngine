@@ -41,6 +41,10 @@ html, body {
     height: 100%;
 }
 
+picture {
+    display: contents;
+}
+
 * {
     box-sizing: border-box;
     scrollbar-color: transparent transparent;

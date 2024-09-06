@@ -16,7 +16,7 @@ export const webPlatform: Platform = {
     },
     async loadViewState() {
         const json = localStorage.getItem('nvn-viewstate')
-        const parsed = tryParseJson(json ?? '', 'viewState', parseViewState)
+        const parsed = tryParseJson(json ?? '{}', 'viewState', parseViewState)
         if (parsed.ctx.warnings.length) void this.warn(parsed.ctx.warnings)
         if (!parsed.success) {
             void this.error('Failed to load viewstate', json, parsed.ctx.errors)
@@ -29,7 +29,7 @@ export const webPlatform: Platform = {
     },
     async loadSettings() {
         const json = localStorage.getItem('nvn-settings')
-        const parsed = tryParseJson(json ?? '', 'settings', parseSettingsState)
+        const parsed = tryParseJson(json ?? '{}', 'settings', parseSettingsState)
         if (parsed.ctx.warnings.length) void this.warn(parsed.ctx.warnings)
         if (!parsed.success) {
             void this.error('Failed to load settings', json, parsed.ctx.errors)

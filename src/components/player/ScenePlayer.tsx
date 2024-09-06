@@ -108,11 +108,12 @@ const getTextLengthAtTime = (text: string, time: number) => {
 
 interface PortraitProps {
     src: string
+    mimeType: string
     y: number
     s: number
 }
 
-const PortraitImage = ({ src, y, s }: PortraitProps) => {
+const PortraitImage = ({ src, mimeType, y, s }: PortraitProps) => {
     const ref = useTransitionAnimationRef(true, {
         in: [{ opacity: 0 }, { opacity: 1 }],
         inT: {},
@@ -120,7 +121,7 @@ const PortraitImage = ({ src, y, s }: PortraitProps) => {
         outT: {},
     })
 
-    return <img ref={ref} src={src} className={styles.character} style={{ top: `${String(y * 100)}%`, height: `${String(s * 100)}%` }} />
+    return <picture><source srcSet={src} type={mimeType} /><img ref={ref} src={src} className={styles.character} style={{ top: `${String(y * 100)}%`, height: `${String(s * 100)}%` }} /></picture>
 }
 
 const Character = ({ characterID, portraitID, location }: CharacterPlayerState) => {
@@ -157,7 +158,7 @@ const Character = ({ characterID, portraitID, location }: CharacterPlayerState) 
     const s = scale * (1 / h)
 
     return <div ref={ref} className={styles.characterPivot} style={{ left: `${String(x * 100)}%` }}>
-        <TransitionGroup<PortraitProps> values={imgUrl ? [{ src: imgUrl, s, y }] : []} getKey={v => v.src}>
+        <TransitionGroup<PortraitProps> values={imgUrl ? [{ src: imgUrl, mimeType: getPortrait()?.image?.mimeType ?? 'image/png', s, y }] : []} getKey={v => v.src}>
             {props => <PortraitImage key={props.src} {...props} />}
         </TransitionGroup>
     </div>
@@ -184,7 +185,9 @@ const Backdrop = ({ backdropID, dir }: BackdropPlayerState) => {
         out: first ? [{ opacity: 1, flexGrow: 1 }, { opacity: 0, flexGrow: 0 }] : [{ flexGrow: 1 }, { flexGrow: 0 }],
         outT: { easing: 'ease-in-out', duration: 500 },
     })
-    return <div ref={ref} className={classes(styles.backdropPivot, { [styles.before ?? '']: dir === -1, [styles.after ?? '']: dir === 1 })}>{imgUrl ? <div className={styles.backdropContainer}><img src={imgUrl} className={styles.backdrop} /></div> : null}</div>
+    return <div ref={ref} className={classes(styles.backdropPivot, { [styles.before ?? '']: dir === -1, [styles.after ?? '']: dir === 1 })}>{imgUrl ? <div className={styles.backdropContainer}>
+        <picture><source srcSet={imgUrl} type={getBackdrop()?.image?.mimeType} /><img src={imgUrl} className={styles.backdrop} /></picture>
+    </div> : null}</div>
 }
 
 const Backdrops = ({ backdrops }: { backdrops: BackdropPlayerState[] }) => {

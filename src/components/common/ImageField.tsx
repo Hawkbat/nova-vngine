@@ -55,8 +55,8 @@ export const ImageField = ({ className, label, value, setValue, validate, target
     return <Field label={label} error={errorCheck()}>
         {value ? <>
             {getThumbImgSrc() ? <>
-                <img className={classes(styles.preview, className)} src={getThumbImgSrc() ?? undefined} onClick={onPreview} />
-                <ImagePreview open={previewOpen} src={throwIfNull(getImgSrc() ?? getThumbImgSrc())} onClose={() => setPreviewOpen(false)} />
+                <picture><source srcSet={getThumbImgSrc() ?? undefined} type={value.mimeType} /><img className={classes(styles.preview, className)} src={getThumbImgSrc() ?? undefined} onClick={onPreview} /></picture>
+                <ImagePreview open={previewOpen} src={throwIfNull(getImgSrc() ?? getThumbImgSrc())} mimeType={value.mimeType} onClose={() => setPreviewOpen(false)} />
             </> : <span>Loading...</span>}
             <EditorIcon path={COMMON_ICONS.deleteItem} label='Delete Image' onClick={onDelete} />
         </> : <>

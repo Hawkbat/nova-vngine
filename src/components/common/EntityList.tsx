@@ -45,7 +45,7 @@ const Item = <T extends EntityType>({ type, item }: { type: T, item: EntityOfTyp
         setCurrentTab(projectKey)
     }
 
-    return <EditorIcon key={item.id} path={getAssetUrl() ?? EXPR_VALUE_ICONS[type]} label={getEntityDisplayName(type, item, false)} active={false} showLabel onClick={() => onSelectItem(item.id as EntityIDOf<T>)} />
+    return <EditorIcon key={item.id} mimeType={asset?.mimeType} path={getAssetUrl() ?? EXPR_VALUE_ICONS[type]} label={getEntityDisplayName(type, item, false)} active={false} showLabel onClick={() => onSelectItem(item.id as EntityIDOf<T>)} />
 }
 
 export const EntityList = <T extends EntityType>({ type, label, filter, createEntity, hideEmpty }: {

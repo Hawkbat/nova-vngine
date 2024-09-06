@@ -14,8 +14,9 @@ const ICON_STYLES: Record<EditorIconStyle, string | undefined> = {
     text: styles.text,
 }
 
-export const EditorIcon = ({ path, label, style, size, active, showLabel, className, onClick }: {
+export const EditorIcon = ({ path, mimeType, label, style, size, active, showLabel, className, onClick }: {
     path: string
+    mimeType?: string
     label?: string
     style?: EditorIconStyle
     size?: number
@@ -34,7 +35,7 @@ export const EditorIcon = ({ path, label, style, size, active, showLabel, classN
     }, [onClick])
 
     return <div className={classes(styles.icon, ICON_STYLES[style ?? 'text'], { [styles.active ?? '']: active !== undefined ? active : false, [styles.inactive ?? '']: active !== undefined ? !active : false, [styles.clickable ?? '']: !!onClick }, className)} onClick={actualOnClick}>
-        {isImage ? <img src={path} className={styles.iconImage} /> : <Icon path={path} title={label} size={`${String(size ?? 1)}em`} />}
+        {isImage ? <picture><source srcSet={path} type={mimeType} /><img src={path} className={styles.iconImage} /></picture> : <Icon path={path} title={label} size={`${String(size ?? 1)}em`} />}
         {showLabel ? <span>{label}</span> : null}
     </div>
 }

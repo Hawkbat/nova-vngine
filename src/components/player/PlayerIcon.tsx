@@ -6,9 +6,10 @@ import { getPathIsUrl } from '../../utils/path'
 
 import styles from './PlayerIcon.module.css'
 
-export const PlayerIcon = ({ className, path, label, size, active, anim, onClick }: {
+export const PlayerIcon = ({ className, path, mimeType, label, size, active, anim, onClick }: {
     className?: string
     path: string
+    mimeType?: string
     label?: string
     size?: number
     active?: boolean
@@ -25,6 +26,6 @@ export const PlayerIcon = ({ className, path, label, size, active, anim, onClick
     }, [onClick])
 
     return <div className={classes(styles.icon, { [styles.active ?? '']: active !== undefined ? active : false, [styles.inactive ?? '']: active !== undefined ? !active : false, [styles.clickable ?? '']: !!onClick, [styles.spinning ?? '']: anim === 'spin', [styles.bobbing ?? '']: anim === 'bob' }, className)} onClick={actualOnClick}>
-        {isImage ? <img src={path} className={styles.iconImage} /> : <Icon path={path} title={label} size={`${String(size ?? 1)}em`} />}
+        {isImage ? <picture><source srcSet={path} type={mimeType} /><img src={path} className={styles.iconImage} /></picture> : <Icon path={path} title={label} size={`${String(size ?? 1)}em`} />}
     </div>
 }

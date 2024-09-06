@@ -8,28 +8,33 @@
   "stories": [
     {
       "id": "X12ECOS8",
-      "name": "My First Story"
+      "name": "My First Story",
+      "firstChapterID": "213RCRAR"
     },
     {
       "id": "DCV72REE",
-      "name": "My Second Story"
+      "name": "My Second Story",
+      "firstChapterID": "M9SJNA1A"
     }
   ],
   "chapters": [
     {
       "id": "213RCRAR",
       "name": "My First Chapter",
-      "storyID": "X12ECOS8"
+      "storyID": "X12ECOS8",
+      "firstSceneID": "X81UH1BT"
     },
     {
       "id": "Z3BR438Y",
       "name": "",
-      "storyID": "X12ECOS8"
+      "storyID": "X12ECOS8",
+      "firstSceneID": null
     },
     {
       "id": "M9SJNA1A",
       "name": "Story 2 Chapter",
-      "storyID": "DCV72REE"
+      "storyID": "DCV72REE",
+      "firstSceneID": null
     }
   ],
   "scenes": [
@@ -126,7 +131,7 @@
           "portrait": {
             "type": "portrait",
             "args": [
-              "7R9ORU1P"
+              "QPWCI2HJ"
             ]
           }
         }
@@ -390,17 +395,18 @@
   "characters": [
     {
       "id": "1U58I1SC",
-      "name": "Emma"
+      "name": "Emma",
+      "mainPortraitID": "COL0H7JM"
     }
   ],
   "portraits": [
     {
-      "id": "7R9ORU1P",
-      "name": "Neutral",
+      "id": "QPWCI2HJ",
+      "name": "Blush",
       "characterID": "1U58I1SC",
       "image": {
         "mimeType": "image/png",
-        "path": "portraits/7R9ORU1P"
+        "path": "portraits/QPWCI2HJ"
       },
       "height": "full"
     },
@@ -415,22 +421,22 @@
       "height": "full"
     },
     {
+      "id": "7R9ORU1P",
+      "name": "Neutral",
+      "characterID": "1U58I1SC",
+      "image": {
+        "mimeType": "image/png",
+        "path": "portraits/7R9ORU1P"
+      },
+      "height": "full"
+    },
+    {
       "id": "7DX98O0E",
       "name": "Sad",
       "characterID": "1U58I1SC",
       "image": {
         "mimeType": "image/png",
         "path": "portraits/7DX98O0E"
-      },
-      "height": "full"
-    },
-    {
-      "id": "QPWCI2HJ",
-      "name": "Blush",
-      "characterID": "1U58I1SC",
-      "image": {
-        "mimeType": "image/png",
-        "path": "portraits/QPWCI2HJ"
       },
       "height": "full"
     }

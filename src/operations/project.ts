@@ -30,7 +30,7 @@ function parseProjectFromJson(text: string) {
 export async function saveProject(root: StorageRootEntry, project: ProjectDefinition) {
     const json = JSON.stringify(project, undefined, 2)
     const provider = getStorageProvider(root.type)
-    if (!provider.storeText) throw new PlatformError('bad-project', 'Tried to save project file but current storage provider does not support it')
+    if (!provider.storeText) throw new PlatformError('not-supported', 'Tried to save project file but current storage provider does not support it')
     await provider.storeText(root, DEFAULT_PROJECT_FILENAME, json)
 }
 
@@ -60,6 +60,7 @@ async function tryLoadProject(root: StorageRootEntry) {
             await openDialog('Bad Project File', err.message, { ok: 'OK' })
             return false
         }
+        throw err
     }
     return true
 }
@@ -105,7 +106,13 @@ export async function userSelectProject() {
 
     const storage = getStorageProvider()
 
-    const dirResult = await storage.pickDirectory?.(null, { title: 'Select project folder' })
+    if (!storage.pickDirectory) {
+        const root: StorageRootEntry = { type: 'fetch', key: `${location.origin}/project` }
+        await tryLoadProject(root)
+        return
+    }
+
+    const dirResult = await storage.pickDirectory(null, { title: 'Select project folder' })
     if (!dirResult) return
 
     const root = await dirResult.toRoot()

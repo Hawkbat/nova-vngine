@@ -23,7 +23,7 @@ import styles from './EntityWorkspace.module.css'
 const EntityImagePreview = <T extends EntityType>({ type, entity }: { type: T, entity: EntityOfType<T> }) => {
     const asset = getEntityPrimaryAsset(type, entity)
     const getImgSrc = useAsset(asset, false)
-    return getImgSrc() ? <img src={getImgSrc() ?? undefined} className={styles.previewImage} /> : null
+    return getImgSrc() ? <picture><source srcSet={getImgSrc() ?? undefined} type={asset?.mimeType} /><img src={getImgSrc() ?? undefined} className={styles.previewImage} /></picture> : null
 }
 
 export const EntityWorkspace = <T extends EntityType>({ type, children, getVariableScopes }: {

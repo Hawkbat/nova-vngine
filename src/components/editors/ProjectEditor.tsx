@@ -4,6 +4,7 @@ import { BUILD_COMMIT, BUILD_DATETIME } from '../../injected'
 import { getEntityDisplayName } from '../../operations/project'
 import { useViewStateScope, useViewStateTab } from '../../operations/viewState'
 import { platform } from '../../platform/platform'
+import { getStorageProvider } from '../../platform/storage/storage'
 import { projectStore } from '../../store/project'
 import { viewStateStore } from '../../store/viewstate'
 import type { EntityType } from '../../types/project'
@@ -96,6 +97,7 @@ const Sidebar = () => {
 const Footer = () => {
     return <div className={styles.footer}>
         <span>Platform: {platform.name}</span>
+        <span>Storage: {getStorageProvider().name}</span>
         <span>Build: {BUILD_COMMIT.BRANCH}/{BUILD_COMMIT.SHORT_HASH} at {BUILD_DATETIME.toISOString()}</span>
     </div>
 }
