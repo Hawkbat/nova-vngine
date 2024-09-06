@@ -15,7 +15,6 @@ publish('dist', {
     cname: 'vngine.hawk.bar',
     message: `Published ${new Date().toLocaleString()}`,
 }, err => {
-    console.error(err)
+    if (err) console.error(err)
+    else console.log('Published!')
 })
-
-console.log('Published!')

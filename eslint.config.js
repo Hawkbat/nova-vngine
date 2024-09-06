@@ -9,7 +9,7 @@ import pluginSimpleImportSort from "eslint-plugin-simple-import-sort";
 
 export default pluginTseslint.config(
   {files: ["src/**/*.{js,mjs,cjs,ts,jsx,tsx}"]},
-  {ignores: ["eslint.config.js", "scripts/**/*", "resources/**/*"]},
+  {ignores: ["eslint.config.js", "scripts/**/*", "resources/**/*", "dist/**/*"]},
   {settings: {
       react: {
         version: "detect"

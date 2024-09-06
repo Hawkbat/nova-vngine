@@ -1,11 +1,11 @@
 import { createStore, entries, get, set } from 'idb-keyval'
 
-import type { StorageDirectoryResult, StorageFileResult, StorageProvider, StorageRootEntry } from '../../types/storage'
-import { StorageError } from '../../types/storage'
-import { getClassFilter, throwIfNull } from '../../utils/guard'
-import { createThumbnail } from '../../utils/media'
-import { getPathFileName, getPathParentPath, getPathSegments, joinPaths, joinPathSegments } from '../../utils/path'
-import { uncheckedRandID } from '../../utils/rand'
+import type { StorageDirectoryResult, StorageFileResult, StorageProvider, StorageRootEntry } from '../types/storage'
+import { StorageError } from '../types/storage'
+import { getClassFilter, throwIfNull } from '../utils/guard'
+import { createThumbnail } from '../utils/media'
+import { getPathFileName, getPathParentPath, getPathSegments, joinPaths, joinPathSegments } from '../utils/path'
+import { uncheckedRandID } from '../utils/rand'
 
 const idbStore = createStore('fs-handle-db', 'fs-handle-store')
 
@@ -57,7 +57,8 @@ export function getHandlePath(root: StorageRootEntry, path: string) {
     return joinPaths(getRootPath(root), path)
 }
 
-async function checkPermissions(handle: HandleValue) {
+async function checkPermissions(handle: HandleValue): Promise<PermissionState> {
+    if (!('queryPermission' in handle)) return 'granted'
     let perms = await handle.queryPermission({ mode: 'readwrite' })
     if (perms === 'denied' || perms === 'prompt') {
         perms = await handle.requestPermission({ mode: 'readwrite' })
@@ -226,5 +227,19 @@ export const browserStorageProvider: StorageProvider = {
             files,
             directories,
         }
+    },
+    async createLocalRoot(id) {
+        const root: StorageRootEntry = { type: 'browser', key: id }
+        const opfs = await navigator.storage.getDirectory()
+        await navigator.storage.persist()
+        const handle = await opfs.getDirectoryHandle(id, { create: true })
+        await storeDirectoryHandle(getRootPath(root), handle)
+        await checkPermissions(handle)
+        return root
+    },
+    async listLocalRoots() {
+        const opfs = await navigator.storage.getDirectory()
+        const roots: StorageRootEntry[] = (await Array.fromAsync(opfs.values())).filter(v => v.kind === 'directory').map(d => ({ type: 'browser', key: d.name }))
+        return roots
     },
 }

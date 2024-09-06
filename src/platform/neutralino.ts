@@ -202,7 +202,6 @@ export const neutralinoPlatform: Platform = {
     },
     async readFromClipboard() {
         const format = await nClipboard.getFormat()
-        console.log(format)
         if (format !== nClipboard.ClipboardFormat.text) return null
         const text = await nClipboard.readText()
         if (!text) return null

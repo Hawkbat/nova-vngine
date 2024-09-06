@@ -4,7 +4,7 @@ import { BUILD_COMMIT, BUILD_DATETIME } from '../../injected'
 import { getEntityDisplayName } from '../../operations/project'
 import { useViewStateScope, useViewStateTab } from '../../operations/viewState'
 import { platform } from '../../platform/platform'
-import { getStorageProvider } from '../../platform/storage/storage'
+import { getStorageProvider } from '../../storage/storage'
 import { projectStore } from '../../store/project'
 import { viewStateStore } from '../../store/viewstate'
 import type { EntityType } from '../../types/project'
@@ -20,6 +20,7 @@ import { ChapterWorkspace } from '../workspaces/ChapterWorkspace'
 import { CharacterWorkspace } from '../workspaces/CharacterWorkspace'
 import { HomeWorkspace } from '../workspaces/HomeWorkspace'
 import { MacroWorkspace } from '../workspaces/MacroWorkspace'
+import { ManualWorkspace } from '../workspaces/ManualWorkspace'
 import { PortraitWorkspace } from '../workspaces/PortraitWorkspace'
 import { ProjectWorkspace } from '../workspaces/ProjectWorkspace'
 import { SceneWorkspace } from '../workspaces/SceneWorkspace'
@@ -122,6 +123,7 @@ export const ProjectEditor = () => {
                 {getCurrentTab() === 'sounds' ? <SoundWorkspace /> : null}
                 {getCurrentTab() === 'variables' ? <VariableWorkspace /> : null}
                 {getCurrentTab() === 'macros' ? <MacroWorkspace /> : null}
+                {getCurrentTab() === 'manual' ? <ManualWorkspace /> : null}
                 {getCurrentTab() === 'settings' ? <SettingsWorkspace /> : null}
             </div>
             <Footer />

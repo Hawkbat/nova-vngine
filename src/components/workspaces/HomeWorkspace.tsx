@@ -1,6 +1,7 @@
 import faviconSvgUrl from '../../favicon.svg'
 import { userCreateNewProject, userOpenRecentProject, userSelectProject } from '../../operations/project'
 import { useViewStateTab } from '../../operations/viewState'
+import { getStorageProvider } from '../../storage/storage'
 import { viewStateStore } from '../../store/viewstate'
 import { useSelector } from '../../utils/store'
 import { EditorIcon } from '../common/EditorIcon'
@@ -12,6 +13,9 @@ export const HomeWorkspace = () => {
     const [, setCurrentTab] = useViewStateTab()
     const getLoadedProject = useSelector(viewStateStore, s => s.loadedProject)
     const getRecentProjects = useSelector(viewStateStore, s => s.recentProjects)
+    const storage = getStorageProvider()
+    const supportsNew = storage.createLocalRoot || storage.pickDirectory ? true : false
+    const supportsOpen = storage.pickDirectory ? true : false
 
     return <div className={styles.workspace}>
         <div className={styles.logo}>
@@ -19,8 +23,8 @@ export const HomeWorkspace = () => {
             Nova VNgine
         </div>
         <div className={styles.buttonGroup}>
-            <EditorIcon label='New Project' path={COMMON_ICONS.newProject} showLabel onClick={() => void userCreateNewProject()} />
-            <EditorIcon label='Open Project' path={COMMON_ICONS.openProject} showLabel onClick={() => void userSelectProject()} />
+            {supportsNew ? <EditorIcon label='New Project' path={COMMON_ICONS.newProject} showLabel onClick={() => void userCreateNewProject()} /> : null}
+            {supportsOpen ? <EditorIcon label='Open Project' path={COMMON_ICONS.openProject} showLabel onClick={() => void userSelectProject()} /> : null}
             <EditorIcon label='Help Manual' path={PROJECT_TAB_ICONS['manual']} showLabel onClick={() => setCurrentTab('manual')} />
             <EditorIcon label='Edit Settings' path={PROJECT_TAB_ICONS['settings']} showLabel onClick={() => setCurrentTab('settings')} />
         </div>

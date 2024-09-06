@@ -1,7 +1,7 @@
 
 import { openDialog } from '../components/common/Dialog'
 import { platform } from '../platform/platform'
-import { getStorageProvider } from '../platform/storage/storage'
+import { getStorageProvider } from '../storage/storage'
 import { createDefaultProject, projectStore } from '../store/project'
 import { viewStateStore } from '../store/viewstate'
 import { createDefaultExpr, type ExprContext, resolveExpr } from '../types/expressions'
@@ -17,7 +17,7 @@ import { randFloat, randID, randInt, randSeedRandom, uncheckedRandID } from '../
 import { useSelector } from '../utils/store'
 import { assertExhaustive, hintTuple } from '../utils/types'
 
-function parseProjectFromJson(text: string) {
+export function parseProjectFromJson(text: string) {
     const parsed = tryParseJson(text, 'project', parseProjectDefinition)
     if (parsed.ctx.warnings.length) void platform.warn(parsed.ctx.warnings)
     if (!parsed.success) {
@@ -73,7 +73,24 @@ export async function userCreateNewProject() {
 
     const storage = getStorageProvider()
 
-    const dirResult = await storage.pickDirectory?.(null, { title: 'Select project folder' })
+    if (!storage.pickDirectory) {
+        if (storage.createLocalRoot) {
+            const id = uncheckedRandID()
+            const root = await storage.createLocalRoot(id)
+            if (!root) {
+                await openDialog('Not Supported', 'Failed to create new project.', { ok: 'OK' })
+                return
+            }
+            const initialProject = createDefaultProject(id)
+            await saveProject(root, initialProject)
+            await tryLoadProject(root)
+            return
+        }
+        await openDialog('Not Supported', 'Your operating system or browser does not support saving new projects. A project could not be created.', { ok: 'OK' })
+        return
+    }
+
+    const dirResult = await storage.pickDirectory(null, { title: 'Select project folder' })
     if (!dirResult) return
 
     const root = await dirResult.toRoot()
@@ -107,8 +124,7 @@ export async function userSelectProject() {
     const storage = getStorageProvider()
 
     if (!storage.pickDirectory) {
-        const root: StorageRootEntry = { type: 'fetch', key: `${location.origin}/project` }
-        await tryLoadProject(root)
+        await openDialog('Not Supported', 'Your operating system or browser does not support opening projects.', { ok: 'OK' })
         return
     }
 

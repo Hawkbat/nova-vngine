@@ -1,14 +1,17 @@
 import { useCallback } from 'react'
 
 import { platform } from '../platform/platform'
+import { getStorageProvider } from '../storage/storage'
 import { viewStateStore } from '../store/viewstate'
-import { isPlatformErrorCode } from '../types/platform'
-import { ENTITY_TYPES, type EntityIDOf, type EntityType, getEntityTypeHierarchy } from '../types/project'
-import type { ProjectEditorTab } from '../types/viewstate'
-import { immSet } from '../utils/imm'
+import { DEFAULT_PROJECT_FILENAME, isPlatformErrorCode } from '../types/platform'
+import { ENTITY_TYPES, type EntityIDOf, type EntityType, getEntityTypeHierarchy, parseProjectDefinition } from '../types/project'
+import type { StorageRootEntry } from '../types/storage'
+import type { ProjectEditorTab, ProjectMetaData } from '../types/viewstate'
+import { existsFilter, tryParseJson } from '../utils/guard'
+import { immAppend, immSet } from '../utils/imm'
 import { useSelector } from '../utils/store'
 import { hintTuple } from '../utils/types'
-import { getEntityHierarchy, loadProject } from './project'
+import { getEntityHierarchy, loadProject, parseProjectFromJson } from './project'
 
 export function useViewStateTab() {
     const getTab = useSelector(viewStateStore, s => s.currentTab)
@@ -34,9 +37,48 @@ export function useViewStateScope<T extends EntityType>(type: T | null): [() => 
         viewStateStore.setValue(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues }, editor: null }))
     }, [type])
     return hintTuple(getScope, setScope)
-}export async function loadInitialViewState() {
+}
+
+export async function loadInitialViewState() {
     const viewState = await platform.loadViewState()
     viewStateStore.setValue(() => viewState)
+    const storage = getStorageProvider()
+    if (storage.listLocalRoots) {
+        const roots = await storage.listLocalRoots()
+        const projects = (await Promise.all(roots.map(async r => {
+            const existingProject = viewState.recentProjects.find(p => p.root.key === r.key)
+            if (existingProject) return null
+            const { files } = await storage.listDirectory(r, '')
+            const projectFile = files.find(f => f.name === DEFAULT_PROJECT_FILENAME)
+            if (projectFile) {
+                const json = await projectFile.text()
+                const parsed = tryParseJson(json, 'project', parseProjectDefinition)
+                if (parsed.success) {
+                    const metadata: ProjectMetaData = {
+                        id: parsed.value.id,
+                        name: parsed.value.name,
+                        root: r,
+                    }
+                    return metadata
+                } else {
+                    void platform.error(parsed.ctx.errors)
+                }
+            }
+            return null
+        }))).filter(existsFilter)
+        viewStateStore.setValue(s => immSet(s, 'recentProjects', immAppend(s.recentProjects, ...projects)))
+    }
+    try {
+        const root: StorageRootEntry = { type: 'fetch', key: `${location.origin}/project` }
+        const json = await getStorageProvider(root.type).loadText(root, DEFAULT_PROJECT_FILENAME)
+        const project = parseProjectFromJson(json)
+        if (!viewStateStore.getValue().recentProjects.find(p => p.id === project.id)) {
+            const projectMetaData: ProjectMetaData = { id: project.id, name: project.name, root }
+            viewStateStore.setValue(s => immSet(s, 'recentProjects', immAppend(s.recentProjects, projectMetaData)))
+        }
+    } catch (err) {
+        console.error(err)
+    }
     try {
         if (viewState.loadedProject && await loadProject(viewState.loadedProject.root)) {
             return

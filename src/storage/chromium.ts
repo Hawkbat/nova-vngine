@@ -1,6 +1,6 @@
-import type { StorageFileResult, StorageProvider, StorageRootEntry } from '../../types/storage'
-import { joinPathSegments } from '../../utils/path'
-import { uncheckedRandID } from '../../utils/rand'
+import type { StorageFileResult, StorageProvider, StorageRootEntry } from '../types/storage'
+import { joinPathSegments } from '../utils/path'
+import { uncheckedRandID } from '../utils/rand'
 import { browserStorageProvider, getHandlePath, getRootKeyFromPath, getRootPath, retrieveDirectoryHandle, searchForHandleKey, storeDirectoryHandle } from './browser'
 
 export const chromiumStorageProvider: StorageProvider = {

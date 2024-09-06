@@ -1,4 +1,4 @@
-import type { StorageType } from '../platform/storage/storage'
+import type { StorageType } from '../storage/storage'
 import type { ParseFunc } from '../utils/guard'
 import { defineParser, parsers as $ } from '../utils/guard'
 import type { AssetDefinition } from './project'
@@ -46,6 +46,8 @@ export interface StorageProvider {
     listDirectory(root: StorageRootEntry | null, path: string): Promise<{ directories: StorageDirectoryResult[], files: StorageFileResult[] }>
     pickFiles?(root: StorageRootEntry | null, options: { title?: string, fileType: string, extensions: string[], multi?: boolean, startIn?: string }): Promise<StorageFileResult[] | null>
     pickDirectory?(root: StorageRootEntry | null, options: { title?: string, startIn?: string }): Promise<StorageDirectoryResult | null>
+    createLocalRoot?(id: string): Promise<StorageRootEntry | null>
+    listLocalRoots?(): Promise<StorageRootEntry[]>
 }
 
 export type StorageErrorCode = 'not-found' | 'not-supported'

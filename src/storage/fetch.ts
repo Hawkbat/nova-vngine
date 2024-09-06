@@ -1,9 +1,9 @@
-import type { StorageDirectoryResult, StorageFileResult, StorageProvider } from '../../types/storage'
-import { parseStorageDirectoryListing, StorageError } from '../../types/storage'
-import { tryParseJson } from '../../utils/guard'
-import { createThumbnail } from '../../utils/media'
-import { getAbsolutePath, getRelativePath, joinPaths } from '../../utils/path'
-import { platform } from '../platform'
+import { platform } from '../platform/platform'
+import type { StorageDirectoryResult, StorageFileResult, StorageProvider } from '../types/storage'
+import { parseStorageDirectoryListing, StorageError } from '../types/storage'
+import { tryParseJson } from '../utils/guard'
+import { createThumbnail } from '../utils/media'
+import { getAbsolutePath, getRelativePath, joinPaths } from '../utils/path'
 
 export const fetchStorageProvider: StorageProvider = {
     type: 'fetch',

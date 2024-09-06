@@ -1,10 +1,10 @@
 import { filesystem as nFS, os as nOS } from '@neutralinojs/lib'
 
-import { LOG_FILE_WRITES } from '../../debug'
-import { isStorageErrorCode, type StorageDirectoryResult, StorageError, type StorageFileResult, type StorageProvider } from '../../types/storage'
-import { createThumbnail } from '../../utils/media'
-import { getAbsolutePath, getPathFileName, getRelativePath } from '../../utils/path'
-import { ensureParentDirectories, isNeutralinoError, neutralinoPlatform, waitForNeutralinoInit } from '../neutralino'
+import { LOG_FILE_WRITES } from '../debug'
+import { ensureParentDirectories, isNeutralinoError, neutralinoPlatform, waitForNeutralinoInit } from '../platform/neutralino'
+import { isStorageErrorCode, type StorageDirectoryResult, StorageError, type StorageFileResult, type StorageProvider } from '../types/storage'
+import { createThumbnail } from '../utils/media'
+import { getAbsolutePath, getPathFileName, getRelativePath } from '../utils/path'
 
 export const neutralinoStorageProvider: StorageProvider = {
     type: 'neutralino',

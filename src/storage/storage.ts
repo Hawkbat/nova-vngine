@@ -1,4 +1,4 @@
-import { STORAGE_FORCE } from '../../debug'
+import { STORAGE_FORCE } from '../debug'
 import { browserStorageProvider } from './browser'
 import { chromiumStorageProvider } from './chromium'
 import { fetchStorageProvider } from './fetch'
