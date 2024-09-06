@@ -1,5 +1,5 @@
 import type { PlatformType } from './platform/platform'
-import type { StorageType } from './platform/storage/storage'
+import type { StorageType } from './storage/storage'
 
 export const LOG_STORE_DIFFS: boolean = false
 export const LOG_FILE_WRITES: boolean = false
