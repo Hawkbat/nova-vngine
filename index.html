@@ -1,9 +1,62 @@
 <!DOCTYPE html><html lang="en"><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Nova VNgine</title><link rel="icon" href="./favicon.ico"></head>
+<title>Nova VNgine</title><link rel="icon" href="./favicon.ico"><style>/* src/main.css */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  src: url("./Inter-VariableFont_opsz,wght-ZQT46P7R.ttf");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: italic;
+  src: url("./Inter-Italic-VariableFont_opsz,wght-3WBQ6O2W.ttf");
+}
+:root {
+  --bg-color: #111;
+  --text-color: white;
+  --primary-color: #FA5;
+  --secondary-color: #5AF;
+  --error-color: #f66;
+  --menu-bg-color: #222;
+  --menu-border-color: #444;
+  --hover-color: #8888;
+  --backsplash-color: #0008;
+  --sidebar-color: #222;
+  --dialogue-box-bg-color: #222C;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-family: "Inter", sans-serif;
+  font-size: 20px;
+  user-select: none;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  height: 100%;
+  touch-action: manipulation;
+}
+#appContainer {
+  height: 100%;
+}
+picture {
+  display: contents;
+}
+* {
+  box-sizing: border-box;
+  scrollbar-color: transparent transparent;
+  scrollbar-width: thin;
+  transition: scrollbar-color 0.1s;
+}
+*:hover {
+  scrollbar-color: var(--text-color) transparent;
+}
+/*# sourceMappingURL=data:application/json;base64,ewogICJ2ZXJzaW9uIjogMywKICAic291cmNlcyI6IFsiLi4vc3JjL21haW4uY3NzIl0sCiAgInNvdXJjZXNDb250ZW50IjogWyJcclxuQGZvbnQtZmFjZSB7XHJcbiAgICBmb250LWZhbWlseTogJ0ludGVyJztcclxuICAgIGZvbnQtc3R5bGU6IG5vcm1hbDtcclxuICAgIHNyYzogdXJsKC4vZm9udHMvSW50ZXItVmFyaWFibGVGb250X29wc3pcXCx3Z2h0LnR0Zik7XHJcbn1cclxuXHJcbkBmb250LWZhY2Uge1xyXG4gICAgZm9udC1mYW1pbHk6ICdJbnRlcic7XHJcbiAgICBmb250LXN0eWxlOiBpdGFsaWM7XHJcbiAgICBzcmM6IHVybCguL2ZvbnRzL0ludGVyLUl0YWxpYy1WYXJpYWJsZUZvbnRfb3BzelxcLHdnaHQudHRmKTtcclxufVxyXG5cclxuOnJvb3Qge1xyXG4gICAgLS1iZy1jb2xvcjogIzExMTtcclxuICAgIC0tdGV4dC1jb2xvcjogd2hpdGU7XHJcbiAgICAtLXByaW1hcnktY29sb3I6ICNGQTU7XHJcbiAgICAtLXNlY29uZGFyeS1jb2xvcjogIzVBRjtcclxuICAgIC0tZXJyb3ItY29sb3I6ICNmNjY7XHJcbiAgICAtLW1lbnUtYmctY29sb3I6ICMyMjI7XHJcbiAgICAtLW1lbnUtYm9yZGVyLWNvbG9yOiAjNDQ0O1xyXG4gICAgLS1ob3Zlci1jb2xvcjogIzg4ODg7XHJcbiAgICAtLWJhY2tzcGxhc2gtY29sb3I6ICMwMDA4O1xyXG4gICAgLS1zaWRlYmFyLWNvbG9yOiAjMjIyO1xyXG4gICAgLS1kaWFsb2d1ZS1ib3gtYmctY29sb3I6ICMyMjJDO1xyXG4gICAgYmFja2dyb3VuZDogdmFyKC0tYmctY29sb3IpO1xyXG4gICAgY29sb3I6IHZhcigtLXRleHQtY29sb3IpO1xyXG4gICAgZm9udC1mYW1pbHk6ICdJbnRlcicsIHNhbnMtc2VyaWY7XHJcbiAgICBmb250LXNpemU6IDIwcHg7XHJcbiAgICB1c2VyLXNlbGVjdDogbm9uZTtcclxufVxyXG5cclxuaHRtbCwgYm9keSB7XHJcbiAgICBtYXJnaW46IDA7XHJcbiAgICBwYWRkaW5nOiAwO1xyXG4gICAgYm9yZGVyOiAwO1xyXG4gICAgaGVpZ2h0OiAxMDAlO1xyXG4gICAgdG91Y2gtYWN0aW9uOiBtYW5pcHVsYXRpb247XHJcbn1cclxuXHJcbiNhcHBDb250YWluZXIge1xyXG4gICAgaGVpZ2h0OiAxMDAlO1xyXG59XHJcblxyXG5waWN0dXJlIHtcclxuICAgIGRpc3BsYXk6IGNvbnRlbnRzO1xyXG59XHJcblxyXG4qIHtcclxuICAgIGJveC1zaXppbmc6IGJvcmRlci1ib3g7XHJcbiAgICBzY3JvbGxiYXItY29sb3I6IHRyYW5zcGFyZW50IHRyYW5zcGFyZW50O1xyXG4gICAgc2Nyb2xsYmFyLXdpZHRoOiB0aGluO1xyXG4gICAgdHJhbnNpdGlvbjogc2Nyb2xsYmFyLWNvbG9yIDAuMXM7XHJcbn1cclxuXHJcbio6aG92ZXIge1xyXG4gICAgc2Nyb2xsYmFyLWNvbG9yOiB2YXIoLS10ZXh0LWNvbG9yKSB0cmFuc3BhcmVudDtcclxufVxyXG4iXSwKICAibWFwcGluZ3MiOiAiO0FBQ0E7QUFDSSxlQUFhO0FBQ2IsY0FBWTtBQUNaLE9BQUs7QUFDVDtBQUVBO0FBQ0ksZUFBYTtBQUNiLGNBQVk7QUFDWixPQUFLO0FBQ1Q7QUFFQTtBQUNJLGNBQVk7QUFDWixnQkFBYztBQUNkLG1CQUFpQjtBQUNqQixxQkFBbUI7QUFDbkIsaUJBQWU7QUFDZixtQkFBaUI7QUFDakIsdUJBQXFCO0FBQ3JCLGlCQUFlO0FBQ2Ysc0JBQW9CO0FBQ3BCLG1CQUFpQjtBQUNqQiwyQkFBeUI7QUFDekIsY0FBWSxJQUFJO0FBQ2hCLFNBQU8sSUFBSTtBQUNYLGVBQWEsT0FBTyxFQUFFO0FBQ3RCLGFBQVc7QUFDWCxlQUFhO0FBQ2pCO0FBRUE7QUFBTTtBQUNGLFVBQVE7QUFDUixXQUFTO0FBQ1QsVUFBUTtBQUNSLFVBQVE7QUFDUixnQkFBYztBQUNsQjtBQUVBLENBQUM7QUFDRyxVQUFRO0FBQ1o7QUFFQTtBQUNJLFdBQVM7QUFDYjtBQUVBO0FBQ0ksY0FBWTtBQUNaLG1CQUFpQixZQUFZO0FBQzdCLG1CQUFpQjtBQUNqQixjQUFZLGdCQUFnQjtBQUNoQztBQUVBLENBQUM7QUFDRyxtQkFBaUIsSUFBSSxjQUFjO0FBQ3ZDOyIsCiAgIm5hbWVzIjogW10KfQo= */
+</style><link rel="stylesheet" href="./index.css?2b873b505f276d75ff06df78bd8dd949"></head>
 <body>
     <div id="root">
     </div>
 
-<script src="/__neutralino_globals.js"></script><script src="build.js"></script></body></html>
+<script src="/__neutralino_globals.js"></script><script src="./index.js?2b873b505f276d75ff06df78bd8dd949" type="module"></script></body></html>

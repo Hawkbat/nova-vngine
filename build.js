@@ -1,1 +1,1 @@
-export const PUBLISHED_PROJECT = `${location.origin}/project`;
+const PUBLISHED_PROJECT = `${location.origin}/project`;
