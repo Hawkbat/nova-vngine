@@ -1,0 +1,507 @@
+{
+  "id": "9TF8BIOT",
+  "name": "Example Project",
+  "editorRandState": [
+    "xorshift32",
+    1947480351
+  ],
+  "stories": [
+    {
+      "id": "X12ECOS8",
+      "name": "My First Story",
+      "firstChapterID": "213RCRAR"
+    },
+    {
+      "id": "DCV72REE",
+      "name": "My Second Story",
+      "firstChapterID": "M9SJNA1A"
+    }
+  ],
+  "chapters": [
+    {
+      "id": "213RCRAR",
+      "name": "My First Chapter",
+      "storyID": "X12ECOS8",
+      "firstSceneID": "X81UH1BT"
+    },
+    {
+      "id": "Z3BR438Y",
+      "name": "",
+      "storyID": "X12ECOS8",
+      "firstSceneID": null
+    },
+    {
+      "id": "M9SJNA1A",
+      "name": "Story 2 Chapter",
+      "storyID": "DCV72REE",
+      "firstSceneID": null
+    }
+  ],
+  "scenes": [
+    {
+      "id": "X81UH1BT",
+      "name": "My First Scene",
+      "chapterID": "213RCRAR",
+      "steps": [
+        {
+          "type": "backdrop",
+          "id": "D9RPZ30U",
+          "backdrop": {
+            "type": "backdrop",
+            "args": [
+              "4YAVCQUO"
+            ]
+          },
+          "mode": "replace"
+        },
+        {
+          "type": "enter",
+          "id": "BP9PKG9I",
+          "character": {
+            "type": "character",
+            "args": [
+              "1U58I1SC"
+            ]
+          },
+          "portrait": {
+            "type": "portrait",
+            "args": [
+              "COL0H7JM"
+            ]
+          },
+          "location": {
+            "type": "location",
+            "args": [
+              {
+                "position": "auto",
+                "height": "auto",
+                "scale": "auto"
+              }
+            ]
+          }
+        },
+        {
+          "type": "text",
+          "id": "D7YO9UY4",
+          "speaker": {
+            "type": "character",
+            "args": [
+              "1U58I1SC"
+            ]
+          },
+          "text": {
+            "type": "format",
+            "children": [
+              [
+                {
+                  "type": "string",
+                  "args": [
+                    "Good morning, "
+                  ]
+                }
+              ],
+              [
+                {
+                  "type": "variable",
+                  "args": [
+                    "4BTATXCJ"
+                  ]
+                }
+              ],
+              [
+                {
+                  "type": "string",
+                  "args": [
+                    "!"
+                  ]
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "type": "portrait",
+          "id": "UA19KVHJ",
+          "character": {
+            "type": "character",
+            "args": [
+              "1U58I1SC"
+            ]
+          },
+          "portrait": {
+            "type": "portrait",
+            "args": [
+              "QPWCI2HJ"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "003W7J28",
+      "name": "Test Scene",
+      "chapterID": "213RCRAR",
+      "steps": [
+        {
+          "type": "backdrop",
+          "id": "TND27UFY",
+          "backdrop": {
+            "type": "backdrop",
+            "args": [
+              "DIIL1XDV"
+            ]
+          },
+          "mode": "replace"
+        },
+        {
+          "type": "music",
+          "id": "WL4ETVD1",
+          "song": {
+            "type": "song",
+            "args": [
+              "HVBBNPAO"
+            ]
+          }
+        },
+        {
+          "type": "enter",
+          "id": "S039OKK3",
+          "character": {
+            "type": "character",
+            "args": [
+              "1U58I1SC"
+            ]
+          },
+          "portrait": {
+            "type": "portrait",
+            "args": [
+              "COL0H7JM"
+            ]
+          },
+          "location": {
+            "type": "location",
+            "args": [
+              {
+                "position": "auto",
+                "height": "auto",
+                "scale": "auto"
+              }
+            ]
+          }
+        },
+        {
+          "type": "text",
+          "id": "NW6V77OD",
+          "speaker": {
+            "type": "character",
+            "args": [
+              "1U58I1SC"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "args": [
+              "Names are weird."
+            ]
+          }
+        },
+        {
+          "type": "text",
+          "id": "GWZ5IYOQ",
+          "speaker": {
+            "type": "character",
+            "args": [
+              "1U58I1SC"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "args": [
+              "My sister's name is Mary."
+            ]
+          }
+        },
+        {
+          "type": "decision",
+          "id": "EDY9EUB9",
+          "options": [
+            {
+              "text": {
+                "type": "string",
+                "args": [
+                  "My name is Mary too!"
+                ]
+              },
+              "condition": {
+                "type": "equal",
+                "params": [
+                  {
+                    "type": "variable",
+                    "args": [
+                      "4BTATXCJ"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "args": [
+                      "Mary"
+                    ]
+                  }
+                ]
+              },
+              "steps": [
+                {
+                  "type": "text",
+                  "id": "5UJTVP50",
+                  "speaker": {
+                    "type": "character",
+                    "args": [
+                      "1U58I1SC"
+                    ]
+                  },
+                  "text": {
+                    "type": "string",
+                    "args": [
+                      "What a coincidence!"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "text": {
+                "type": "string",
+                "args": [
+                  "Mary? That's a nice name."
+                ]
+              },
+              "condition": {
+                "type": "notEqual",
+                "params": [
+                  {
+                    "type": "variable",
+                    "args": [
+                      "4BTATXCJ"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "args": [
+                      "Mary"
+                    ]
+                  }
+                ]
+              },
+              "steps": [
+                {
+                  "type": "text",
+                  "id": "GOHDTPJP",
+                  "speaker": {
+                    "type": "character",
+                    "args": [
+                      "1U58I1SC"
+                    ]
+                  },
+                  "text": {
+                    "type": "string",
+                    "args": [
+                      "Isn't it?"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "text": {
+                "type": "string",
+                "args": [
+                  "Weird."
+                ]
+              },
+              "condition": {
+                "type": "boolean",
+                "args": [
+                  true
+                ]
+              },
+              "steps": []
+            }
+          ]
+        },
+        {
+          "type": "text",
+          "id": "4YY691TF",
+          "speaker": {
+            "type": "character",
+            "args": [
+              "1U58I1SC"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "args": [
+              "Anyway, see you later!"
+            ]
+          }
+        },
+        {
+          "type": "sound",
+          "id": "CCX2O2G8",
+          "sound": {
+            "type": "sound",
+            "args": [
+              "2KX8AFHT"
+            ]
+          }
+        },
+        {
+          "type": "branch",
+          "id": "MCZ2KPQW",
+          "options": [
+            {
+              "condition": {
+                "type": "equal",
+                "params": [
+                  {
+                    "type": "variable",
+                    "args": [
+                      "4BTATXCJ"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "args": [
+                      ""
+                    ]
+                  }
+                ]
+              },
+              "steps": []
+            },
+            {
+              "condition": {
+                "type": "boolean",
+                "args": [
+                  true
+                ]
+              },
+              "steps": []
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "characters": [
+    {
+      "id": "1U58I1SC",
+      "name": "Emma",
+      "mainPortraitID": "COL0H7JM"
+    }
+  ],
+  "portraits": [
+    {
+      "id": "QPWCI2HJ",
+      "name": "Blush",
+      "characterID": "1U58I1SC",
+      "image": {
+        "mimeType": "image/png",
+        "path": "portraits/QPWCI2HJ"
+      },
+      "height": "full"
+    },
+    {
+      "id": "COL0H7JM",
+      "name": "Happy",
+      "characterID": "1U58I1SC",
+      "image": {
+        "mimeType": "image/png",
+        "path": "portraits/COL0H7JM"
+      },
+      "height": "full"
+    },
+    {
+      "id": "7R9ORU1P",
+      "name": "Neutral",
+      "characterID": "1U58I1SC",
+      "image": {
+        "mimeType": "image/png",
+        "path": "portraits/7R9ORU1P"
+      },
+      "height": "full"
+    },
+    {
+      "id": "7DX98O0E",
+      "name": "Sad",
+      "characterID": "1U58I1SC",
+      "image": {
+        "mimeType": "image/png",
+        "path": "portraits/7DX98O0E"
+      },
+      "height": "full"
+    }
+  ],
+  "backdrops": [
+    {
+      "id": "4YAVCQUO",
+      "name": "Plaza",
+      "image": {
+        "mimeType": "image/png",
+        "path": "backdrops/4YAVCQUO"
+      }
+    },
+    {
+      "id": "DIIL1XDV",
+      "name": "Dorm Room",
+      "image": {
+        "mimeType": "image/png",
+        "path": "backdrops/DIIL1XDV"
+      }
+    },
+    {
+      "id": "XUJMMGGN",
+      "name": "Classroom",
+      "image": {
+        "mimeType": "image/png",
+        "path": "backdrops/XUJMMGGN"
+      }
+    }
+  ],
+  "songs": [
+    {
+      "id": "HVBBNPAO",
+      "name": "Sample Loop",
+      "audio": {
+        "mimeType": "audio/ogg",
+        "path": "songs/HVBBNPAO"
+      }
+    }
+  ],
+  "sounds": [
+    {
+      "id": "2KX8AFHT",
+      "name": "Scream",
+      "audio": {
+        "mimeType": "audio/ogg",
+        "path": "sounds/2KX8AFHT"
+      }
+    }
+  ],
+  "variables": [
+    {
+      "type": "text",
+      "id": "4BTATXCJ",
+      "name": "Player Name",
+      "scope": {
+        "type": "allStories"
+      },
+      "default": {
+        "type": "string",
+        "args": [
+          "Mary"
+        ]
+      }
+    }
+  ],
+  "macros": []
+}

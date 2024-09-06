@@ -1,0 +1,59 @@
+<!DOCTYPE html><html><head>
+    <meta charset="utf-8">
+  <title>Nova VNgine</title><link rel="icon" href="./favicon.ico"><style>/* src/main.css */
+@font-face {
+  font-family: "Inter";
+  font-style: normal;
+  src: url("./Inter-VariableFont_opsz,wght-ZQT46P7R.ttf");
+}
+@font-face {
+  font-family: "Inter";
+  font-style: italic;
+  src: url("./Inter-Italic-VariableFont_opsz,wght-3WBQ6O2W.ttf");
+}
+:root {
+  --bg-color: #111;
+  --text-color: white;
+  --primary-color: #FA5;
+  --secondary-color: #5AF;
+  --error-color: #f66;
+  --menu-bg-color: #222;
+  --menu-border-color: #444;
+  --hover-color: #8888;
+  --backsplash-color: #0008;
+  --sidebar-color: #222;
+  --dialogue-box-bg-color: #222C;
+  background: var(--bg-color);
+  color: var(--text-color);
+  font-family: "Inter", sans-serif;
+  font-size: 20px;
+  user-select: none;
+}
+html,
+body {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  height: 100%;
+}
+#appContainer {
+  height: 100%;
+}
+picture {
+  display: contents;
+}
+* {
+  box-sizing: border-box;
+  scrollbar-color: transparent transparent;
+  scrollbar-width: thin;
+  transition: scrollbar-color 0.1s;
+}
+*:hover {
+  scrollbar-color: var(--text-color) transparent;
+}
+/*# sourceMappingURL=data:application/json;base64,ewogICJ2ZXJzaW9uIjogMywKICAic291cmNlcyI6IFsiLi4vc3JjL21haW4uY3NzIl0sCiAgInNvdXJjZXNDb250ZW50IjogWyJcclxuQGZvbnQtZmFjZSB7XHJcbiAgICBmb250LWZhbWlseTogJ0ludGVyJztcclxuICAgIGZvbnQtc3R5bGU6IG5vcm1hbDtcclxuICAgIHNyYzogdXJsKC4vZm9udHMvSW50ZXItVmFyaWFibGVGb250X29wc3pcXCx3Z2h0LnR0Zik7XHJcbn1cclxuXHJcbkBmb250LWZhY2Uge1xyXG4gICAgZm9udC1mYW1pbHk6ICdJbnRlcic7XHJcbiAgICBmb250LXN0eWxlOiBpdGFsaWM7XHJcbiAgICBzcmM6IHVybCguL2ZvbnRzL0ludGVyLUl0YWxpYy1WYXJpYWJsZUZvbnRfb3BzelxcLHdnaHQudHRmKTtcclxufVxyXG5cclxuOnJvb3Qge1xyXG4gICAgLS1iZy1jb2xvcjogIzExMTtcclxuICAgIC0tdGV4dC1jb2xvcjogd2hpdGU7XHJcbiAgICAtLXByaW1hcnktY29sb3I6ICNGQTU7XHJcbiAgICAtLXNlY29uZGFyeS1jb2xvcjogIzVBRjtcclxuICAgIC0tZXJyb3ItY29sb3I6ICNmNjY7XHJcbiAgICAtLW1lbnUtYmctY29sb3I6ICMyMjI7XHJcbiAgICAtLW1lbnUtYm9yZGVyLWNvbG9yOiAjNDQ0O1xyXG4gICAgLS1ob3Zlci1jb2xvcjogIzg4ODg7XHJcbiAgICAtLWJhY2tzcGxhc2gtY29sb3I6ICMwMDA4O1xyXG4gICAgLS1zaWRlYmFyLWNvbG9yOiAjMjIyO1xyXG4gICAgLS1kaWFsb2d1ZS1ib3gtYmctY29sb3I6ICMyMjJDO1xyXG4gICAgYmFja2dyb3VuZDogdmFyKC0tYmctY29sb3IpO1xyXG4gICAgY29sb3I6IHZhcigtLXRleHQtY29sb3IpO1xyXG4gICAgZm9udC1mYW1pbHk6ICdJbnRlcicsIHNhbnMtc2VyaWY7XHJcbiAgICBmb250LXNpemU6IDIwcHg7XHJcbiAgICB1c2VyLXNlbGVjdDogbm9uZTtcclxufVxyXG5cclxuaHRtbCwgYm9keSB7XHJcbiAgICBtYXJnaW46IDA7XHJcbiAgICBwYWRkaW5nOiAwO1xyXG4gICAgYm9yZGVyOiAwO1xyXG4gICAgaGVpZ2h0OiAxMDAlO1xyXG59XHJcblxyXG4jYXBwQ29udGFpbmVyIHtcclxuICAgIGhlaWdodDogMTAwJTtcclxufVxyXG5cclxucGljdHVyZSB7XHJcbiAgICBkaXNwbGF5OiBjb250ZW50cztcclxufVxyXG5cclxuKiB7XHJcbiAgICBib3gtc2l6aW5nOiBib3JkZXItYm94O1xyXG4gICAgc2Nyb2xsYmFyLWNvbG9yOiB0cmFuc3BhcmVudCB0cmFuc3BhcmVudDtcclxuICAgIHNjcm9sbGJhci13aWR0aDogdGhpbjtcclxuICAgIHRyYW5zaXRpb246IHNjcm9sbGJhci1jb2xvciAwLjFzO1xyXG59XHJcblxyXG4qOmhvdmVyIHtcclxuICAgIHNjcm9sbGJhci1jb2xvcjogdmFyKC0tdGV4dC1jb2xvcikgdHJhbnNwYXJlbnQ7XHJcbn1cclxuIl0sCiAgIm1hcHBpbmdzIjogIjtBQUNBO0FBQ0ksZUFBYTtBQUNiLGNBQVk7QUFDWixPQUFLO0FBQ1Q7QUFFQTtBQUNJLGVBQWE7QUFDYixjQUFZO0FBQ1osT0FBSztBQUNUO0FBRUE7QUFDSSxjQUFZO0FBQ1osZ0JBQWM7QUFDZCxtQkFBaUI7QUFDakIscUJBQW1CO0FBQ25CLGlCQUFlO0FBQ2YsbUJBQWlCO0FBQ2pCLHVCQUFxQjtBQUNyQixpQkFBZTtBQUNmLHNCQUFvQjtBQUNwQixtQkFBaUI7QUFDakIsMkJBQXlCO0FBQ3pCLGNBQVksSUFBSTtBQUNoQixTQUFPLElBQUk7QUFDWCxlQUFhLE9BQU8sRUFBRTtBQUN0QixhQUFXO0FBQ1gsZUFBYTtBQUNqQjtBQUVBO0FBQU07QUFDRixVQUFRO0FBQ1IsV0FBUztBQUNULFVBQVE7QUFDUixVQUFRO0FBQ1o7QUFFQSxDQUFDO0FBQ0csVUFBUTtBQUNaO0FBRUE7QUFDSSxXQUFTO0FBQ2I7QUFFQTtBQUNJLGNBQVk7QUFDWixtQkFBaUIsWUFBWTtBQUM3QixtQkFBaUI7QUFDakIsY0FBWSxnQkFBZ0I7QUFDaEM7QUFFQSxDQUFDO0FBQ0csbUJBQWlCLElBQUksY0FBYztBQUN2QzsiLAogICJuYW1lcyI6IFtdCn0K */
+</style><link rel="stylesheet" href="./index.css?c348289c8b222072a000a14be3c78870"></head>
+  <body>
+  
+
+<script src="/__neutralino_globals.js"></script><script src="./index.js?c348289c8b222072a000a14be3c78870" type="module"></script></body></html>
