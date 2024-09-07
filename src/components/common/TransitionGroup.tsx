@@ -26,7 +26,14 @@ interface TransitionGroupEntry<T> {
     props: T
 }
 
-export const TransitionGroup = <T,>({ values, getKey, sort, children }: { values: T[], getKey: (value: T) => string, sort?: (a: T, b: T) => number, children: (props: T, transition: TransitionProps) => React.ReactNode }) => {
+interface TransitionGroupProps<T> {
+    values: T[]
+    getKey: (value: T) => string
+    sort?: (a: T, b: T) => number
+    children: (props: T, transition: TransitionProps) => React.ReactNode
+}
+
+export const TransitionGroup = <T,>({ values, getKey, sort, children }: TransitionGroupProps<T>) => {
     const latestGetKey = useLatest(getKey)
     const [entries, setEntries] = useState<Record<string, TransitionGroupEntry<T> | undefined>>({})
     const latestEntries = useLatest(entries)

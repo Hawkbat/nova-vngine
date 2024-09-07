@@ -7,7 +7,7 @@ import { getAbsolutePath, getRelativePath, joinPaths } from '../utils/path'
 
 export const fetchStorageProvider: StorageProvider = {
     type: 'fetch',
-    name: 'External Server',
+    name: 'External Website',
     isSupported() {
         return true
     },

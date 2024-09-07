@@ -1,12 +1,10 @@
 import { userPlayStory } from '../../operations/player'
 import { projectStore } from '../../store/project'
-import { viewStateStore } from '../../store/viewstate'
 import type { ChapterID, StoryDefinition } from '../../types/project'
 import { immSet } from '../../utils/imm'
 import { useSelector } from '../../utils/store'
 import { EditorButton, EditorButtonGroup } from '../common/EditorButton'
 import { EntityField } from '../common/EntityField'
-import { GamePlayer } from '../player/GamePlayer'
 import { EntityWorkspace } from './EntityWorkspace'
 
 import styles from './StoryWorkspace.module.css'
@@ -22,7 +20,5 @@ const StoryEditor = ({ story, setStory }: { story: StoryDefinition, setStory: (s
 }
 
 export const StoryWorkspace = () => {
-    const getIsInPlayer = useSelector(viewStateStore, s => s.editor?.type === 'player')
-
-    return getIsInPlayer() ? <GamePlayer /> : <EntityWorkspace type='story' getVariableScopes={story => [{ type: 'story', value: story.id }, { type: 'stories', value: [story.id] }, { type: 'allStories' }]}>{(story, setStory) => <StoryEditor key={story.id} story={story} setStory={setStory} />}</EntityWorkspace>
+    return <EntityWorkspace type='story' getVariableScopes={story => [{ type: 'story', value: story.id }, { type: 'stories', value: [story.id] }, { type: 'allStories' }]}>{(story, setStory) => <StoryEditor key={story.id} story={story} setStory={setStory} />}</EntityWorkspace>
 }

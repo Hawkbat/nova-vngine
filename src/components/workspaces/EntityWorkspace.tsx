@@ -1,6 +1,7 @@
 import { Fragment } from 'react/jsx-dev-runtime'
 
 import { getEntityByID, getEntityDisplayName, getEntityPrimaryAsset, getEntityReferences } from '../../operations/project'
+import { useProjectReadonly } from '../../operations/storage'
 import { useViewStateScope } from '../../operations/viewState'
 import { useAsset } from '../../store/assets'
 import { projectStore } from '../../store/project'
@@ -31,6 +32,7 @@ export const EntityWorkspace = <T extends EntityType>({ type, children, getVaria
     children: (item: EntityOfType<T>, setItem: (setter: (value: EntityOfType<T>) => EntityOfType<T>) => void) => React.ReactNode
     getVariableScopes?: (item: EntityOfType<T>) => AnyVariableScope[]
 }) => {
+    const readonly = useProjectReadonly()
     const getDeveloperMode = useSelector(settingsStore, s => s.developerMode)
     const projectKey = getProjectEntityKey(type)
     const [getItemID] = useViewStateScope(type)
@@ -70,9 +72,9 @@ export const EntityWorkspace = <T extends EntityType>({ type, children, getVaria
             <Field label='Referenced By'>
                 {references.length ? references.map(r => <EditorButton key={r.id} style='text' icon={EXPR_ICONS[r.type]} onClick={() => viewStateStore.setValue(v => immSet(immSet(v, 'scopes', immSet(v.scopes, r.type, r.id as EntityIDOf<EntityType>)), 'currentTab', getProjectEntityKey(r.type)))}>{getEntityDisplayName(r.type, getEntityByID(r.type, r.id as EntityIDOf<EntityType>), true)}</EditorButton>) : <>Nothing</>}
             </Field>
-            <EditorButtonGroup side='left'>
+            {!readonly ? <EditorButtonGroup side='left'>
                 <EditorButton disabled={references.length > 0} onClick={onDeleteItem}>Delete {prettyPrintIdentifier(type)} {getEntityDisplayName(type, item, false)}</EditorButton>
-            </EditorButtonGroup>
+            </EditorButtonGroup> : null}
         </div>
         {asset ? <div className={styles.preview}>
             <EntityImagePreview type={type} entity={item} />

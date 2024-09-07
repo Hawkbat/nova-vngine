@@ -3,6 +3,7 @@ import { useCallback, useLayoutEffect, useRef, useState } from 'react'
 import clickSrc from '../../sounds/click.mp3'
 import { useAsset } from '../../store/assets'
 import { projectStore } from '../../store/project'
+import { settingsStore } from '../../store/settings'
 import type { LocationHeightValue, LocationPositionValue, LocationScaleValue } from '../../types/expressions'
 import type { BackdropPlayerState, CharacterPlayerState, DialoguePlayerState, OptionPlayerState, PromptPlayerState, ScenePlayerState, SongPlayerState, SoundPlayerState } from '../../types/player'
 import { classes } from '../../utils/display'
@@ -42,6 +43,7 @@ const SCALE_VALUES = {
 
 const playClick = () => {
     const audio = new Audio(clickSrc)
+    audio.volume = settingsStore.getValue().scenePlayerSettings.uiVolume
     void audio.play()
 }
 

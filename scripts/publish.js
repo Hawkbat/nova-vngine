@@ -6,6 +6,7 @@ console.log('Staging build...')
 fs.rmSync('dist', { recursive: true, force: true })
 fs.mkdirSync('dist', { recursive: true })
 fs.cpSync('resources', 'dist', { recursive: true })
+fs.writeFileSync('dist/build.js', 'const PUBLISHED_PROJECT = `${location.origin}/project`;')
 fs.cpSync('example-project', 'dist/project', { recursive: true })
 
 console.log('Publishing...')

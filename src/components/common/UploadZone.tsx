@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 
-import { useProjectStorage } from '../../operations/project'
+import { useProjectStorage } from '../../operations/storage'
 import type { StorageFileResult } from '../../types/storage'
 import { classes } from '../../utils/display'
 import { useDrop } from '../../utils/hooks'

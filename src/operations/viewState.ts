@@ -5,13 +5,13 @@ import { getStorageProvider } from '../storage/storage'
 import { viewStateStore } from '../store/viewstate'
 import { DEFAULT_PROJECT_FILENAME, isPlatformErrorCode } from '../types/platform'
 import { ENTITY_TYPES, type EntityIDOf, type EntityType, getEntityTypeHierarchy, parseProjectDefinition } from '../types/project'
-import type { StorageRootEntry } from '../types/storage'
+import { isStorageErrorCode, type StorageRootEntry } from '../types/storage'
 import type { ProjectEditorTab, ProjectMetaData } from '../types/viewstate'
 import { existsFilter, tryParseJson } from '../utils/guard'
 import { immAppend, immSet } from '../utils/imm'
 import { useSelector } from '../utils/store'
 import { hintTuple } from '../utils/types'
-import { getEntityHierarchy, loadProject, parseProjectFromJson } from './project'
+import { getEntityHierarchy, loadProject, parseProjectFromJson, tryLoadProject } from './project'
 
 export function useViewStateTab() {
     const getTab = useSelector(viewStateStore, s => s.currentTab)
@@ -69,15 +69,22 @@ export async function loadInitialViewState() {
         viewStateStore.setValue(s => immSet(s, 'recentProjects', immAppend(s.recentProjects, ...projects)))
     }
     try {
-        const root: StorageRootEntry = { type: 'fetch', key: `${location.origin}/project` }
-        const json = await getStorageProvider(root.type).loadText(root, DEFAULT_PROJECT_FILENAME)
-        const project = parseProjectFromJson(json)
-        if (!viewStateStore.getValue().recentProjects.find(p => p.id === project.id)) {
-            const projectMetaData: ProjectMetaData = { id: project.id, name: project.name, root }
-            viewStateStore.setValue(s => immSet(s, 'recentProjects', immAppend(s.recentProjects, projectMetaData)))
+        if ('PUBLISHED_PROJECT' in window && PUBLISHED_PROJECT) {
+            const root: StorageRootEntry = { type: 'fetch', key: PUBLISHED_PROJECT }
+            const json = await getStorageProvider(root.type).loadText(root, DEFAULT_PROJECT_FILENAME)
+            const project = parseProjectFromJson(json)
+            if (!viewStateStore.getValue().recentProjects.find(p => p.id === project.id)) {
+                const projectMetaData: ProjectMetaData = { id: project.id, name: project.name, root }
+                viewStateStore.setValue(s => immSet(s, 'recentProjects', immAppend(s.recentProjects, projectMetaData)))
+            }
+            if (await tryLoadProject(root)) {
+                return
+            }
         }
     } catch (err) {
-        console.error(err)
+        if (!isStorageErrorCode(err, 'not-found')) {
+            console.error(err)
+        }
     }
     try {
         if (viewState.loadedProject && await loadProject(viewState.loadedProject.root)) {

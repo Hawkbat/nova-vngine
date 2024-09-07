@@ -1,8 +1,8 @@
 import { gamePlayerStore } from '../store/player'
 import { viewStateStore } from '../store/viewstate'
 import { type AnyExprValue, resolveExpr, resolveExprAs } from '../types/expressions'
-import type { GamePlayerActionOfType, GamePlayerActionType, GamePlayerEvaluationState, GamePlayerState } from '../types/player'
-import { applyStepToScenePlayerState, getExprContext, getInitialGamePlayerState, getInitialScenePlayerState, GoToSceneGamePlayerSignal, ReturnToStepGamePlayerSignal, SceneEndGamePlayerSignal, StopGamePlayerSignal } from '../types/player'
+import type { GamePlayerActionOfType, GamePlayerActionType, GamePlayerEvalState, GameSaveState, ScenePlayerSettingsState } from '../types/player'
+import { applyStepToScenePlayerState, getExprContext, getInitialGameSaveState, getInitialScenePlayerState, GoToSceneGamePlayerSignal, ReturnToStepGamePlayerSignal, StopGamePlayerSignal } from '../types/player'
 import { type ChapterID, getVariableValueType, type MacroID, type SceneID, type StoryID } from '../types/project'
 import type { AnyStep, StepID } from '../types/steps'
 import { arrayHead } from '../utils/array'
@@ -12,18 +12,18 @@ import { hintTuple } from '../utils/types'
 import { getEntityByID } from './project'
 
 export function userPlayStory(storyID: StoryID) {
-    gamePlayerStore.setValue(() => getInitialGamePlayerState(storyID))
-    viewStateStore.setValue(s => immSet(s, 'editor', { type: 'player', storyID }))
+    gamePlayerStore.setValue(s => immSet(s, 'currentSave', getInitialGameSaveState(storyID)))
+    viewStateStore.setValue(s => immSet(s, 'currentTab', 'play'))
 }
 
-export function getCurrentPlayerState(gameState: GamePlayerState) {
-    let evalState: GamePlayerEvaluationState = {
+export function getCurrentPlayerState(gameState: GameSaveState, settings: ScenePlayerSettingsState) {
+    let evalState: GamePlayerEvalState = {
         randState: gameState.randState,
         story: null,
         macros: [],
         stoppedAt: null,
     }
-    let sceneState = getInitialScenePlayerState()
+    let sceneState = getInitialScenePlayerState(settings)
     const exprContext = getExprContext(() => evalState, setter => evalState = setter(evalState))
     const actions = [...gameState.actions]
     const stepHistory: AnyStep[] = []
@@ -36,6 +36,12 @@ export function getCurrentPlayerState(gameState: GamePlayerState) {
             return head as GamePlayerActionOfType<T>
         }
         return null
+    }
+
+    const checkStop = (step: AnyStep) => {
+        if (actions.length === 0 && step.id === gameState.stopAfter) {
+            stopNext = true
+        }
     }
 
     const processStory = (storyID: StoryID, chapterID?: ChapterID, sceneID?: SceneID) => {
@@ -90,11 +96,10 @@ export function getCurrentPlayerState(gameState: GamePlayerState) {
                 variables: {},
             }
         }
-        sceneState = getInitialScenePlayerState()
+        sceneState = getInitialScenePlayerState(settings)
         try {
             processSteps(scene.steps)
             popScene()
-            throw new SceneEndGamePlayerSignal(scene.id)
         } catch (err) {
             if (err instanceof GoToSceneGamePlayerSignal) {
                 if (err.sceneID === scene.id) return processScene(sceneID)
@@ -130,15 +135,12 @@ export function getCurrentPlayerState(gameState: GamePlayerState) {
             case 'narrate':
             case 'prompt':
             case 'decision': {
-                if (!gameState.stopAfter || stopNext) {
+                if (actions.length === 0 && (!gameState.stopAfter || stopNext)) {
                     throw new StopGamePlayerSignal(step)
                 }
                 break
             }
             default: break
-        }
-        if (step.id === gameState.stopAfter) {
-            stopNext = true
         }
         switch (step.type) {
             case 'prompt': {
@@ -154,6 +156,7 @@ export function getCurrentPlayerState(gameState: GamePlayerState) {
             case 'decision': {
                 const action = tryPopAction('decision', step.id)
                 if (!action) throw new StopGamePlayerSignal(step)
+                checkStop(step)
                 processSteps(throwIfNull(step.options[action.index]).steps)
                 break
             }
@@ -161,6 +164,7 @@ export function getCurrentPlayerState(gameState: GamePlayerState) {
                 for (const option of step.options) {
                     const conditionMet = resolveExprAs(option.condition, 'boolean', exprContext).value
                     if (conditionMet) {
+                        checkStop(step)
                         processSteps(option.steps)
                         break
                     }
@@ -187,6 +191,7 @@ export function getCurrentPlayerState(gameState: GamePlayerState) {
             }
             default: break
         }
+        checkStop(step)
     }
 
     const processSteps = (steps: AnyStep[]) => {

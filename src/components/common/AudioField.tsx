@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 
-import { useProjectStorage } from '../../operations/project'
+import { useProjectStorage } from '../../operations/storage'
 import { useAsset } from '../../store/assets'
 import type { AssetDefinition } from '../../types/project'
 import { AUDIO_EXTENSIONS, getMimeType } from '../../utils/media'
@@ -12,7 +12,7 @@ import type { UploadCallback } from './UploadZone'
 import { UploadZone } from './UploadZone'
 
 export const AudioField = ({ className, label, value, setValue, validate, targetPath }: FieldProps<AssetDefinition | null> & { targetPath: string }) => {
-    const { getRoot, storage } = useProjectStorage()
+    const { getRoot, storage, readonly } = useProjectStorage()
     const getAudioSrc = useAsset(value, false)
 
     const errorCheck = useCallback(() => {
@@ -43,9 +43,9 @@ export const AudioField = ({ className, label, value, setValue, validate, target
     return <Field label={label} error={errorCheck()}>
         {value ? <>
             {getAudioSrc() ? <audio src={getAudioSrc() ?? undefined} controls /> : <span>Loading...</span>}
-            <EditorIcon path={COMMON_ICONS.deleteItem} label='Delete Audio' onClick={onDelete} />
+            {!readonly ? <EditorIcon path={COMMON_ICONS.deleteItem} label='Delete Audio' onClick={onDelete} /> : null}
         </> : <>
-            <UploadZone fileType='Audio File' extensions={AUDIO_EXTENSIONS} title='Upload Audio File' onUpload={onUpload} />
+            {!readonly ? <UploadZone fileType='Audio File' extensions={AUDIO_EXTENSIONS} title='Upload Audio File' onUpload={onUpload} /> : null}
         </>}
     </Field>
 }

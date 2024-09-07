@@ -1,4 +1,4 @@
-import { mdiAccount, mdiAccountMinus, mdiAccountPlus, mdiAccountVoice, mdiAlert, mdiApplicationVariable, mdiArchive, mdiArchiveEdit, mdiArchivePlus, mdiArrowExpandDown, mdiArrowExpandHorizontal, mdiArrowExpandUp, mdiArrowExpandVertical, mdiArrowRightBox, mdiArrowULeftTop, mdiBookMultipleOutline, mdiBookOpenVariantOutline, mdiCheckboxBlankOutline, mdiCheckboxMarked, mdiCheckCircle, mdiChevronDown, mdiChevronRight, mdiClose, mdiCloseCircleOutline, mdiCog, mdiCreation, mdiDice3, mdiDiceMultiple, mdiDotsCircle, mdiDotsHorizontal, mdiEmoticon, mdiEqual, mdiFlag, mdiFormatHorizontalAlignCenter, mdiFormatHorizontalAlignLeft, mdiFormatHorizontalAlignRight, mdiFormatLetterCaseLower, mdiFormatLetterCaseUpper, mdiFormatListCheckbox, mdiFormatListChecks, mdiFormatListGroup, mdiFormatListText, mdiFormatText, mdiFormTextbox, mdiGreaterThan, mdiGreaterThanOrEqual, mdiHome, mdiImageArea, mdiLessThan, mdiLessThanOrEqual, mdiMapSearch, mdiMenuDown, mdiMinus, mdiMusic, mdiNotEqualVariant, mdiPause, mdiPercent, mdiPlay, mdiPlus, mdiPlusBox, mdiPound, mdiPoundBox, mdiRestart, mdiScriptText, mdiScriptTextPlay, mdiSignatureText, mdiSlashForward, mdiSourceBranch, mdiSquareOutline, mdiText, mdiTextBoxOutline, mdiTrashCan, mdiUpload, mdiVariable, mdiVolumeHigh } from '@mdi/js'
+import { mdiAccount, mdiAccountMinus, mdiAccountPlus, mdiAccountVoice, mdiAlert, mdiApplicationVariable, mdiArchive, mdiArchiveEdit, mdiArchiveMarker, mdiArchivePlus, mdiArrowExpandDown, mdiArrowExpandHorizontal, mdiArrowExpandUp, mdiArrowExpandVertical, mdiArrowRightBox, mdiArrowULeftTop, mdiBookMultipleOutline, mdiBookOpenVariantOutline, mdiCheckboxBlankOutline, mdiCheckboxMarked, mdiCheckCircle, mdiChevronDown, mdiChevronRight, mdiClose, mdiCloseCircleOutline, mdiCog, mdiCreation, mdiDice3, mdiDiceMultiple, mdiDotsCircle, mdiDotsHorizontal, mdiEmoticon, mdiEqual, mdiFlag, mdiFormatHorizontalAlignCenter, mdiFormatHorizontalAlignLeft, mdiFormatHorizontalAlignRight, mdiFormatLetterCaseLower, mdiFormatLetterCaseUpper, mdiFormatListCheckbox, mdiFormatListChecks, mdiFormatListGroup, mdiFormatListText, mdiFormatText, mdiFormTextbox, mdiGreaterThan, mdiGreaterThanOrEqual, mdiHome, mdiImageArea, mdiLessThan, mdiLessThanOrEqual, mdiMapSearch, mdiMenuDown, mdiMinus, mdiMusic, mdiNotEqualVariant, mdiPause, mdiPercent, mdiPlay, mdiPlus, mdiPlusBox, mdiPound, mdiPoundBox, mdiRestart, mdiScriptText, mdiScriptTextPlay, mdiSignatureText, mdiSlashForward, mdiSourceBranch, mdiSquareOutline, mdiText, mdiTextBoxOutline, mdiTrashCan, mdiUpload, mdiVariable, mdiViewList, mdiVolumeHigh } from '@mdi/js'
 
 import type { ExprPrimitiveValueType, ExprType } from '../../types/expressions'
 import type { StepType } from '../../types/steps'
@@ -9,6 +9,7 @@ export const COMMON_ICONS = {
     warning: mdiAlert,
     newProject: mdiArchivePlus,
     openProject: mdiArchiveEdit,
+    openProjectUrl: mdiArchiveMarker,
     cancel: mdiClose,
     close: mdiCloseCircleOutline,
     checkboxChecked: mdiCheckboxMarked,
@@ -29,6 +30,7 @@ export const COMMON_ICONS = {
     play: mdiPlay,
     pause: mdiPause,
     restart: mdiRestart,
+    list: mdiViewList,
 } satisfies Record<string, string>
 
 export const EXPR_ICONS: Record<ExprType, string> = {
@@ -93,6 +95,7 @@ export const EXPR_VALUE_ICONS: Record<ExprPrimitiveValueType, string> = {
 
 export const PROJECT_TAB_ICONS: Record<ProjectEditorTab, string> = {
     home: mdiHome,
+    play: mdiPlay,
     manual: mdiMapSearch,
     settings: mdiCog,
     project: mdiArchive,

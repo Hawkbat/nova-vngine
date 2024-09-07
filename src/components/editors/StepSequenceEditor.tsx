@@ -1,6 +1,7 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 
 import { getProjectExprContext, immGenerateID } from '../../operations/project'
+import { useProjectReadonly } from '../../operations/storage'
 import { platform } from '../../platform/platform'
 import { projectStore } from '../../store/project'
 import { settingsStore } from '../../store/settings'
@@ -13,7 +14,7 @@ import { arrayHead, arrayTail } from '../../utils/array'
 import { classes, prettyPrintIdentifier } from '../../utils/display'
 import { throwIfNull, tryParseValue } from '../../utils/guard'
 import { useDrag, useDrop } from '../../utils/hooks'
-import { immAppend, immInsertAt, immRemoveAt, immReplaceAt, immSet, immSetProps } from '../../utils/imm'
+import { immAppend, immInsertAt, immRemoveAt, immReplaceAt, immSet } from '../../utils/imm'
 import { useSelector } from '../../utils/store'
 import { assertExhaustive } from '../../utils/types'
 import { DropdownField } from '../common/DropdownField'
@@ -58,6 +59,7 @@ const StepField = ({ className, label, value, setValue, steps, setSteps, selecte
 
 const StepEditor = ({ step, setStep, deleteStep, steps, setSteps, selected, setSelected, ctx }: { step: AnyStep, setStep: (setter: (step: AnyStep) => AnyStep) => void, deleteStep: () => void, steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, selected: StepID | null, setSelected: (id: StepID | null) => void, ctx: ExprContext }) => {
     const getDeveloperMode = useSelector(settingsStore, s => s.developerMode)
+    const readonly = useProjectReadonly()
 
     const onDeleteStep = (e: React.MouseEvent) => {
         e.stopPropagation()
@@ -105,24 +107,24 @@ const StepEditor = ({ step, setStep, deleteStep, steps, setSteps, selected, setS
                 {step.options.map((o, i) => <div key={i} className={styles.optionEditor}>
                     <ExpressionField label='Text' value={o.text} setValue={expr => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(throwIfNull(s.options[i]), 'text', expr))) : s)} paramTypes={['string']} ctx={ctx} />
                     <ExpressionField label='Condition' value={o.condition} setValue={expr => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(throwIfNull(s.options[i]), 'condition', expr))) : s)} paramTypes={['boolean']} ctx={ctx} />
-                    <Field label='Delete Option'>
+                    {!readonly ? <Field label='Delete Option'>
                         <EditorIcon path={COMMON_ICONS.deleteItem} label='Delete Option' onClick={() => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immRemoveAt(s.options, i)) : s)} />
-                    </Field>
+                    </Field> : null}
                 </div>)}
-                <Field label='Add Option'>
+                {!readonly ? <Field label='Add Option'>
                     <EditorIcon path={COMMON_ICONS.addItem} label='Add Option' onClick={() => setStep(s => isStepType(s, 'decision') ? immSet(s, 'options', immAppend(s.options, { text: createDefaultExpr('string', ctx), condition: createDefaultExpr('boolean', ctx), steps: [] })) : s)} />
-                </Field>
+                </Field> : null}
             </>
             case 'branch': return <>
                 {step.options.map((o, i) => <div key={i} className={styles.optionEditor}>
                     <ExpressionField label='Condition' value={o.condition} setValue={expr => setStep(s => isStepType(s, 'branch') ? immSet(s, 'options', immReplaceAt(s.options, i, immSet(throwIfNull(s.options[i]), 'condition', expr))) : s)} paramTypes={['boolean']} ctx={ctx} />
-                    <Field label='Delete Option'>
+                    {!readonly ? <Field label='Delete Option'>
                         <EditorIcon path={COMMON_ICONS.deleteItem} label='Delete Option' onClick={() => setStep(s => isStepType(s, 'branch') ? immSet(s, 'options', immRemoveAt(s.options, i)) : s)} />
-                    </Field>
+                    </Field> : null}
                 </div>)}
-                <Field label='Add Option'>
+                {!readonly ? <Field label='Add Option'>
                     <EditorIcon path={COMMON_ICONS.addItem} label='Add Option' onClick={() => setStep(s => isStepType(s, 'branch') ? immSet(s, 'options', immAppend(s.options, { condition: createDefaultExpr('boolean', ctx), steps: [] })) : s)} />
-                </Field>
+                </Field> : null}
             </>
             case 'prompt': return <>
                 <StringField label='Label' value={step.label} setValue={label => setStep(s => isStepType(s, 'prompt') ? immSet(s, 'label', label) : s)} />
@@ -154,9 +156,9 @@ const StepEditor = ({ step, setStep, deleteStep, steps, setSteps, selected, setS
             <StringField label='Step Type' value={prettyPrintIdentifier(step.type)} />
         </> : null}
         {subEditor()}
-        <Field label='Delete Step'>
+        {!readonly ? <Field label='Delete Step'>
             <EditorIcon path={COMMON_ICONS.deleteItem} label='Delete Step' onClick={onDeleteStep} />
-        </Field>
+        </Field> : null}
     </div>
 }
 
@@ -183,6 +185,7 @@ const StepGap = ({ before, after, setSteps, rootSteps, setRootSteps }: { before:
 }
 
 const StepList = ({ steps, setSteps, selected, setSelected, ctx, rootSteps, setRootSteps }: { steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, selected: StepID | null, setSelected: (id: StepID | null) => void, ctx: ExprContext, rootSteps: AnyStep[], setRootSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void }) => {
+    const readonly = useProjectReadonly()
     const [dropdownProps, openDropdown] = useDropdownMenuState()
 
     const onAddStep = (e: React.MouseEvent, type: StepType) => {
@@ -199,9 +202,9 @@ const StepList = ({ steps, setSteps, selected, setSelected, ctx, rootSteps, setR
             <StepBubble key={s.id} step={s} setStep={setter => setSteps(steps => immReplaceAt(steps, i, setter(throwIfNull(steps[i]))))} deleteStep={() => setSteps(steps => immRemoveAt(steps, i))} selected={selected} setSelected={setSelected} ctx={ctx} rootSteps={rootSteps} setRootSteps={setRootSteps} />
             <StepGap before={s.id} after={steps[i + 1]?.id ?? null} setSteps={setSteps} rootSteps={rootSteps} setRootSteps={setRootSteps} />
         </Fragment>)}
-        <div className={styles.outlineBubble} onClick={openDropdown}>
+        {!readonly ? <div className={styles.outlineBubble} onClick={openDropdown}>
             <EditorIcon path={COMMON_ICONS.addItem} />
-        </div>
+        </div> : null}
         <SearchDropdownMenu items={STEP_TYPES} filter={(t, search) => t.toLowerCase().includes(search.toLowerCase())} {...dropdownProps}>
             {(type) => <DropdownMenuItem key={type} onClick={e => (onAddStep(e, type), dropdownProps.onClose())}>
                 <EditorIcon path={STEP_ICONS[type]} label={prettyPrintIdentifier(type)} />
@@ -269,10 +272,7 @@ export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setS
     const selected = useMemo(() => getDeepStep(getSelectedStepID(), steps, setSteps, [], null), [getSelectedStepID, steps, setSteps])
 
     const sceneState: ScenePlayerState = useMemo(() => {
-        let state = getInitialScenePlayerState()
-        state = immSet(state, 'settings', immSetProps(state.settings, {
-            musicVolume: 0,
-        }))
+        let state = getInitialScenePlayerState({ musicVolume: 0, soundVolume: 1, uiVolume: 1, textSpeed: 1 })
         if (!selected) return state
 
         const previousSteps = selected.previousSteps.flatMap(s => {

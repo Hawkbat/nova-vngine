@@ -5,9 +5,9 @@ import { PROJECT_ENTITY_KEYS } from './project'
 import type { StepID } from './steps'
 import { parseStorageRootEntry, type StorageRootEntry } from './storage'
 
-export type ProjectEditorTab = 'home' | 'manual' | 'settings' | 'project' | ProjectEntityKeyOf<EntityType>
+export type ProjectEditorTab = 'home' | 'play' | 'manual' | 'settings' | 'project' | ProjectEntityKeyOf<EntityType>
 
-export type SubEditorViewState = { type: 'player', storyID: StoryID } | { type: 'sceneSteps', sceneID: SceneID, stepID: StepID | null } | { type: 'macroSteps', macroID: MacroID, stepID: StepID | null }
+export type SubEditorViewState = { type: 'sceneSteps', sceneID: SceneID, stepID: StepID | null } | { type: 'macroSteps', macroID: MacroID, stepID: StepID | null }
 
 export interface ProjectMetaData {
     id: string
@@ -31,9 +31,6 @@ const parseProjectMetaData: ParseFunc<ProjectMetaData> = defineParser<ProjectMet
 }, d))
 
 export const parseSubEditorViewState: ParseFunc<SubEditorViewState> = defineParser<SubEditorViewState>((c, v, d) => $.typed(c, v, {}, {
-    player: {
-        storyID: $.id,
-    },
     sceneSteps: {
         sceneID: $.id,
         stepID: (c, v, d) => $.either<StepID, null>(c, v, $.id, $.null, d),
@@ -46,7 +43,7 @@ export const parseSubEditorViewState: ParseFunc<SubEditorViewState> = definePars
 
 export const parseViewState: ParseFunc<ViewState> = defineParser<ViewState>((c, v, d) => $.object(c, v, {
     loaded: $.boolean,
-    currentTab: (c, v, d) => $.enum(c, v, ['home', 'manual', 'settings', 'project', ...PROJECT_ENTITY_KEYS], d),
+    currentTab: (c, v, d) => $.enum(c, v, ['home', 'play', 'manual', 'settings', 'project', ...PROJECT_ENTITY_KEYS], d),
     loadedProject: (c, v, d) => $.either(c, v, parseProjectMetaData, $.null, d),
     recentProjects: (c, v, d) => $.array(c, v, parseProjectMetaData, d),
     scopes: (c, v, d) => $.object(c, v, {

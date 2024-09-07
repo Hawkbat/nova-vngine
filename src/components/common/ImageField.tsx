@@ -1,6 +1,6 @@
 import { useCallback, useState } from 'react'
 
-import { useProjectStorage } from '../../operations/project'
+import { useProjectStorage } from '../../operations/storage'
 import { useAsset } from '../../store/assets'
 import type { AssetDefinition } from '../../types/project'
 import { classes } from '../../utils/display'
@@ -17,7 +17,7 @@ import { UploadZone } from './UploadZone'
 import styles from './ImageField.module.css'
 
 export const ImageField = ({ className, label, value, setValue, validate, targetPath }: FieldProps<AssetDefinition | null> & { targetPath: string }) => {
-    const { getRoot, storage } = useProjectStorage()
+    const { getRoot, storage, readonly } = useProjectStorage()
     const getImgSrc = useAsset(value, false)
     const getThumbImgSrc = useAsset(value, true)
     const [previewOpen, setPreviewOpen] = useState(false)
@@ -58,9 +58,9 @@ export const ImageField = ({ className, label, value, setValue, validate, target
                 <picture><source srcSet={getThumbImgSrc() ?? undefined} type={value.mimeType} /><img className={classes(styles.preview, className)} src={getThumbImgSrc() ?? undefined} onClick={onPreview} /></picture>
                 <ImagePreview open={previewOpen} src={throwIfNull(getImgSrc() ?? getThumbImgSrc())} mimeType={value.mimeType} onClose={() => setPreviewOpen(false)} />
             </> : <span>Loading...</span>}
-            <EditorIcon path={COMMON_ICONS.deleteItem} label='Delete Image' onClick={onDelete} />
+            {!readonly ? <EditorIcon path={COMMON_ICONS.deleteItem} label='Delete Image' onClick={onDelete} /> : null}
         </> : <>
-            <UploadZone fileType='Image File' extensions={IMAGE_EXTENSIONS} title='Upload Image File' onUpload={onUpload} />
+            {!readonly ? <UploadZone fileType='Image File' extensions={IMAGE_EXTENSIONS} title='Upload Image File' onUpload={onUpload} /> : null}
         </>}
     </Field>
 }

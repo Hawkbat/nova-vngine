@@ -7,6 +7,20 @@ const commit = await new Promise((resolve, reject) => getLastCommit((err, commit
 
 const DEVELOPMENT = true
 
+const htmlTemplate = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+</head>
+<body>
+    <div id="root">
+    </div>
+</body>
+</html>
+`.trim()
+
 export const buildContext = await esbuild.context({
     bundle: true,
     entryPoints: ['src/main.css', 'src/index.tsx'],
@@ -37,11 +51,12 @@ export const buildContext = await esbuild.context({
                     'src/main.css',
                     'src/index.tsx'
                 ],
+                htmlTemplate,
                 filename: 'index.html',
                 scriptLoading: 'module',
                 title: 'Nova VNgine',
                 favicon: 'src/favicon.ico',
-                extraScripts: ['/__neutralino_globals.js'],
+                extraScripts: ['/__neutralino_globals.js', 'build.js'],
                 hash: true,
                 inline: filepath => filepath.endsWith('/main.css'),
             }

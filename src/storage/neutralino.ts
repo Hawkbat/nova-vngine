@@ -8,7 +8,7 @@ import { getAbsolutePath, getPathFileName, getRelativePath } from '../utils/path
 
 export const neutralinoStorageProvider: StorageProvider = {
     type: 'neutralino',
-    name: 'Native Filesystem',
+    name: 'Local Drive (Native)',
     isSupported() {
         return 'NL_APPID' in window
     },

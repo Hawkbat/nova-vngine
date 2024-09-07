@@ -1,5 +1,5 @@
 
-import { openDialog } from '../components/common/Dialog'
+import { openDialog, openPromptDialog } from '../components/common/Dialog'
 import { platform } from '../platform/platform'
 import { getStorageProvider } from '../storage/storage'
 import { createDefaultProject, projectStore } from '../store/project'
@@ -14,7 +14,6 @@ import { prettyPrintIdentifier } from '../utils/display'
 import { throwIfNull, tryParseJson } from '../utils/guard'
 import { immAppend, immSet } from '../utils/imm'
 import { randFloat, randID, randInt, randSeedRandom, uncheckedRandID } from '../utils/rand'
-import { useSelector } from '../utils/store'
 import { assertExhaustive, hintTuple } from '../utils/types'
 
 export function parseProjectFromJson(text: string) {
@@ -51,7 +50,7 @@ export async function loadProject(root: StorageRootEntry) {
     return true
 }
 
-async function tryLoadProject(root: StorageRootEntry) {
+export async function tryLoadProject(root: StorageRootEntry) {
     try {
         await loadProject(root)
         viewStateStore.setValue(s => immSet(s, 'currentTab', 'project'))
@@ -140,6 +139,13 @@ export async function userSelectProject() {
         return
     }
 
+    await tryLoadProject(root)
+}
+
+export async function userSelectProjectByUrl() {
+    const url = await openPromptDialog('Input Project URL', 'Specify a full URL to a project folder hosted on a public web server. The URL must begin with "https://" and not have a trailing forward slash.', 'Project URL', '', 'Load Project')
+    if (!url) return
+    const root: StorageRootEntry = { type: 'fetch', key: url }
     await tryLoadProject(root)
 }
 
@@ -454,16 +460,4 @@ export function immConvertVariable(variable: AnyVariableDefinition, type: Variab
         case 'lookup': return { id, name, type, scope, keys: { type: 'flag', setValueLabel: createDefaultExpr('string', ctx), unsetValueLabel: createDefaultExpr('string', ctx) }, elements: { type: 'flag', setValueLabel: createDefaultExpr('string', ctx), unsetValueLabel: createDefaultExpr('string', ctx) }, default: createDefaultExpr('unset', ctx) }
         default: assertExhaustive(type, `Unhandled variable type ${String(type)}`)
     }
-}
-
-export function getProjectStorage() {
-    const root = viewStateStore.getSnapshot().loadedProject?.root ?? null
-    const storage = getStorageProvider(root?.type)
-    return { storage, root }
-}
-
-export function useProjectStorage() {
-    const getRoot = useSelector(viewStateStore, s => s.loadedProject?.root ?? null)
-    const storage = getStorageProvider(getRoot()?.type)
-    return { storage, getRoot }
 }

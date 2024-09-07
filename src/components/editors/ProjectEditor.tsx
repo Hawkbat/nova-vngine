@@ -15,6 +15,7 @@ import { useSelector } from '../../utils/store'
 import { EditorButton } from '../common/EditorButton'
 import { EditorIcon } from '../common/EditorIcon'
 import { COMMON_ICONS, EXPR_VALUE_ICONS, PROJECT_TAB_ICONS } from '../common/Icons'
+import { GamePlayer } from '../player/GamePlayer'
 import { BackdropWorkspace } from '../workspaces/BackdropWorkspace'
 import { ChapterWorkspace } from '../workspaces/ChapterWorkspace'
 import { CharacterWorkspace } from '../workspaces/CharacterWorkspace'
@@ -55,7 +56,7 @@ const Breadcrumbs = () => {
     const getProjectName = useSelector(projectStore, s => s.name)
     const getProjectIsLoaded = useSelector(viewStateStore, s => s.loadedProject !== null)
     const [getCurrentTab, setCurrentTab] = useViewStateTab()
-    return getProjectIsLoaded() ? <div className={styles.breadcrumbs}>
+    return getProjectIsLoaded() && getCurrentTab() !== 'play' ? <div className={styles.breadcrumbs}>
         <EditorButton icon={PROJECT_TAB_ICONS.project} style='text' active={getCurrentTab() === 'project'} onClick={() => setCurrentTab('project')}>{getProjectName()}</EditorButton>
         {ENTITY_TYPES.map(e => <Breadcrumb key={e} type={e} />)}
     </div> : null
@@ -79,14 +80,16 @@ const TabButton = ({ tab }: { tab: ProjectEditorTab }) => {
 }
 
 const Sidebar = () => {
+    const [getCurrentTab] = useViewStateTab()
     const getProjectIsLoaded = useSelector(viewStateStore, s => s.loadedProject !== null)
 
     return <div className={styles.sidebar}>
         <TabButton tab='home' />
         {getProjectIsLoaded() ? <>
+            <TabButton tab='play' />
             <div className={styles.sidebarLine} />
             <TabButton tab='project' />
-            {PROJECT_ENTITY_KEYS.map(t => <TabButton key={t} tab={t} />)}
+            {getCurrentTab() === 'project' || (PROJECT_ENTITY_KEYS as string[]).includes(getCurrentTab()) ? PROJECT_ENTITY_KEYS.map(t => <TabButton key={t} tab={t} />) : null}
         </> : null}
         <div className={styles.sidebarSpacer} />
         <div className={styles.sidebarLine} />
@@ -96,9 +99,10 @@ const Sidebar = () => {
 }
 
 const Footer = () => {
+    const getProjectStorageType = useSelector(viewStateStore, s => s.loadedProject?.root.type)
     return <div className={styles.footer}>
         <span>Platform: {platform.name}</span>
-        <span>Storage: {getStorageProvider().name}</span>
+        <span>Storage: {getStorageProvider(getProjectStorageType()).name}</span>
         <span>Build: {BUILD_COMMIT.BRANCH}/{BUILD_COMMIT.SHORT_HASH} at {BUILD_DATETIME.toISOString()}</span>
     </div>
 }
@@ -112,6 +116,7 @@ export const ProjectEditor = () => {
             <Breadcrumbs />
             <div className={styles.workspace}>
                 {getCurrentTab() === 'home' ? <HomeWorkspace /> : null}
+                {getCurrentTab() === 'play' ? <GamePlayer /> : null}
                 {getCurrentTab() === 'project' ? <ProjectWorkspace /> : null}
                 {getCurrentTab() === 'stories' ? <StoryWorkspace /> : null}
                 {getCurrentTab() === 'chapters' ? <ChapterWorkspace /> : null}

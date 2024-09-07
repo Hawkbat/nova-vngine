@@ -2,7 +2,7 @@ import { getEntityDisplayName, getProjectExprContext } from '../operations/proje
 import { arrayTail } from '../utils/array'
 import { throwIfNull } from '../utils/guard'
 import { immAppend, immPrepend, immReplaceWhere, immSet } from '../utils/imm'
-import { randFloat, randInt, randSeedRandom, type RandState } from '../utils/rand'
+import { randFloat, randInt, randSeedRandom, type RandState, uncheckedRandID } from '../utils/rand'
 import { assertExhaustive } from '../utils/types'
 import { type AnyExprValue, castExprValue, type ExprContext, type ExprValueType, isPrimitiveValue, type LocationValue, resolveExpr, resolveExprAs } from './expressions'
 import { type AnyVariableDefinition, type AnyVariableScope, type BackdropID, type ChapterID, type CharacterID, getVariableValueType, type MacroID, type PortraitID, type SceneID, type SongID, type SoundID, type StoryID, type VariableID } from './project'
@@ -30,19 +30,24 @@ export type GamePlayerActionType = AnyGamePlayerAction['type']
 
 export type GamePlayerActionOfType<T extends GamePlayerActionType> = Extract<AnyGamePlayerAction, { type: T }>
 
-interface MacroPlayerState {
+interface MacroPlayerEvalState {
     id: MacroID
     variables: Record<VariableID, AnyExprValue>
 }
 
 export interface GamePlayerState {
+    currentSave: GameSaveState | null
+}
+
+export interface GameSaveState {
+    id: string
     randState: RandState
     actions: AnyGamePlayerAction[]
     storyID: StoryID
     stopAfter: StepID | null
 }
 
-export interface GamePlayerEvaluationState {
+export interface GamePlayerEvalState {
     randState: RandState
     story: {
         id: StoryID
@@ -59,7 +64,7 @@ export interface GamePlayerEvaluationState {
             variables: Record<VariableID, AnyExprValue>
         }>
     } | null
-    macros: MacroPlayerState[]
+    macros: MacroPlayerEvalState[]
     stoppedAt: AnyStep | null
 }
 
@@ -119,8 +124,9 @@ export interface ScenePlayerState {
     prompt: PromptPlayerState | null
 }
 
-export function getInitialGamePlayerState(storyID: StoryID): GamePlayerState {
+export function getInitialGameSaveState(storyID: StoryID): GameSaveState {
     return {
+        id: uncheckedRandID(),
         storyID,
         randState: randSeedRandom(),
         actions: [],
@@ -128,8 +134,8 @@ export function getInitialGamePlayerState(storyID: StoryID): GamePlayerState {
     }
 }
 
-export function getInitialScenePlayerState(): ScenePlayerState {
-    return { settings: { musicVolume: 1, soundVolume: 1, uiVolume: 1, textSpeed: 1 }, characters: [], backdrops: [], song: { songID: null }, sounds: [], dialogue: { speakerID: null, speakerAlias: null, text: null, mode: 'adv' }, options: [], prompt: null }
+export function getInitialScenePlayerState(settings: ScenePlayerSettingsState): ScenePlayerState {
+    return { settings, characters: [], backdrops: [], song: { songID: null }, sounds: [], dialogue: { speakerID: null, speakerAlias: null, text: null, mode: 'adv' }, options: [], prompt: null }
 }
 
 export function applyStepToScenePlayerState(state: ScenePlayerState, step: AnyStep, ctx: ExprContext): ScenePlayerState {
@@ -197,7 +203,7 @@ export function applyStepToScenePlayerState(state: ScenePlayerState, step: AnySt
     }
 }
 
-function isVariableInScope(evalState: GamePlayerEvaluationState, variable: AnyVariableDefinition, characterID: CharacterID | null, macroID: MacroID | null): boolean {
+function isVariableInScope(evalState: GamePlayerEvalState, variable: AnyVariableDefinition, characterID: CharacterID | null, macroID: MacroID | null): boolean {
     switch (variable.scope.type) {
         case 'allStories': return !!evalState.story
         case 'stories': return !!evalState.story && variable.scope.value.includes(evalState.story.id)
@@ -217,7 +223,7 @@ function isVariableInScope(evalState: GamePlayerEvaluationState, variable: AnyVa
     }
 }
 
-function getVariableTarget(evalState: GamePlayerEvaluationState, scope: AnyVariableScope, characterID: CharacterID | null, macroID: MacroID | null) {
+function getVariableTarget(evalState: GamePlayerEvalState, scope: AnyVariableScope, characterID: CharacterID | null, macroID: MacroID | null) {
     switch (scope.type) {
         case 'allStories':
         case 'stories':
@@ -251,14 +257,14 @@ function getVariableTarget(evalState: GamePlayerEvaluationState, scope: AnyVaria
     }
 }
 
-function getVariable(evalState: GamePlayerEvaluationState, variableID: VariableID, characterID: CharacterID | null, macroID: MacroID | null, exprContext: ExprContext) {
+function getVariable(evalState: GamePlayerEvalState, variableID: VariableID, characterID: CharacterID | null, macroID: MacroID | null, exprContext: ExprContext) {
     const variable = throwIfNull(exprContext.resolvers.variable(variableID))
     if (!isVariableInScope(evalState, variable, characterID, macroID)) throw new Error(`Tried to get a value for ${getEntityDisplayName('variable', variable, false)} but it was not in scope`)
     const variableTarget = getVariableTarget(evalState, variable.scope, characterID, macroID)
     return variableTarget[variableID] ?? resolveExpr(variable.default, exprContext)
 }
 
-function setVariable(evalState: GamePlayerEvaluationState, variableID: VariableID, value: AnyExprValue, characterID: CharacterID | null, macroID: MacroID | null, exprContext: ExprContext) {
+function setVariable(evalState: GamePlayerEvalState, variableID: VariableID, value: AnyExprValue, characterID: CharacterID | null, macroID: MacroID | null, exprContext: ExprContext) {
     const variable = throwIfNull(exprContext.resolvers.variable(variableID))
     if (!isVariableInScope(evalState, variable, characterID, macroID)) throw new Error(`Tried to set a value for ${getEntityDisplayName('variable', variable, false)} but it was not in scope`)
     const variableType = getVariableValueType(variable, exprContext)
@@ -267,7 +273,7 @@ function setVariable(evalState: GamePlayerEvaluationState, variableID: VariableI
     variableTarget[variableID] = convertedValue
 }
 
-export function getExprContext(getState: () => GamePlayerEvaluationState, setState: (setter: (state: GamePlayerEvaluationState) => GamePlayerEvaluationState) => void): ExprContext {
+export function getExprContext(getState: () => GamePlayerEvalState, setState: (setter: (state: GamePlayerEvalState) => GamePlayerEvalState) => void): ExprContext {
     const projectCtx = getProjectExprContext()
 
     const ctx: ExprContext = {
@@ -306,8 +312,4 @@ export class ReturnToStepGamePlayerSignal extends Error {
 
 export class GoToSceneGamePlayerSignal extends Error {
     constructor(public sceneID: SceneID) { super(`Tried to go to a different scene but was unable to. Scene ID: ${sceneID}`) }
-}
-
-export class SceneEndGamePlayerSignal extends Error {
-    constructor(public sceneID: SceneID) { super(`The scene ended without going to a different scene. Scene ID: ${sceneID}`) }
 }

@@ -5,7 +5,7 @@ import { browserStorageProvider, getHandlePath, getRootKeyFromPath, getRootPath,
 
 export const chromiumStorageProvider: StorageProvider = {
     type: 'chromium',
-    name: 'Sandboxed Filesystem',
+    name: 'Local Drive (Sandboxed)',
     isSupported() {
         return 'showOpenFilePicker' in window
     },

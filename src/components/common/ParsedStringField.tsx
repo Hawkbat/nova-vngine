@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { useProjectReadonly } from '../../operations/storage'
 import { classes } from '../../utils/display'
 import { useDebounce, useLatest } from '../../utils/hooks'
 import type { FieldProps } from './Field'
@@ -10,7 +11,8 @@ import styles from './ParsedStringField.module.css'
 export type FieldFormatFunc<T> = (value: T) => string
 export type FieldParseFunc<T> = (str: string) => { success: true, value: T } | { success: false, error: string }
 
-export const ParsedStringField = <T,>({ className, label, value, setValue, validate, parse, format }: FieldProps<T> & { parse: FieldParseFunc<T>, format: FieldFormatFunc<T> }) => {
+export const ParsedStringField = <T,>({ className, label, value, setValue, validate, parse, format, children }: FieldProps<T> & { parse: FieldParseFunc<T>, format: FieldFormatFunc<T>, children?: React.ReactNode }) => {
+    const projectReadonly = useProjectReadonly()
     const [tempValue, setTempValue] = useState(format(value))
     const hasFocusRef = useRef(false)
     const getLatestValue = useLatest(value)
@@ -66,9 +68,10 @@ export const ParsedStringField = <T,>({ className, label, value, setValue, valid
         hasFocusRef.current = false
     }, [attemptCommit, getLatestFormat, getLatestTempValue, getLatestValue])
 
-    const readonly = !setValue
+    const readonly = !setValue || projectReadonly
 
     return <Field label={label} error={errorCheck()}>
         <input className={classes(styles.field, className)} type='text' readOnly={readonly} placeholder={label} onChange={onChange} onFocus={onFocus} onBlur={onBlur} value={tempValue} />
+        {children}
     </Field>
 }

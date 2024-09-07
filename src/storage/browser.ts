@@ -109,7 +109,7 @@ async function loadFileHandle(root: StorageRootEntry, path: string) {
 
 export const browserStorageProvider: StorageProvider = {
     type: 'browser',
-    name: 'Private Filesystem',
+    name: 'Local Browser',
     isSupported() {
         return true
     },

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-import { getProjectStorage } from '../operations/project'
+import { getProjectStorage } from '../operations/storage'
 import type { AssetDefinition } from '../types/project'
 import { createSimpleStore, type SimpleStore, useStore } from '../utils/store'
 
