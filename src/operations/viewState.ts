@@ -78,6 +78,7 @@ export async function loadInitialViewState() {
                 viewStateStore.setValue(s => immSet(s, 'recentProjects', immAppend(s.recentProjects, projectMetaData)))
             }
             if (await tryLoadProject(root)) {
+                viewStateStore.setValue(s => immSet(s, 'currentTab', 'play'))
                 return
             }
         }
