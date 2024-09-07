@@ -1,1 +1,1 @@
-const PUBLISHED_PROJECT = `${location.origin}/project`;
+window.PUBLISHED_PROJECT = `${location.origin}/project`;
