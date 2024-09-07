@@ -21,6 +21,7 @@ import { ScenePlayer } from './ScenePlayer'
 import styles from './GamePlayer.module.css'
 
 const GameScenePlayer = ({ setScreen }: { setScreen: (screen: MenuScreen) => void }) => {
+    const [fastForward, setFastForward] = useState(false)
     const [getGameState, setGameState] = useStore(gamePlayerStore)
     const getState = useCallback(() => throwIfNull(getGameState().currentSave), [getGameState])
     const setState = useCallback((setter: (value: GameSaveState) => GameSaveState) => {
@@ -28,7 +29,7 @@ const GameScenePlayer = ({ setScreen }: { setScreen: (screen: MenuScreen) => voi
     }, [setGameState])
     const getSettings = useSelector(settingsStore, s => s.scenePlayerSettings)
 
-    const [evalState, sceneState] = getCurrentPlayerState(getState(), getSettings())
+    const [evalState, sceneState] = getCurrentPlayerState(getState(), getSettings(), fastForward)
 
     const getLatestStep = useLatest(evalState.stoppedAt)
 
@@ -85,6 +86,7 @@ const GameScenePlayer = ({ setScreen }: { setScreen: (screen: MenuScreen) => voi
     return <div ref={animRef} className={styles.player}>
         <ScenePlayer state={sceneState} onAdvance={onAdvance} onSelectOption={onSelectOption} onSubmitPrompt={onSubmitPrompt} />
         <div className={styles.playerButtons}>
+            <PlayerIcon path={COMMON_ICONS.fastForward} label='Fast-Forward' active={fastForward} onClick={() => setFastForward(v => !v)} />
             <PlayerIcon path={COMMON_ICONS.restart} label='Rewind' onClick={onRewind} />
         </div>
     </div>

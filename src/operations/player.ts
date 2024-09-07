@@ -16,7 +16,7 @@ export function userPlayStory(storyID: StoryID) {
     viewStateStore.setValue(s => immSet(s, 'currentTab', 'play'))
 }
 
-export function getCurrentPlayerState(gameState: GameSaveState, settings: ScenePlayerSettingsState) {
+export function getCurrentPlayerState(gameState: GameSaveState, settings: ScenePlayerSettingsState, fastForward: boolean) {
     let evalState: GamePlayerEvalState = {
         randState: gameState.randState,
         story: null,
@@ -133,6 +133,10 @@ export function getCurrentPlayerState(gameState: GameSaveState, settings: SceneP
         switch (step.type) {
             case 'text':
             case 'narrate':
+                if (actions.length === 0 && !fastForward && (!gameState.stopAfter || stopNext)) {
+                    throw new StopGamePlayerSignal(step)
+                }
+                break
             case 'prompt':
             case 'decision': {
                 if (actions.length === 0 && (!gameState.stopAfter || stopNext)) {
@@ -173,7 +177,7 @@ export function getCurrentPlayerState(gameState: GameSaveState, settings: SceneP
             }
             case 'set': {
                 const variableID = resolveExprAs(step.variable, 'variable', exprContext).value
-                const value = resolveExpr(step.variable, exprContext)
+                const value = resolveExpr(step.value, exprContext)
                 exprContext.variables.setValue(variableID, value)
                 break
             }

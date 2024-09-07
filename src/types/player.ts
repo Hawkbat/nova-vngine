@@ -267,10 +267,14 @@ function getVariable(evalState: GamePlayerEvalState, variableID: VariableID, cha
 function setVariable(evalState: GamePlayerEvalState, variableID: VariableID, value: AnyExprValue, characterID: CharacterID | null, macroID: MacroID | null, exprContext: ExprContext) {
     const variable = throwIfNull(exprContext.resolvers.variable(variableID))
     if (!isVariableInScope(evalState, variable, characterID, macroID)) throw new Error(`Tried to set a value for ${getEntityDisplayName('variable', variable, false)} but it was not in scope`)
-    const variableType = getVariableValueType(variable, exprContext)
-    const convertedValue = castExprValue(value, variableType, exprContext)
-    const variableTarget = getVariableTarget(evalState, variable.scope, characterID, macroID)
-    variableTarget[variableID] = convertedValue
+    try {
+        const variableType = getVariableValueType(variable, exprContext)
+        const convertedValue = castExprValue(value, variableType, exprContext)
+        const variableTarget = getVariableTarget(evalState, variable.scope, characterID, macroID)
+        variableTarget[variableID] = convertedValue
+    } catch (err) {
+        throw new Error(`An error occurred while trying to set ${variable.name} to value ${JSON.stringify(value)}`, { cause: err })
+    }
 }
 
 export function getExprContext(getState: () => GamePlayerEvalState, setState: (setter: (state: GamePlayerEvalState) => GamePlayerEvalState) => void): ExprContext {

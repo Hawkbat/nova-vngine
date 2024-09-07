@@ -251,15 +251,19 @@ export function isPrimitiveValue(value: AnyExprValue): value is AnyExprPrimitive
 function resolveNumberOp(left: AnyExpr, right: AnyExpr, op: (a: number, b: number, isInt: boolean) => number, ctx: ExprContext): ExprValueOfType<'number'> | ExprValueOfType<'integer'> {
     let leftValue = resolveExpr(left, ctx)
     let rightValue = resolveExpr(right, ctx)
-    if (leftValue.type === 'integer' && rightValue.type === 'integer') {
-        return { type: 'integer', value: op(leftValue.value, rightValue.value, true) }
-    } else if (leftValue.type === 'number' && rightValue.type === 'number') {
-        return { type: 'number', value: op(leftValue.value, rightValue.value, false) }
-    } else {
-        leftValue = castExprValue(leftValue, 'number', ctx)
-        rightValue = castExprValue(rightValue, 'number', ctx)
-        return { type: 'number', value: op(leftValue.value, rightValue.value, false) }
+    const leftIntValue = tryCastExprValue(leftValue, 'integer', ctx)
+    const rightIntValue = tryCastExprValue(rightValue, 'integer', ctx)
+    if (leftIntValue && rightIntValue) {
+        return { type: 'integer', value: op(leftIntValue.value, rightIntValue.value, true) }
     }
+    const leftNumValue = tryCastExprValue(leftValue, 'number', ctx)
+    const rightNumValue = tryCastExprValue(rightValue, 'number', ctx)
+    if (leftNumValue && rightNumValue) {
+        return { type: 'number', value: op(leftNumValue.value, rightNumValue.value, false) }
+    }
+    leftValue = castExprValue(leftValue, 'number', ctx)
+    rightValue = castExprValue(rightValue, 'number', ctx)
+    return { type: 'number', value: op(leftValue.value, rightValue.value, false) }
 }
 
 function resolveNumberComparison(left: AnyExpr, right: AnyExpr, op: (a: number, b: number) => boolean, ctx: ExprContext): ExprValueOfType<'boolean'> {
@@ -391,12 +395,12 @@ export function guessExprReturnType(expr: AnyExpr, ctx: ExprContext): ExprValueT
     return null
 }
 
-export function castExprValue<T extends ExprValueType>(expr: AnyExprValue, type: T, ctx: ExprContext): ExprValueOfType<T> {
+export function tryCastExprValue<T extends ExprValueType>(expr: AnyExprValue, type: T, ctx: ExprContext): ExprValueOfType<T> | null {
     if (expr.type === type) {
         return expr as ExprValueOfType<T>
     }
     if (expr.type === 'variable') {
-        return castExprValue(throwIfNull(ctx.variables.getValue(expr.value)), type, ctx)
+        return tryCastExprValue(throwIfNull(ctx.variables.getValue(expr.value)), type, ctx)
     }
     switch (type) {
         case 'string': {
@@ -426,7 +430,14 @@ export function castExprValue<T extends ExprValueType>(expr: AnyExprValue, type:
         }
         default: break
     }
-    throw new Error(`Unable to convert expression value ${JSON.stringify(expr)} to ${type}`)
+    return null
+}
+
+
+export function castExprValue<T extends ExprValueType>(expr: AnyExprValue, type: T, ctx: ExprContext): ExprValueOfType<T> {
+    const result = tryCastExprValue(expr, type, ctx)
+    if (!result) throw new Error(`Unable to convert expression value ${JSON.stringify(expr)} to ${type}`)
+    return result
 }
 
 export function exprValueTypeAssignableTo(type: ExprValueType | null, types: ExprValueType[] | null) {
