@@ -221,6 +221,7 @@ export function getCurrentPlayerState(gameState: GameSaveState, settings: SceneP
                 }
                 default: break
             }
+            sceneState = cleanupScenePlayerStateAfterStep(sceneState, step, exprContext)
             checkStop(step)
         } catch (err) {
             if (err instanceof GamePlayerSignal) {
@@ -278,9 +279,20 @@ export function getCurrentPlayerState(gameState: GameSaveState, settings: SceneP
     return hintTuple(evalState, sceneState, exprContext)
 }
 
+export function cleanupScenePlayerStateAfterStep(state: ScenePlayerState, step: AnyStep, ctx: ExprContext): ScenePlayerState {
+    switch (step.type) {
+        case 'text':
+        case 'decision':
+        case 'prompt':
+            state = immSet(state, 'sounds', [])
+            break
+        default: break
+    }
+    return state
+}
+
 export function applyStepToScenePlayerState(state: ScenePlayerState, step: AnyStep, ctx: ExprContext, flags?: { randomized?: boolean }): ScenePlayerState {
     state = immSet(state, 'options', [])
-    if (step.type !== 'sound') state = immSet(state, 'sounds', [])
     if (step.type !== 'prompt') state = immSet(state, 'prompt', null)
     switch (step.type) {
         case 'backdrop': {

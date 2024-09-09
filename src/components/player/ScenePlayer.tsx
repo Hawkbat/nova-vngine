@@ -215,15 +215,35 @@ const Backdrops = ({ backdrops }: { backdrops: BackdropPlayerState[] }) => {
 }
 
 const Song = ({ songID, volume }: SongPlayerState & { volume: number }) => {
+    const transition = useTransitionState()
+    if (transition.state === 'in') {
+        setTimeout(() => {
+            transition.end(transition.key)
+        }, 0)
+    }
+    const fadeOut = transition.state === 'out'
     const getSong = useSelector(projectStore, s => s.songs.find(s => s.id === songID) ?? null)
     const getAudioUrl = useAsset(getSong()?.audio ?? null, false)
-    const audioRef = useSmoothAudio({ playing: true, looping: true, volume })
-    return getAudioUrl() ? <audio src={getAudioUrl() ?? undefined} ref={audioRef} /> : null
+    const audioRef = useSmoothAudio({ playing: !fadeOut, looping: !fadeOut, volume })
+    const onEnded = useCallback(() => {
+        transition.end(transition.key)
+    }, [transition])
+    return getAudioUrl() ? <audio src={getAudioUrl() ?? undefined} ref={audioRef} onEnded={onEnded} /> : null
+}
+
+const Songs = ({ song, volume }: { song: SongPlayerState, volume: number }) => {
+    return <TransitionGroup values={song.songID ? [song] : []} getKey={s => s.songID ?? ''}>
+        {props => <Song {...props} volume={volume} />}
+    </TransitionGroup>
 }
 
 const Sound = ({ soundID, volume }: SoundPlayerState & { volume: number }) => {
     const transition = useTransitionState()
-    if (transition.state === 'in') transition.end(transition.key)
+    if (transition.state === 'in') {
+        setTimeout(() => {
+            transition.end(transition.key)
+        }, 0)
+    }
     const getSound = useSelector(projectStore, s => s.sounds.find(s => s.id === soundID) ?? null)
     const getAudioUrl = useAsset(getSound()?.audio ?? null, false)
     const audioRef = useSmoothAudio({ playing: true, volume })
@@ -253,7 +273,7 @@ const DialogueText = ({ text, textSpeed, canAdvance }: { text: string, textSpeed
     const [skipped, setSkipped] = useState(false)
     const latestTextLength = useLatest(textLength)
     useAnimationLoop(textLength < text.length, useCallback((dt, et) => {
-        const newLength = getTextLengthAtTime(text, et * textSpeed * 25)
+        const newLength = getTextLengthAtTime(text, et * textSpeed * 30)
         if (newLength <= text.length && newLength > latestTextLength()) {
             setTextLength(newLength)
         }
@@ -426,7 +446,7 @@ export const ScenePlayer = ({ state, onAdvance, onSubmitPrompt, onRandomizePromp
             <Dialogue {...state.dialogue} textSpeed={state.settings.textSpeed} canAdvance={canAdvance} />
             <Options options={state.options} onSelectOption={onSelectOption} />
             <Prompts prompt={state.prompt} onSubmitPrompt={onSubmitPrompt} onRandomizePrompt={onRandomizePrompt} />
-            <Song {...state.song} volume={state.settings.musicVolume} />
+            <Songs song={state.song} volume={state.settings.musicVolume} />
             <Sounds sounds={state.sounds} volume={state.settings.soundVolume} />
         </div>
     </EventProvider>

@@ -64,7 +64,13 @@ export function useSmoothAudio(props: { playing?: boolean, looping?: boolean, vo
         audio.preservesPitch = false
         audio.volume = moveTowards(audio.volume, targetVolume, fadeRate * dt)
         if (audio.paused && playing && (looping || !audio.ended) && (!pauseOnMute || audio.volume > 0)) {
-            void audio.play()
+            void audio.play().catch((err: unknown) => {
+                if (err instanceof DOMException && err.name === 'AbortError') {
+                    // Ignore aborts due to pause toggling
+                } else {
+                    console.error(err)
+                }
+            })
         }
         if (!audio.paused && (!playing || (pauseOnMute && audio.volume === 0))) {
             audio.pause()
