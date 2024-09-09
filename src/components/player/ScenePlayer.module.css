@@ -125,8 +125,8 @@
 }
 
 .dialogue {
-    font-size: 1.5em;
-    padding: 1.5em;
+    font-size: 1.25em;
+    padding: 1.25em;
     min-height: 100%;
 }
 
@@ -148,11 +148,11 @@
 .speaker {
     position: absolute;
     left: 0;
-    top: -1.5em;
+    top: -1.25em;
     border-radius: 0.5em;
     padding: 0 0.5em;
     background-color: var(--dialogue-box-bg-color);
-    font-size: 1.5em;
+    font-size: 1.25em;
     backdrop-filter: blur(20px);
 }
 
@@ -187,7 +187,7 @@
     border-radius: 0.5em;
     background-color: var(--dialogue-box-bg-color);
     opacity: 0.5;
-    font-size: 1.5em;
+    font-size: 1.25em;
     backdrop-filter: blur(20px);
     pointer-events: auto;
 }
@@ -242,7 +242,7 @@
 }
 
 .promptField {
-    font-size: 1.5em;
+    font-size: 1.25em;
     background-color: var(--dialogue-box-bg-color);
 }
 

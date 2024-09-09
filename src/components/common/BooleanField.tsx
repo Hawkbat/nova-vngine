@@ -1,9 +1,12 @@
 import { useCallback } from 'react'
 
+import { classes } from '../../utils/display'
 import { EditorIcon } from './EditorIcon'
 import type { FieldProps } from './Field'
 import { Field } from './Field'
 import { COMMON_ICONS } from './Icons'
+
+import styles from './BooleanField.module.css'
 
 export const BooleanField = ({ className, label, value, setValue, validate }: FieldProps<boolean>) => {
 
@@ -18,6 +21,6 @@ export const BooleanField = ({ className, label, value, setValue, validate }: Fi
     }, [value, setValue])
 
     return <Field label={label} error={errorCheck()}>
-        <EditorIcon className={className} path={value ? COMMON_ICONS.checkboxChecked : COMMON_ICONS.checkboxUnchecked} label={label} onClick={onClick} />
+        <EditorIcon className={classes(className, styles.checkbox)} path={value ? COMMON_ICONS.checkboxChecked : COMMON_ICONS.checkboxUnchecked} label={label} onClick={onClick} />
     </Field>
 }

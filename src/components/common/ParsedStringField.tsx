@@ -79,7 +79,7 @@ export const ParsedStringField = <T,>({ className, label, value, setValue, valid
 
     return <Field label={label} error={errorCheck()}>
         <span ref={measureRef} className={styles.measure}>{tempValue ? tempValue : label}</span>
-        <input ref={inputRef} className={classes(styles.field, className)} type='text' readOnly={readonly} placeholder={label} onChange={onChange} onFocus={onFocus} onBlur={onBlur} value={tempValue} />
         {children}
+        <input ref={inputRef} className={classes(styles.field, className)} type='text' readOnly={readonly} placeholder={label} onChange={onChange} onFocus={onFocus} onBlur={onBlur} value={tempValue} />
     </Field>
 }

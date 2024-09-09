@@ -5,6 +5,8 @@ import type { FieldProps } from './Field'
 import type { FieldFormatFunc, FieldParseFunc } from './ParsedStringField'
 import { ParsedStringField } from './ParsedStringField'
 
+import styles from './NumberField.module.css'
+
 export const NumberField = ({ className, label, value, setValue, validate, min, max, slider }: FieldProps<number> & { min?: number, max?: number, slider?: boolean }) => {
     const [sliderValue, setSliderValue] = useStateFromProps(value)
 
@@ -35,8 +37,7 @@ export const NumberField = ({ className, label, value, setValue, validate, min, 
         if (sliderValue !== value) setValue?.(sliderValue)
     }, [setValue, sliderValue, value]))
 
-    //TODO: Style number input sliders: https://dev.to/_phzn/styling-range-sliders-with-css-4lgl
     return <ParsedStringField className={className} label={label} value={slider ? sliderValue : value} setValue={setValue} parse={parse} format={format} validate={doValidate}>
-        {slider ? <input type='range' value={sliderValue} min={min ?? 0} max={max ?? 1} step={0.1} onChange={onSetSliderValue} /> : null}
+        {slider ? <input className={styles.slider} type='range' value={sliderValue} min={min ?? 0} max={max ?? 1} step={0.1} onChange={onSetSliderValue} /> : null}
     </ParsedStringField>
 }
