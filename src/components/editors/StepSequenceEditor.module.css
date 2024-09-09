@@ -95,6 +95,7 @@
 
 .option {
     display: flex;
+    font-size: 0.75em;
 }
 
 .simpleBubble {
@@ -103,11 +104,12 @@
     align-items: center;
     min-width: 2em;
     height: 2em;
-    border-radius: 50%;
+    border-radius: 1em;
     background: var(--text-color);
     color: var(--bg-color);
     cursor: pointer;
     opacity: 0.8;
+    padding: 0 0.1em;
 }
 
 .simpleBubble:hover {
@@ -124,7 +126,7 @@
     display: flex;
     width: 2em;
     height: 2em;
-    border-radius: 50%;
+    border-radius: 1em;
     border: 2px solid var(--text-color);
     justify-content: center;
     align-items: center;
@@ -133,6 +135,10 @@
 
 .outlineBubble:hover {
     background: var(--hover-color);
+}
+
+.bubblePreview {
+    font-size: 0.5em;
 }
 
 .stepGap {

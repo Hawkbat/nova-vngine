@@ -1,20 +1,22 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 
-import { getProjectExprContext, immGenerateID } from '../../operations/project'
+import { applyStepToScenePlayerState } from '../../operations/player'
+import { getEntityDisplayNameByID, getEntityEditorDisplayName, getEntityEditorDisplayNameByID, getProjectExprContext, immGenerateID } from '../../operations/project'
 import { useProjectReadonly } from '../../operations/storage'
 import { platform } from '../../platform/platform'
 import { projectStore } from '../../store/project'
 import { settingsStore } from '../../store/settings'
 import { viewStateStore } from '../../store/viewstate'
-import { createDefaultExpr, type ExprContext } from '../../types/expressions'
-import { applyStepToScenePlayerState, getInitialScenePlayerState, type ScenePlayerState } from '../../types/player'
+import { createDefaultExpr, type ExprContext, resolveExprAs } from '../../types/expressions'
+import { getInitialScenePlayerState, type ScenePlayerState } from '../../types/player'
+import type { MacroDefinition } from '../../types/project'
 import type { AnyStep, StepID, StepType } from '../../types/steps'
 import { createStep, getDeepStep, isStepType, parseAnyStep, STEP_TYPES } from '../../types/steps'
 import { arrayHead, arrayTail } from '../../utils/array'
 import { classes, prettyPrintIdentifier } from '../../utils/display'
 import { throwIfNull, tryParseValue } from '../../utils/guard'
 import { useDrag, useDrop } from '../../utils/hooks'
-import { immAppend, immInsertAt, immRemoveAt, immReplaceAt, immSet } from '../../utils/imm'
+import { immAppend, immInsertAt, immPadTo, immRemoveAt, immReplaceAt, immSet } from '../../utils/imm'
 import { useSelector } from '../../utils/store'
 import { assertExhaustive } from '../../utils/types'
 import { DropdownField } from '../common/DropdownField'
@@ -73,7 +75,7 @@ const StepEditor = ({ step, setStep, deleteStep, steps, setSteps, selected, setS
                 <ExpressionField label='Text' value={step.text} setValue={expr => setStep(s => isStepType(s, 'text') ? immSet(s, 'text', expr) : s)} paramTypes={['string']} ctx={ctx} />
             </>
             case 'narrate': return <>
-                <DropdownField<typeof step.mode> label='Mode' value={step.mode} setValue={mode => setStep(s => isStepType(s, 'narrate') ? immSet(s, 'mode', mode) : s)} options={['adv', 'nvl']} format={m => m.toUpperCase()} />
+                <DropdownField<typeof step.mode> label='Mode' value={step.mode} setValue={mode => setStep(s => isStepType(s, 'narrate') ? immSet(s, 'mode', mode) : s)} options={['adv', 'nvl', 'pop']} format={m => m.toUpperCase()} />
                 <ExpressionField label='Text' value={step.text} setValue={expr => setStep(s => isStepType(s, 'narrate') ? immSet(s, 'text', expr) : s)} paramTypes={['string']} ctx={ctx} />
             </>
             case 'backdrop': return <>
@@ -130,21 +132,44 @@ const StepEditor = ({ step, setStep, deleteStep, steps, setSteps, selected, setS
                 <StringField label='Label' value={step.label} setValue={label => setStep(s => isStepType(s, 'prompt') ? immSet(s, 'label', label) : s)} />
                 <ExpressionField label='Variable' value={step.variable} setValue={expr => setStep(s => isStepType(s, 'prompt') ? immSet(s, 'variable', expr) : s)} paramTypes={['variable']} ctx={ctx} />
                 <ExpressionField label='Initial Value' value={step.initialValue} setValue={expr => setStep(s => isStepType(s, 'prompt') ? immSet(s, 'initialValue', expr) : s)} paramTypes={null} ctx={ctx} />
+                <ExpressionField label='Random Value' value={step.randomValue} setValue={expr => setStep(s => isStepType(s, 'prompt') ? immSet(s, 'randomValue', expr) : s)} paramTypes={null} ctx={ctx} />
             </>
             case 'set': return <>
                 <ExpressionField label='Variable' value={step.variable} setValue={expr => setStep(s => isStepType(s, 'set') ? immSet(s, 'variable', expr) : s)} paramTypes={['variable']} ctx={ctx} />
                 <ExpressionField label='Value' value={step.value} setValue={expr => setStep(s => isStepType(s, 'set') ? immSet(s, 'value', expr) : s)} paramTypes={null} ctx={ctx} />
             </>
-            case 'macro': return <>
-                <ExpressionField label='Macro' value={step.macro} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'macro', expr) : s)} paramTypes={['macro']} ctx={ctx} />
-                {step.inputs.map((input, i) => <ExpressionField key={i} label={`Input ${String(i)}`} value={input} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'inputs', immReplaceAt(s.inputs, i, expr)) : s)} paramTypes={null} ctx={ctx} />)}
-                {step.outputs.map((output, i) => <ExpressionField key={i} label={`Output ${String(i)}`} value={output} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'outputs', immReplaceAt(s.outputs, i, expr)) : s)} paramTypes={['variable']} ctx={ctx} />)}
+            case 'setCharacter': return <>
+                <ExpressionField label='Character' value={step.character} setValue={expr => setStep(s => isStepType(s, 'setCharacter') ? immSet(s, 'character', expr) : s)} paramTypes={['character']} ctx={ctx} />
+                <ExpressionField label='Variable' value={step.variable} setValue={expr => setStep(s => isStepType(s, 'setCharacter') ? immSet(s, 'variable', expr) : s)} paramTypes={['variable']} ctx={ctx} />
+                <ExpressionField label='Value' value={step.value} setValue={expr => setStep(s => isStepType(s, 'setCharacter') ? immSet(s, 'value', expr) : s)} paramTypes={null} ctx={ctx} />
             </>
+            case 'macro': {
+                let macro: MacroDefinition | null = null
+                try {
+                    const macroID = resolveExprAs(step.macro, 'macro', ctx).value
+                    macro = ctx.resolvers.macro(macroID)
+                } catch {
+                    // Ignore unresolved macro
+                }
+                return <>
+                    <ExpressionField label='Macro' value={step.macro} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'macro', expr) : s)} paramTypes={['macro']} ctx={ctx} />
+                    {macro ? <>
+                        {macro.inputs.map((input, i) => <ExpressionField key={i} label={getEntityDisplayNameByID('variable', input, false)} value={step.inputs[i] ?? createDefaultExpr('unset', ctx)} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'inputs', immReplaceAt(immPadTo(s.inputs, i + 1, () => createDefaultExpr('unset', ctx)), i, expr)) : s)} paramTypes={null} ctx={ctx} />)}
+                        {macro.outputs.map((output, i) => <ExpressionField key={i} label={getEntityDisplayNameByID('variable', output, false)} value={step.outputs[i] ?? createDefaultExpr('unset', ctx)} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'outputs', immReplaceAt(immPadTo(s.outputs, i + 1, () => createDefaultExpr('unset', ctx)), i, expr)) : s)} paramTypes={['variable']} ctx={ctx} />)}
+                    </> : <>
+                        {step.inputs.map((input, i) => <ExpressionField key={i} label={`Input ${String(i)}`} value={input} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'inputs', immReplaceAt(s.inputs, i, expr)) : s)} paramTypes={null} ctx={ctx} />)}
+                        {step.outputs.map((output, i) => <ExpressionField key={i} label={`Output ${String(i)}`} value={output} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'outputs', immReplaceAt(s.outputs, i, expr)) : s)} paramTypes={['variable']} ctx={ctx} />)}
+                    </>}
+                </>
+            }
             case 'returnTo': return <>
                 <StepField label='Target Step' value={step.stepID} setValue={stepID => setStep(s => isStepType(s, 'returnTo') ? immSet(s, 'stepID', stepID) : s)} steps={steps} setSteps={setSteps} selected={selected} setSelected={setSelected} />
             </>
             case 'goto': return <>
                 <ExpressionField label='Scene' value={step.scene} setValue={expr => setStep(s => isStepType(s, 'goto') ? immSet(s, 'scene', expr) : s)} paramTypes={['scene']} ctx={ctx} />
+            </>
+            case 'error': return <>
+                <ExpressionField label='Message' value={step.message} setValue={expr => setStep(s => isStepType(s, 'error') ? immSet(s, 'message', expr) : s)} paramTypes={['string']} ctx={ctx} />
             </>
             default: assertExhaustive(step, `Unhandled step type ${JSON.stringify(step)}`)
         }
@@ -222,6 +247,61 @@ const StepBubble = ({ step, setStep, selected, setSelected, ctx, rootSteps, setR
         setSelected(step.id)
     }
 
+    const getPreview = () => {
+        try {
+            switch (step.type) {
+                case 'text': {
+                    const speakerID = resolveExprAs(step.speaker, 'character', ctx).value
+                    const speaker = ctx.resolvers.character(speakerID)
+                    if (!speaker) break
+                    const text = resolveExprAs(step.text, 'string', ctx).value
+                    return <>{getEntityEditorDisplayName('character', speaker)}: {text.substring(0, 10)}...</>
+                }
+                case 'narrate': {
+                    const text = resolveExprAs(step.text, 'string', ctx).value
+                    return <>{text.substring(0, 10)}...</>
+                }
+                case 'enter': {
+                    return getEntityEditorDisplayNameByID('character', resolveExprAs(step.character, 'character', ctx).value)
+                }
+                case 'move': {
+                    return getEntityEditorDisplayNameByID('character', resolveExprAs(step.character, 'character', ctx).value)
+                }
+                case 'exit': {
+                    return getEntityEditorDisplayNameByID('character', resolveExprAs(step.character, 'character', ctx).value)
+                }
+                case 'backdrop': {
+                    const backdropID = resolveExprAs(step.backdrop, 'backdrop', ctx).value
+                    const backdrop = ctx.resolvers.backdrop(backdropID)
+                    if (!backdrop) break
+                    return getEntityEditorDisplayName('backdrop', backdrop)
+                }
+                case 'goto': {
+                    const sceneID = resolveExprAs(step.scene, 'scene', ctx).value
+                    const scene = ctx.resolvers.scene(sceneID)
+                    if (!scene) break
+                    return getEntityEditorDisplayName('scene', scene)
+                }
+                case 'set': {
+                    const variableID = resolveExprAs(step.variable, 'variable', ctx).value
+                    const variable = ctx.resolvers.variable(variableID)
+                    if (!variable) break
+                    return getEntityEditorDisplayName('variable', variable)
+                }
+                case 'macro': {
+                    const macroID = resolveExprAs(step.macro, 'macro', ctx).value
+                    const macro = ctx.resolvers.macro(macroID)
+                    if (!macro) break
+                    return getEntityEditorDisplayName('macro', macro)
+                }
+                default: break
+            }
+            return <></>
+        } catch (err) {
+            return <EditorIcon path={COMMON_ICONS.warning} label={String(err)} />
+        }
+    }
+
     switch (step.type) {
         case 'decision':
         case 'branch':
@@ -254,6 +334,7 @@ const StepBubble = ({ step, setStep, selected, setSelected, ctx, rootSteps, setR
         default:
             return <div {...dragProps} className={classes(styles.simpleBubble, { [styles.active ?? '']: selected === step.id, [styles.dragging ?? '']: dragging })} onClick={onSelect}>
                 <EditorIcon path={STEP_ICONS[step.type]} label={prettyPrintIdentifier(step.type)} />
+                <span className={styles.bubblePreview}>{getPreview()}</span>
             </div>
     }
 }
@@ -323,6 +404,10 @@ export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setS
         onAdvance()
     }
 
+    const onRandomizePrompt = () => {
+        // Not implemented
+    }
+
     useEffect(() => {
         if (!autoPlay) return
         switch (selected?.step.type) {
@@ -365,7 +450,7 @@ export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setS
     }, [])
 
     return <div className={styles.sequenceEditor}>
-        <ScenePlayer state={sceneState} onAdvance={onAdvance} onSelectOption={onSelectOption} onSubmitPrompt={onSubmitPrompt} />
+        <ScenePlayer state={sceneState} onAdvance={onAdvance} onSelectOption={onSelectOption} onSubmitPrompt={onSubmitPrompt} onRandomizePrompt={onRandomizePrompt} />
         <div className={styles.playerIcons}>
             <PlayerIcon path={COMMON_ICONS.restart} onClick={onRestartClick} />
             <PlayerIcon path={autoPlay ? COMMON_ICONS.pause : COMMON_ICONS.play} onClick={onAutoPlayClick} />

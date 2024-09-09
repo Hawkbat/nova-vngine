@@ -26,3 +26,15 @@
         width: 8em;
     }
 }
+
+.measure {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 0px;
+    height: 0px;
+    visibility: hidden;
+    overflow: scroll;
+    pointer-events: none;
+    white-space: pre;
+}

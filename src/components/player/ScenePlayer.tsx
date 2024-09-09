@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from 'react'
+import { type CSSProperties, useCallback, useLayoutEffect, useRef, useState } from 'react'
 
 import clickSrc from '../../sounds/click.mp3'
 import { useAsset } from '../../store/assets'
@@ -59,18 +59,32 @@ const textToContent = (text: string, animate: boolean, start: number = 0, end: n
     const content: React.ReactNode[] = []
     let italic = false
     let bold = false
+    let styles: Partial<CSSProperties> | null = null
     let i = 0
-    const commitText = () => content.push(<span key={start} className={classes({ b: bold, i: italic })}>{[...text.substring(start, i)].map((c, j) => animate ? <Letter key={`${String(start)}_${String(j)}`}>{c}</Letter> : c)}</span>)
+    const commitText = () => content.push(<span key={start} className={classes({ b: bold, i: italic })} style={{ ...styles }}>{[...text.substring(start, i)].map((c, j) => animate ? <Letter key={`${String(start)}_${String(j)}`}>{c}</Letter> : c)}</span>)
     while (i < Math.min(text.length, end)) {
         if (text[i] === '/' && text[i + 1] === '/') {
             if (i > start) commitText()
             italic = !italic
             i += 2
             start = i
-        } if (text[i] === '\'' && text[i + 1] === '\'') {
+        } else if (text[i] === '\'' && text[i + 1] === '\'') {
             if (i > start) commitText()
             bold = !bold
             i += 2
+            start = i
+        } else if (text[i] === '@' && text[i + 1] === '@') {
+            if (i > start) commitText()
+            i += 2
+            if (styles !== null) {
+                styles = null
+            } else {
+                const endIndex = text.indexOf(';', i + 2)
+                const styleStr = text.substring(i, endIndex)
+                const [k, v] = styleStr.split(':')
+                styles = { [k ?? '']: v }
+                i = endIndex + 1
+            }
             start = i
         } else if (text[i] === '\\') {
             if (i > start) commitText()
@@ -275,7 +289,7 @@ const DialogueBox = ({ text, speakerAlias, speakerID, mode, textSpeed, canAdvanc
         outT: { duration: 200 },
     })
 
-    return <div ref={animRef} className={classes(styles.dialogueBox, { [styles.adv ?? '']: mode === 'adv', [styles.nvl ?? '']: mode === 'nvl' })}>
+    return <div ref={animRef} className={classes(styles.dialogueBox, { [styles.adv ?? '']: mode === 'adv', [styles.nvl ?? '']: mode === 'nvl', [styles.pop ?? '']: mode === 'pop' })}>
         {text ? <DialogueText text={text} textSpeed={textSpeed} canAdvance={canAdvance} /> : null}
         {speakerName ? <div className={styles.speaker}>{textToContent(speakerName, false)}</div> : null}
     </div>
@@ -319,7 +333,7 @@ const StringPromptField = ({ value, setValue }: { value: unknown, setValue: (val
     return <input autoFocus value={String(value)} onChange={e => setValue(e.target.value)} onKeyDown={onKeyDown} />
 }
 
-const Prompt = ({ label, type, initialValue, onSubmitPrompt }: PromptPlayerState & { onSubmitPrompt: (value: unknown) => void }) => {
+const Prompt = ({ label, type, initialValue, randomizable, onSubmitPrompt, onRandomizePrompt }: PromptPlayerState & { onSubmitPrompt: (value: unknown) => void, onRandomizePrompt: () => void }) => {
     const [value, setValue] = useStateFromProps(initialValue)
 
     const animRef = useTransitionAnimationRef(true, {
@@ -358,23 +372,26 @@ const Prompt = ({ label, type, initialValue, onSubmitPrompt }: PromptPlayerState
     return <div ref={animRef} className={styles.prompt} onClick={onClick} onKeyDown={onKeyDown}>
         <div className={styles.promptBox}>
             <div className={styles.promptLabel}>{textToContent(label, false)}</div>
-            <div className={styles.promptField}>{subField()}</div>
+            <div className={styles.promptField}>
+                {subField()}
+                {randomizable ? <PlayerIcon path={COMMON_ICONS.randomize} label='Randomize' onClick={onRandomizePrompt} /> : null}
+            </div>
         </div>
         <PlayerIcon size={3} path={COMMON_ICONS.success} label='Confirm' onClick={onSubmitPromptsClick} />
     </div>
 }
 
-const Prompts = ({ prompt, onSubmitPrompt }: { prompt: PromptPlayerState | null, onSubmitPrompt: (value: unknown) => void }) => {
+const Prompts = ({ prompt, onSubmitPrompt, onRandomizePrompt }: { prompt: PromptPlayerState | null, onSubmitPrompt: (value: unknown) => void, onRandomizePrompt: () => void }) => {
     return <div className={styles.prompts}>
         <TransitionGroup values={prompt ? [prompt] : []} getKey={p => p.label}>
-            {props => <Prompt {...props} onSubmitPrompt={onSubmitPrompt} />}
+            {props => <Prompt {...props} onSubmitPrompt={onSubmitPrompt} onRandomizePrompt={onRandomizePrompt} />}
         </TransitionGroup>
     </div>
 }
 
 const advanceEvent = createEventContext<boolean>('advance')
 
-export const ScenePlayer = ({ state, onAdvance, onSubmitPrompt, onSelectOption }: { state: ScenePlayerState, onAdvance: () => void, onSubmitPrompt: (value: unknown) => void, onSelectOption: (index: number) => void }) => {
+export const ScenePlayer = ({ state, onAdvance, onSubmitPrompt, onRandomizePrompt, onSelectOption }: { state: ScenePlayerState, onAdvance: () => void, onSubmitPrompt: (value: unknown) => void, onRandomizePrompt: () => void, onSelectOption: (index: number) => void }) => {
     const [EventProvider, dispatch] = advanceEvent.useEmitter()
     const canAdvance = !state.options.length && !state.prompt
     const latestCanAdvance = useLatest(canAdvance)
@@ -408,7 +425,7 @@ export const ScenePlayer = ({ state, onAdvance, onSubmitPrompt, onSelectOption }
             </div>
             <Dialogue {...state.dialogue} textSpeed={state.settings.textSpeed} canAdvance={canAdvance} />
             <Options options={state.options} onSelectOption={onSelectOption} />
-            <Prompts prompt={state.prompt} onSubmitPrompt={onSubmitPrompt} />
+            <Prompts prompt={state.prompt} onSubmitPrompt={onSubmitPrompt} onRandomizePrompt={onRandomizePrompt} />
             <Song {...state.song} volume={state.settings.musicVolume} />
             <Sounds sounds={state.sounds} volume={state.settings.soundVolume} />
         </div>

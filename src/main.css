@@ -23,6 +23,7 @@
     --backsplash-color: #0008;
     --sidebar-color: #222;
     --dialogue-box-bg-color: #222C;
+    --expr-color: #ccc4;
     background: var(--bg-color);
     color: var(--text-color);
     font-family: 'Inter', sans-serif;

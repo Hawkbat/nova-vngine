@@ -1,24 +1,115 @@
-import { useCallback, useEffect, useState } from 'react'
+import { Fragment, useCallback, useEffect, useState } from 'react'
 
 import { getCurrentPlayerState, userPlayStory } from '../../operations/player'
-import { getEntityDisplayName } from '../../operations/project'
+import { getEntityByID, getEntityDisplayName } from '../../operations/project'
+import { useViewStateTab } from '../../operations/viewState'
 import { gamePlayerStore } from '../../store/player'
 import { projectStore } from '../../store/project'
 import { settingsStore } from '../../store/settings'
-import type { GameSaveState } from '../../types/player'
-import type { StoryID } from '../../types/project'
+import { type AnyExprValue, type ExprContext, resolveExprAs } from '../../types/expressions'
+import { type CharacterPlayerEvalState, type GamePlayerEvalState, type GameSaveState, prettyPrintActions } from '../../types/player'
+import type { CharacterID, StoryID, VariableID } from '../../types/project'
+import { arrayJoin } from '../../utils/array'
 import { classes } from '../../utils/display'
 import { throwIfNull } from '../../utils/guard'
 import { useLatest } from '../../utils/hooks'
 import { immAppend, immSet } from '../../utils/imm'
 import { useSelector, useStore } from '../../utils/store'
-import { COMMON_ICONS } from '../common/Icons'
+import { EditorIcon } from '../common/EditorIcon'
+import { COMMON_ICONS, EXPR_ICONS } from '../common/Icons'
 import { ParticleField } from '../common/ParticleField'
 import { TransitionGroup, useTransitionAnimationRef } from '../common/TransitionGroup'
 import { PlayerIcon } from './PlayerIcon'
 import { ScenePlayer } from './ScenePlayer'
 
 import styles from './GamePlayer.module.css'
+
+const DebuggerVariable = ({ variableID, value, exprContext }: { variableID: VariableID, value: AnyExprValue, exprContext: ExprContext }) => {
+    const variable = getEntityByID('variable', variableID)
+    const getDisplayValue = (value: AnyExprValue): React.ReactNode => {
+        switch (value.type) {
+            case 'boolean': {
+                if (variable?.type === 'flag') {
+                    if (value.value && variable.setValueLabel.type !== 'unset') {
+                        return resolveExprAs(variable.setValueLabel, 'string', exprContext).value
+                    }
+                    if (!value.value && variable.unsetValueLabel.type !== 'unset') {
+                        return resolveExprAs(variable.unsetValueLabel, 'string', exprContext).value
+                    }
+                }
+                return value.value ? 'True' : 'False'
+            }
+            case 'number': {
+                const s = String(value.value)
+                if (!s.includes('.')) return `${s}.0`
+                return s
+            }
+            case 'integer': return String(value.value)
+            case 'string': return JSON.stringify(value.value)
+            case 'story':
+            case 'chapter':
+            case 'scene':
+            case 'character':
+            case 'portrait':
+            case 'backdrop':
+            case 'song':
+            case 'sound':
+            case 'macro':
+            case 'variable':
+                return getEntityDisplayName(value.type, getEntityByID(value.type, value.value), true)
+            case 'location': return String(value.value)
+            case 'list': {
+                return arrayJoin(value.value.map(v => getDisplayValue(v)), <>, </>)
+            }
+            default: return <>{JSON.stringify(value)}</>
+        }
+    }
+    return <>
+        <b>{variable ? getEntityDisplayName('variable', variable, false) : variableID}</b>
+        <i>{getDisplayValue(value)}</i>
+    </>
+}
+
+const GameSceneDebugger = ({ saveState, evalState, exprContext }: { saveState: GameSaveState, evalState: GamePlayerEvalState, exprContext: ExprContext }) => {
+    const [open, setOpen] = useState(false)
+
+    return <div className={classes(styles.debugger, open && styles.open)}>
+        <EditorIcon path={EXPR_ICONS.variable} onClick={() => setOpen(v => !v)} />
+        <div className={styles.debuggerVariableList}>
+            <b>Seed</b><i>{evalState.randState[1]}</i>
+            <b>Story</b><i>{evalState.story?.id ? getEntityDisplayName('story', getEntityByID('story', evalState.story.id), false) : 'None'}</i>
+            {evalState.story ? <div className={styles.debuggerVariableList}>
+                {(Object.entries(evalState.story.variables) as [VariableID, AnyExprValue][]).map(([k, v]) => <DebuggerVariable key={k} variableID={k} value={v} exprContext={exprContext} />)}
+                <b>Chapter</b><i>{evalState.story.chapter?.id ? getEntityDisplayName('chapter', getEntityByID('chapter', evalState.story.chapter.id), false) : 'None'}</i>
+                {evalState.story.chapter ? <div className={styles.debuggerVariableList}>
+                    {(Object.entries(evalState.story.chapter.variables) as [VariableID, AnyExprValue][]).map(([k, v]) => <DebuggerVariable key={k} variableID={k} value={v} exprContext={exprContext} />)}
+                    <b>Scene</b><i>{evalState.story.chapter.scene?.id ? getEntityDisplayName('scene', getEntityByID('scene', evalState.story.chapter.scene.id), false) : 'None'}</i>
+                    {evalState.story.chapter.scene ? <div className={styles.debuggerVariableList}>
+                        {(Object.entries(evalState.story.chapter.scene.variables) as [VariableID, AnyExprValue][]).map(([k, v]) => <DebuggerVariable key={k} variableID={k} value={v} exprContext={exprContext} />)}
+                    </div> : null}
+                </div> : null}
+                <b>Characters</b><i></i>
+                {(Object.entries(evalState.story.characters) as [CharacterID, CharacterPlayerEvalState][]).map(([k, v]) => <Fragment key={k}>
+                    <b>{getEntityDisplayName('character', getEntityByID('character', k), false)}</b><i></i>
+                    <div className={styles.debuggerVariableList}>
+                        {(Object.entries(v.variables) as [VariableID, AnyExprValue][]).map(([k, v]) => <DebuggerVariable key={k} variableID={k} value={v} exprContext={exprContext} />)}
+                    </div>
+                </Fragment>)}
+            </div> : null}
+            <b>Macros</b><i></i>
+                {evalState.macros.map(m => <Fragment key={m.id}>
+                    <b>{getEntityDisplayName('macro', getEntityByID('macro', m.id), false)}</b><i></i>
+                    <div className={styles.debuggerVariableList}>
+                        {(Object.entries(m.variables) as [VariableID, AnyExprValue][]).map(([k, v]) => <DebuggerVariable key={k} variableID={k} value={v} exprContext={exprContext} />)}
+                    </div>
+                </Fragment>)}
+        </div>
+        <div className={styles.debuggerActionList}>
+            <b>Actions</b>
+            {prettyPrintActions(saveState.actions).map((a, i) => <span key={i}>{a}</span>)}
+        </div>
+    </div>
+}
 
 const GameScenePlayer = ({ setScreen }: { setScreen: (screen: MenuScreen) => void }) => {
     const [fastForward, setFastForward] = useState(false)
@@ -29,7 +120,7 @@ const GameScenePlayer = ({ setScreen }: { setScreen: (screen: MenuScreen) => voi
     }, [setGameState])
     const getSettings = useSelector(settingsStore, s => s.scenePlayerSettings)
 
-    const [evalState, sceneState] = getCurrentPlayerState(getState(), getSettings(), fastForward)
+    const [evalState, sceneState, exprContext] = getCurrentPlayerState(getState(), getSettings(), fastForward)
 
     const getLatestStep = useLatest(evalState.stoppedAt)
 
@@ -38,22 +129,20 @@ const GameScenePlayer = ({ setScreen }: { setScreen: (screen: MenuScreen) => voi
     }, [setGameState])
 
     const onAdvance = useCallback(() => {
-            setState(s => {
-                const step = getLatestStep()
-                if (!step) return s
-                return immSet(s, 'stopAfter', step.id)
-            })
+        setState(s => {
+            const step = getLatestStep()
+            if (!step) return s
+            return immSet(s, 'stopAfter', step.id)
+        })
     }, [getLatestStep, setState])
 
     const onSelectOption = useCallback((index: number) => {
         setState(s => {
             const step = getLatestStep()
-            if (!step) return s
-            if (step.type === 'decision') {
-                if (index < 0 || index >= step.options.length) return s
-                s = immSet(s, 'actions', immAppend(s.actions, { type: 'decision', stepID: step.id, index }))
-                s = immSet(s, 'stopAfter', step.id)
-            }
+            if (!step || step.type !== 'decision') return s
+            if (index < 0 || index >= step.options.length) return s
+            s = immSet(s, 'actions', immAppend(s.actions, { type: 'decision', stepID: step.id, index }))
+            s = immSet(s, 'stopAfter', step.id)
             return s
         })
     }, [getLatestStep, setState])
@@ -61,11 +150,18 @@ const GameScenePlayer = ({ setScreen }: { setScreen: (screen: MenuScreen) => voi
     const onSubmitPrompt = useCallback((value: unknown) => {
         setState(s => {
             const step = getLatestStep()
-            if (!step) return s
-            if (step.type === 'prompt') {
-                s = immSet(s, 'actions', immAppend(s.actions, { type: 'prompt', stepID: step.id, value }))
-                s = immSet(s, 'stopAfter', step.id)
-            }
+            if (!step || step.type !== 'prompt') return s
+            s = immSet(s, 'actions', immAppend(s.actions, { type: 'prompt', stepID: step.id, value }))
+            s = immSet(s, 'stopAfter', step.id)
+            return s
+        })
+    }, [getLatestStep, setState])
+
+    const onRandomizePrompt = useCallback(() => {
+        setState(s => {
+            const step = getLatestStep()
+            if (!step || step.type !== 'prompt') return s
+            s = immSet(s, 'actions', immAppend(s.actions, { type: 'randomize', stepID: step.id }))
             return s
         })
     }, [getLatestStep, setState])
@@ -84,10 +180,12 @@ const GameScenePlayer = ({ setScreen }: { setScreen: (screen: MenuScreen) => voi
     })
 
     return <div ref={animRef} className={styles.player}>
-        <ScenePlayer state={sceneState} onAdvance={onAdvance} onSelectOption={onSelectOption} onSubmitPrompt={onSubmitPrompt} />
+        <ScenePlayer state={sceneState} onAdvance={onAdvance} onSelectOption={onSelectOption} onSubmitPrompt={onSubmitPrompt} onRandomizePrompt={onRandomizePrompt} />
+        <GameSceneDebugger saveState={getState()} evalState={evalState} exprContext={exprContext} />
         <div className={styles.playerButtons}>
             <PlayerIcon path={COMMON_ICONS.fastForward} label='Fast-Forward' active={fastForward} onClick={() => setFastForward(v => !v)} />
             <PlayerIcon path={COMMON_ICONS.restart} label='Rewind' onClick={onRewind} />
+            <PlayerIcon path={COMMON_ICONS.menu} label='Menu' onClick={() => setScreen('main')} />
         </div>
     </div>
 }
@@ -131,18 +229,16 @@ const Menu = ({ header, children }: { header: string, children: React.ReactNode 
 }
 
 const GameOverMenu = ({ setScreen }: { setScreen: (screen: MenuScreen) => void }) => {
-    const [getGameState, setGameState] = useStore(gamePlayerStore)
     const onRewind = useCallback(() => {
-        setGameState(s => immSet(s, 'currentSave', immSet(throwIfNull(s.currentSave), 'actions', throwIfNull(s.currentSave).actions.slice(0, -1))))
+        gamePlayerStore.setValue(s => immSet(s, 'currentSave', immSet(throwIfNull(s.currentSave), 'actions', throwIfNull(s.currentSave).actions.slice(0, -1))))
         setScreen('play')
-    }, [setGameState, setScreen])
-    const onRestart = useCallback(() => {
-        userPlayStory(throwIfNull(getGameState().currentSave).storyID)
-        setScreen('play')
-    }, [getGameState, setScreen])
+    }, [setScreen])
+    const onMainMenu = useCallback(() => {
+        setScreen('main')
+    }, [setScreen])
     return <Menu header='The End'>
         <MenuButton onClick={onRewind}>Rewind</MenuButton>
-        <MenuButton onClick={onRestart}>Restart</MenuButton>
+        <MenuButton onClick={onMainMenu}>Main Menu</MenuButton>
     </Menu>
 }
 
@@ -166,6 +262,7 @@ const SaveMenu = ({ setScreen }: { setScreen: (screen: MenuScreen) => void }) =>
 const MainMenu = ({ setScreen }: { setScreen: (screen: MenuScreen) => void }) => {
     const getCurrentSave = useSelector(gamePlayerStore, s => s.currentSave)
     const getProjectName = useSelector(projectStore, s => s.name)
+    const [, setTab] = useViewStateTab()
     const onContinue = useCallback(() => {
         setScreen('play')
     }, [setScreen])
@@ -175,10 +272,14 @@ const MainMenu = ({ setScreen }: { setScreen: (screen: MenuScreen) => void }) =>
     const onLoadGame = useCallback(() => {
         setScreen('saves')
     }, [setScreen])
+    const onSettings = useCallback(() => {
+        setTab('settings')
+    }, [setTab])
     return <Menu header={getProjectName()}>
         <MenuButton disabled={!getCurrentSave()} onClick={onContinue}>Continue</MenuButton>
         <MenuButton onClick={onNewGame}>New Game</MenuButton>
         <MenuButton disabled onClick={onLoadGame}>Load Game</MenuButton>
+        <MenuButton onClick={onSettings}>Settings</MenuButton>
     </Menu>
 }
 

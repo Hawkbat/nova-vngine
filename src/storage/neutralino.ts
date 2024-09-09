@@ -108,7 +108,15 @@ export const neutralinoStorageProvider: StorageProvider = {
     async storeAsset(root, asset, buffer) {
         await this.storeBinary?.(root, asset.path, buffer)
         const path = root ? getAbsolutePath(asset.path, root.key) : asset.path
-        await nFS.remove(`${path}_thumb`)
+        try {
+            await nFS.remove(`${path}_thumb`)
+        } catch (err) {
+            if (isNeutralinoError(err) && err.code === 'NE_FS_REMVERR') {
+                // Ignore if we cannot delete, it probably doesn't exist yet
+            } else {
+                throw err
+            }
+        }
     },
     async listDirectory(root, path) {
         await waitForNeutralinoInit()

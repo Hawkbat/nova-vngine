@@ -28,43 +28,43 @@ const ScopeEditor = ({ scope, setScope }: { scope: AnyVariableScope, setScope: (
             case 'allCharacters':
             case 'allMacros':
                 return <></>
-            case 'story': return <EntityField label='Story' type='story' value={scope.value} setValue={value => setScope(immSet(scope, 'value', value))} options={getProject().stories} includeParent />
-            case 'chapter': return <EntityField label='Chapter' type='chapter' value={scope.value} setValue={value => setScope(immSet(scope, 'value', value))} options={getProject().chapters} includeParent />
-            case 'scene': return <EntityField label='Scene' type='scene' value={scope.value} setValue={value => setScope(immSet(scope, 'value', value))} options={getProject().scenes} includeParent />
-            case 'character': return <EntityField label='Character' type='character' value={scope.value} setValue={value => setScope(immSet(scope, 'value', value))} options={getProject().characters} includeParent />
-            case 'macro': return <EntityField label='Macro' type='macro' value={scope.value} setValue={value => setScope(immSet(scope, 'value', value))} options={getProject().macros} includeParent />
+            case 'story': return <EntityField label='Story' type='story' value={scope.value} setValue={value => setScope(immSet(scope, 'value', value))} options={getProject().stories} />
+            case 'chapter': return <EntityField label='Chapter' type='chapter' value={scope.value} setValue={value => setScope(immSet(scope, 'value', value))} options={getProject().chapters} />
+            case 'scene': return <EntityField label='Scene' type='scene' value={scope.value} setValue={value => setScope(immSet(scope, 'value', value))} options={getProject().scenes} />
+            case 'character': return <EntityField label='Character' type='character' value={scope.value} setValue={value => setScope(immSet(scope, 'value', value))} options={getProject().characters} />
+            case 'macro': return <EntityField label='Macro' type='macro' value={scope.value} setValue={value => setScope(immSet(scope, 'value', value))} options={getProject().macros} />
             case 'stories': return <Field label='Stories'>
                 {scope.value.map((s, i) => <Fragment key={s} >
                     <EditorIcon path={COMMON_ICONS.deleteItem} label='Remove Item' onClick={() => setScope(immSet(scope, 'value', immRemoveAt(scope.value, i)))} />
-                    <EntityField value={s} setValue={value => setScope(immSet(scope, 'value', immReplaceAt(scope.value, i, value)))} type='story' options={getProject().stories} includeParent />
+                    <EntityField value={s} setValue={value => setScope(immSet(scope, 'value', immReplaceAt(scope.value, i, value)))} type='story' options={getProject().stories} />
                 </Fragment>)}
                 <EditorIcon path={COMMON_ICONS.addItem} label='Add Item' onClick={() => setScope(immSet(scope, 'value', immAppend(scope.value, '' as StoryID)))} />
             </Field>
             case 'chapters': return <Field label='Chapters'>
                 {scope.value.map((s, i) => <Fragment key={s} >
                     <EditorIcon path={COMMON_ICONS.deleteItem} label='Remove Item' onClick={() => setScope(immSet(scope, 'value', immRemoveAt(scope.value, i)))} />
-                    <EntityField value={s} setValue={value => setScope(immSet(scope, 'value', immReplaceAt(scope.value, i, value)))} type='chapter' options={getProject().chapters} includeParent />
+                    <EntityField value={s} setValue={value => setScope(immSet(scope, 'value', immReplaceAt(scope.value, i, value)))} type='chapter' options={getProject().chapters} />
                 </Fragment>)}
                 <EditorIcon path={COMMON_ICONS.addItem} label='Add Item' onClick={() => setScope(immSet(scope, 'value', immAppend(scope.value, '' as ChapterID)))} />
             </Field>
             case 'scenes': return <Field label='Scenes'>
                 {scope.value.map((s, i) => <Fragment key={s} >
                     <EditorIcon path={COMMON_ICONS.deleteItem} label='Remove Item' onClick={() => setScope(immSet(scope, 'value', immRemoveAt(scope.value, i)))} />
-                    <EntityField value={s} setValue={value => setScope(immSet(scope, 'value', immReplaceAt(scope.value, i, value)))} type='scene' options={getProject().scenes} includeParent />
+                    <EntityField value={s} setValue={value => setScope(immSet(scope, 'value', immReplaceAt(scope.value, i, value)))} type='scene' options={getProject().scenes} />
                 </Fragment>)}
                 <EditorIcon path={COMMON_ICONS.addItem} label='Add Item' onClick={() => setScope(immSet(scope, 'value', immAppend(scope.value, '' as SceneID)))} />
             </Field>
             case 'characters': return <Field label='Character'>
                 {scope.value.map((s, i) => <Fragment key={s} >
                     <EditorIcon path={COMMON_ICONS.deleteItem} label='Remove Item' onClick={() => setScope(immSet(scope, 'value', immRemoveAt(scope.value, i)))} />
-                    <EntityField value={s} setValue={value => setScope(immSet(scope, 'value', immReplaceAt(scope.value, i, value)))} type='character' options={getProject().characters} includeParent />
+                    <EntityField value={s} setValue={value => setScope(immSet(scope, 'value', immReplaceAt(scope.value, i, value)))} type='character' options={getProject().characters} />
                 </Fragment>)}
                 <EditorIcon path={COMMON_ICONS.addItem} label='Add Item' onClick={() => setScope(immSet(scope, 'value', immAppend(scope.value, '' as CharacterID)))} />
             </Field>
             case 'macros': return <Field label='Macros'>
                 {scope.value.map((s, i) => <Fragment key={s} >
                     <EditorIcon path={COMMON_ICONS.deleteItem} label='Remove Item' onClick={() => setScope(immSet(scope, 'value', immRemoveAt(scope.value, i)))} />
-                    <EntityField value={s} setValue={value => setScope(immSet(scope, 'value', immReplaceAt(scope.value, i, value)))} type='macro' options={getProject().macros} includeParent />
+                    <EntityField value={s} setValue={value => setScope(immSet(scope, 'value', immReplaceAt(scope.value, i, value)))} type='macro' options={getProject().macros} />
                 </Fragment>)}
                 <EditorIcon path={COMMON_ICONS.addItem} label='Add Item' onClick={() => setScope(immSet(scope, 'value', immAppend(scope.value, '' as MacroID)))} />
             </Field>

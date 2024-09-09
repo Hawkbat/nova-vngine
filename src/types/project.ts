@@ -169,6 +169,7 @@ export type CharacterID = EntityID<'character'>
 
 export interface CharacterDefinition extends EntityDefinition<CharacterID> {
     mainPortraitID: PortraitID | null
+    alias: StringExpr
 }
 
 export type PortraitID = EntityID<'portrait'>
@@ -252,7 +253,7 @@ export function isVariableInScope(variable: AnyVariableDefinition, scope: AnyVar
         case 'story': return variable.scope.type === 'story' && variable.scope.value === scope.value
         case 'allChapters': return variable.scope.type === 'allChapters'
         case 'chapters': return variable.scope.type === 'chapters' && variable.scope.value.some(s => scope.value.includes(s))
-        case 'chapter': return variable.scope.type === 'chapter'
+        case 'chapter': return variable.scope.type === 'chapter' && variable.scope.value === scope.value
         case 'allScenes': return variable.scope.type === 'allScenes'
         case 'scenes': return variable.scope.type === 'scenes' && variable.scope.value.some(s => scope.value.includes(s))
         case 'scene': return variable.scope.type === 'scene' && variable.scope.value === scope.value
@@ -337,8 +338,8 @@ export function getVariableValueType(variable: AnyVariableDefinition | AnyPartia
             if (isPrimitiveValue(expr)) {
                 return expr.type
             }
-            const defaultType = 'default' in variable ? resolveExpr(variable.default, ctx).type : null
-            return arrayHead<AnyExprValue>(expr.values)?.type ?? defaultType ?? 'string'
+            const defaultType = 'default' in variable && variable.default.type !== 'unset' ? resolveExpr(variable.default, ctx).type : null
+            return arrayHead<AnyExprValue>(expr.value)?.type ?? defaultType ?? 'string'
         } else if (variable.type === 'multipleChoice') {
             return resolveExpr(variable.options, ctx).type
         } else if (variable.type === 'list') {
@@ -346,7 +347,7 @@ export function getVariableValueType(variable: AnyVariableDefinition | AnyPartia
         } else if (variable.type === 'lookup') {
             return getVariableValueType(variable.elements, ctx)
         }
-        return 'list:string'
+        return 'list'
     }
     return basicType
 }
@@ -365,6 +366,8 @@ export type MacroID = EntityID<'macro'>
 
 export interface MacroDefinition extends EntityDefinition<MacroID> {
     steps: AnyStep[]
+    inputs: VariableID[]
+    outputs: VariableID[]
 }
 
 export interface AssetDefinition {
@@ -401,6 +404,7 @@ const parseCharacterDefinition: ParseFunc<CharacterDefinition> = defineParser<Ch
     id: $.id,
     name: $.string,
     mainPortraitID: (c, v, d) => $.either<PortraitID, null>(c, v, $.id, $.null, d ?? null),
+    alias: (c, v, d) => parseAnyExpr(c, v, d ?? { type: 'unset' }),
 }, d))
 
 const parsePortraitDefinition: ParseFunc<PortraitDefinition> = defineParser<PortraitDefinition>((c, v, d) => $.object(c, v, {
@@ -484,6 +488,8 @@ const parseMacroDefinition: ParseFunc<MacroDefinition> = defineParser<MacroDefin
     id: $.id,
     name: $.string,
     steps: (c, v, d) => $.array(c, v, parseAnyStep, d),
+    inputs: (c, v, d) => $.array(c, v, $.id, d ?? []),
+    outputs: (c, v, d) => $.array(c, v, $.id, d ?? []),
 }, d))
 
 export const parseProjectDefinition: ParseFunc<ProjectDefinition> = defineParser<ProjectDefinition>((c, v, d) => $.object(c, v, {

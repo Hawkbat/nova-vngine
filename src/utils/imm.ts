@@ -38,6 +38,11 @@ export function immKeepWhile<T>(arr: T[], shouldKeep: (value: T, i: number, arr:
     return arr.slice(0, endIndex)
 }
 
+export function immPadTo<T>(arr: T[], length: number, getPad: (i: number) => T) {
+    if (arr.length >= length) return arr
+    return arr.concat(new Array(length - arr.length).fill(null).map((_, i) => getPad(arr.length + i)))
+}
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function immSet<T extends Record<string, any>, K extends keyof T>(obj: T, key: K, value: T[K]): T {
     return { ...obj, [key]: value }

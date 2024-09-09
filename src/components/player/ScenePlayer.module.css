@@ -76,6 +76,7 @@
 .character {
     position: absolute;
     width: auto;
+    transition: top 0.5s, height 0.5s;
 }
 
 .dialoguePivot {
@@ -103,15 +104,24 @@
 }
 
 .dialogueBox.nvl {
-    top: 3em;
+    top: 6em;
     bottom: 3em;
     left: 3em;
     right: 3em;
     overflow: auto;
 }
 
-.dialoguePivot.nvl > .dialogueBox {
-    height: 100%;
+.dialogueBox.pop {
+    left: 1em;
+    right: 1em;
+    top: 50%;
+    max-height: fit-content;
+    max-width: fit-content;
+    margin: auto;
+}
+
+.dialogueBox.pop > .dialogue {
+    padding: 0.5em;
 }
 
 .dialogue {
@@ -162,6 +172,12 @@
     gap: 0.25em;
     z-index: 100;
     pointer-events: none;
+}
+
+@media (max-width: 50em) {
+    .options {
+        left: 1em;
+    }
 }
 
 .option {

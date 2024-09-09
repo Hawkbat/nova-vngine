@@ -35,6 +35,8 @@ const ProjectItem = ({ project }: { project: ProjectMetaData }) => {
         </EditorButton>
 }
 
+//TODO: Project ZIP download/export (e.g. to convert read-only fetched projects or OPFS projects to desktop or chromium-editable ones)
+
 export const HomeWorkspace = () => {
     const [, setCurrentTab] = useViewStateTab()
     const getRecentProjects = useSelector(viewStateStore, s => s.recentProjects)

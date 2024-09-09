@@ -1,6 +1,6 @@
 import { Fragment } from 'react/jsx-dev-runtime'
 
-import { getEntityByID, getEntityDisplayName, getEntityPrimaryAsset, immCreateEntity, immCreateVariable } from '../../operations/project'
+import { getEntityByID, getEntityDisplayName, getEntityEditorDisplayName, getEntityPrimaryAsset, immCreateEntity, immCreateVariable } from '../../operations/project'
 import { useProjectReadonly } from '../../operations/storage'
 import { useViewStateScope, useViewStateTab } from '../../operations/viewState'
 import { useAsset } from '../../store/assets'
@@ -23,11 +23,11 @@ export const VariableList = ({ scope, hideEmpty }: { scope: AnyVariableScope, hi
             case 'characters':
             case 'macros':
                 return `Multiple ${prettyPrintIdentifier(scope.type)}`
-            case 'story': return getEntityDisplayName('story', getEntityByID('story', scope.value), true)
-            case 'chapter': return getEntityDisplayName('chapter', getEntityByID('chapter', scope.value), true)
-            case 'scene': return getEntityDisplayName('scene', getEntityByID('scene', scope.value), true)
-            case 'character': return getEntityDisplayName('character', getEntityByID('character', scope.value), true)
-            case 'macro': return getEntityDisplayName('macro', getEntityByID('macro', scope.value), true)
+            case 'story': return getEntityEditorDisplayName('story', getEntityByID('story', scope.value))
+            case 'chapter': return getEntityEditorDisplayName('chapter', getEntityByID('chapter', scope.value))
+            case 'scene': return getEntityEditorDisplayName('scene', getEntityByID('scene', scope.value))
+            case 'character': return getEntityEditorDisplayName('character', getEntityByID('character', scope.value))
+            case 'macro': return getEntityEditorDisplayName('macro', getEntityByID('macro', scope.value))
             default: return prettyPrintIdentifier(scope.type)
         }
     }
@@ -88,7 +88,7 @@ export const EntityList = <T extends EntityType>({ type, label, filter, createEn
             </div>
         </> : parentType ? getParentItems()?.map(p => <Fragment key={p.id}>
             <div className={styles.heading}>
-                <EditorButton icon={EXPR_VALUE_ICONS[parentType]} style='text' onClick={() => onSelectParent(p.id as EntityParentIDOf<T>)}>{getEntityDisplayName(parentType, p, true)}</EditorButton>
+                <EditorButton icon={EXPR_VALUE_ICONS[parentType]} style='text' onClick={() => onSelectParent(p.id as EntityParentIDOf<T>)}>{getEntityEditorDisplayName(parentType, p)}</EditorButton>
             </div>
             <div className={styles.items}>
                 {items.filter(i => getEntityParentID(type, i as EntityOfType<T>) === p.id).map(item => <Item key={item.id} type={type} item={item} />)}

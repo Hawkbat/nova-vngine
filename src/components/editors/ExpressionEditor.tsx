@@ -3,7 +3,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Fragment } from 'react'
 
-import { getEntityByID, getEntityDisplayName } from '../../operations/project'
+import { getEntityByID, getEntityEditorDisplayName } from '../../operations/project'
 import { projectStore } from '../../store/project'
 import type { AnyExpr, ExprContext, ExprDefinition, ExprPrimitiveRawValueOfType, ExprPrimitiveValueType, ExprType, ExprValueType } from '../../types/expressions'
 import { createDefaultExpr, createDefaultExprChild, EXPR_DEFINITION_MAP, EXPR_DEFINITIONS, exprValueTypeAssignableTo, guessExprReturnType, validateExpr } from '../../types/expressions'
@@ -84,9 +84,9 @@ const EntityArgEditor = <T extends EntityType>({ type, value, setValue, label }:
     const getItems = useSelector(projectStore, s => s[getProjectEntityKey(type)]) as () => EntityOfType<T>[]
     return <>
         <EditorButton className={styles.argButton} style='text' onClick={openDropdown}>
-            {entity ? getEntityDisplayName(type, entity, true) : 'None'}
+            {getEntityEditorDisplayName(type, entity)}
         </EditorButton>
-        <SearchDropdownMenu<EntityOfType<T>> {...dropdownProps} items={getItems().sort((a, b) => a.name.localeCompare(b.name))} filter={(e, search) => e.name.toLowerCase().includes(search.toLowerCase())}>{(entity: EntityOfType<T>) => <DropdownMenuItem key={entity.id} onClick={() => (setValue(entity.id as ExprPrimitiveRawValueOfType<T>), dropdownProps.onClose())}>{getEntityDisplayName(type, entity, true)}</DropdownMenuItem>}</SearchDropdownMenu>
+        <SearchDropdownMenu<EntityOfType<T>> {...dropdownProps} items={getItems().sort((a, b) => getEntityEditorDisplayName(type, a).localeCompare(getEntityEditorDisplayName(type, b)))} filter={(e, search) => e.name.toLowerCase().includes(search.toLowerCase())}>{(entity: EntityOfType<T>) => <DropdownMenuItem key={entity.id} onClick={() => (setValue(entity.id as ExprPrimitiveRawValueOfType<T>), dropdownProps.onClose())}>{getEntityEditorDisplayName(type, entity)}</DropdownMenuItem>}</SearchDropdownMenu>
     </>
 }
 

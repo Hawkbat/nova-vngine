@@ -6,7 +6,7 @@ import { createDefaultProject, projectStore } from '../store/project'
 import { viewStateStore } from '../store/viewstate'
 import { createDefaultExpr, type ExprContext, resolveExpr } from '../types/expressions'
 import { DEFAULT_PROJECT_FILENAME, isPlatformErrorCode, PlatformError } from '../types/platform'
-import { type AnyVariableDefinition, type AnyVariableScope, type AssetDefinition, type BackdropDefinition, type BackdropID, type ChapterDefinition, type ChapterID, type CharacterDefinition, type CharacterID, type EntityIDOf, type EntityOfType, type EntityParentIDOf, type EntityParentOf, type EntityType, getEntityParentID, getEntityParentType, getEntityTypeByProjectKey, getProjectEntityKey, type MacroDefinition, type MacroID, parseProjectDefinition, type PortraitDefinition, type PortraitID, PROJECT_ENTITY_KEYS, type ProjectDefinition, type SceneDefinition, type SceneID, type SongDefinition, type SongID, type SoundDefinition, type SoundID, type StoryDefinition, type StoryID, type VariableID, type VariableType } from '../types/project'
+import { type AnyEntity, type AnyVariableDefinition, type AnyVariableScope, type AssetDefinition, type BackdropDefinition, type BackdropID, type ChapterDefinition, type ChapterID, type CharacterDefinition, type CharacterID, type EntityIDOf, type EntityOfType, type EntityParentIDOf, type EntityParentOf, type EntityType, getEntityParentID, getEntityParentType, getEntityTypeByProjectKey, getProjectEntityKey, type MacroDefinition, type MacroID, parseProjectDefinition, type PortraitDefinition, type PortraitID, PROJECT_ENTITY_KEYS, type ProjectDefinition, type SceneDefinition, type SceneID, type SongDefinition, type SongID, type SoundDefinition, type SoundID, type StoryDefinition, type StoryID, type VariableID, type VariableType } from '../types/project'
 import type { StorageRootEntry } from '../types/storage'
 import type { ProjectMetaData } from '../types/viewstate'
 import { arrayHead } from '../utils/array'
@@ -197,8 +197,6 @@ export function getProjectExprContext(): ExprContext {
             setValue: () => {},
             getCharacterValue: (id, characterID) => resolveExpr(project.variables.find(e => e.id === id)?.default ?? createDefaultExpr('unset', ctx), ctx),
             setCharacterValue: () => {},
-            getMacroValue: (id, macroID) => resolveExpr(project.variables.find(e => e.id === id)?.default ?? createDefaultExpr('unset', ctx), ctx),
-            setMacroValue: () => {},
         },
         random: {
             float: (min, max) => randFloat(randSeedRandom(), min, max)[1],
@@ -251,13 +249,49 @@ export function getEntityPrimaryAsset<T extends EntityType>(type: T, entity: Ent
     }
 }
 
-export function getEntityDisplayName<T extends EntityType>(type: T, entity: EntityOfType<T> | null, includeParent: boolean): string {
+export function getEntityDisplayName<T extends EntityType>(type: T, entity: EntityOfType<T> | null | undefined, includeParent: boolean): string {
     if (!entity) return 'None'
     const entityName = entity.name ? entity.name : `Untitled ${prettyPrintIdentifier(type)}`
     const parentType = getEntityParentType(type)
     const parent = getEntityParent(type, entity)
     if (includeParent && parentType && parent) return `${getEntityDisplayName(parentType, parent, false)} - ${entityName}`
+    if (type === 'variable' && includeParent) {
+        const [parentType, parent] = getVariableParent(entity as AnyVariableDefinition)
+        if (parentType && parent) return `${getEntityDisplayName(parentType, parent, false)} - ${entityName}`
+    }
     return entityName
+}
+
+export function getEntityDisplayNameByID<T extends EntityType>(type: T, id: EntityIDOf<T> | null | undefined, includeParent: boolean): string {
+    return getEntityDisplayName(type, id ? getEntityByID(type, id) : null, includeParent)
+}
+
+export function getEntityEditorDisplayName<T extends EntityType>(type: T, entity: EntityOfType<T> | null | undefined): string {
+    if (!entity) return getEntityDisplayName(type, entity, false)
+    if (type === 'variable') {
+        const [parentType, parent] = getVariableParent(entity as AnyVariableDefinition)
+        const includeParent = parentType && parent ? viewStateStore.getValue().scopes[parentType] !== parent.id : true
+        return getEntityDisplayName(type, entity, includeParent)
+    }
+    const parentType = getEntityParentType(type)
+    const parent = getEntityParent(type, entity)
+    const includeParent = parentType && parent ? viewStateStore.getValue().scopes[parentType] !== parent.id : true
+    return getEntityDisplayName(type, entity, includeParent)
+}
+
+export function getEntityEditorDisplayNameByID<T extends EntityType>(type: T, id: EntityIDOf<T> | null | undefined): string {
+    return getEntityEditorDisplayName(type, id ? getEntityByID(type, id) : null)
+}
+
+export function getVariableParent(v: AnyVariableDefinition): [EntityType | null, AnyEntity | null] {
+    switch (v.scope.type) {
+        case 'story': return hintTuple('story', getEntityByID('story', v.scope.value))
+        case 'chapter': return hintTuple('chapter', getEntityByID('chapter', v.scope.value))
+        case 'scene': return hintTuple('scene', getEntityByID('scene', v.scope.value))
+        case 'character': return hintTuple('character', getEntityByID('character', v.scope.value))
+        case 'macro': return hintTuple('macro', getEntityByID('macro', v.scope.value))
+        default: return [null, null]
+    }
 }
 
 export function getEntityReferences(id: string): { type: EntityType, id: string }[] {
@@ -335,6 +369,7 @@ export function immCreateCharacter(project: ProjectDefinition): [ProjectDefiniti
         id,
         name: '',
         mainPortraitID: null,
+        alias: { type: 'unset' },
     }
 
     return hintTuple(immSet(project, 'characters', immAppend(project.characters, character)), character)
@@ -421,6 +456,8 @@ export function immCreateMacro(project: ProjectDefinition): [ProjectDefinition, 
         id,
         name: '',
         steps: [],
+        inputs: [],
+        outputs: [],
     }
 
     return hintTuple(immSet(project, 'macros', immAppend(project.macros, macro)), macro)

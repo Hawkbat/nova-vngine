@@ -32,3 +32,6 @@ export function arrayMax<T>(array: T[], selector: (value: T) => number, defaultV
     return array.reduce((p, c) => Math.max(p, selector(c)), -Infinity)
 }
 
+export function arrayJoin<T, U = T>(array: T[], separator: U): (T | U)[] {
+    return array.flatMap((v, i) => i > 0 ? [separator, v] : [v])
+}

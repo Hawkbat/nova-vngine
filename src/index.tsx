@@ -3,10 +3,12 @@ import { createRoot } from 'react-dom/client'
 
 import { App } from './components/App'
 import { LoadingApp } from './components/LoadingApp'
+import { loadInitialGame } from './operations/player'
 import { saveProject } from './operations/project'
 import { loadInitialSettings } from './operations/settings'
 import { loadInitialViewState } from './operations/viewState'
 import { platform } from './platform/platform'
+import { gamePlayerStore } from './store/player'
 import { projectStore } from './store/project'
 import { settingsStore } from './store/settings'
 import { viewStateStore } from './store/viewstate'
@@ -84,6 +86,11 @@ async function initializeAll() {
         await wait(1000)
     })
 
+    subscribeToStoreAsync(gamePlayerStore, async state => {
+        await platform.saveGame(state)
+        await wait(1000)
+    })
+
     subscribeToStoreAsync(viewStateStore, updateTitle)
     subscribeToStoreAsync(projectStore, updateTitle)
     subscribeToStoreAsync(projectStore.meta, updateTitle)
@@ -101,6 +108,7 @@ async function initializeAll() {
         }
     })
 
+    await loadInitialGame()
     await loadInitialSettings()
     await loadInitialViewState()
 

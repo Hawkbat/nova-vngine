@@ -40,6 +40,7 @@ export const AudioField = ({ className, label, value, setValue, validate, target
         setValue?.(null)
     }, [setValue])
 
+    //TODO: Make custom audio player control component instead of using <audio controls />
     return <Field label={label} error={errorCheck()}>
         {value ? <>
             {getAudioSrc() ? <audio src={getAudioSrc() ?? undefined} controls /> : <span>Loading...</span>}

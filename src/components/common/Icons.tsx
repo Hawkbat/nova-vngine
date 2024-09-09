@@ -1,6 +1,6 @@
-import { mdiAccount, mdiAccountMinus, mdiAccountPlus, mdiAccountVoice, mdiAlert, mdiApplicationVariable, mdiArchive, mdiArchiveEdit, mdiArchiveMarker, mdiArchivePlus, mdiArrowExpandDown, mdiArrowExpandHorizontal, mdiArrowExpandUp, mdiArrowExpandVertical, mdiArrowRightBox, mdiArrowULeftTop, mdiBookMultipleOutline, mdiBookOpenVariantOutline, mdiCheckboxBlankOutline, mdiCheckboxMarked, mdiCheckCircle, mdiChevronDown, mdiChevronRight, mdiClose, mdiCloseCircleOutline, mdiCog, mdiCreation, mdiDice3, mdiDiceMultiple, mdiDotsCircle, mdiDotsHorizontal, mdiEmoticon, mdiEqual, mdiFastForward, mdiFlag, mdiFormatHorizontalAlignCenter, mdiFormatHorizontalAlignLeft, mdiFormatHorizontalAlignRight, mdiFormatLetterCaseLower, mdiFormatLetterCaseUpper, mdiFormatListCheckbox, mdiFormatListChecks, mdiFormatListGroup, mdiFormatListText, mdiFormatText, mdiFormTextbox, mdiGreaterThan, mdiGreaterThanOrEqual, mdiHome, mdiImageArea, mdiLessThan, mdiLessThanOrEqual, mdiMapSearch, mdiMenuDown, mdiMinus, mdiMusic, mdiNotEqualVariant, mdiPause, mdiPercent, mdiPlay, mdiPlus, mdiPlusBox, mdiPound, mdiPoundBox, mdiRestart, mdiScriptText, mdiScriptTextPlay, mdiSignatureText, mdiSlashForward, mdiSourceBranch, mdiSquareOutline, mdiText, mdiTextBoxOutline, mdiTrashCan, mdiUpload, mdiVariable, mdiViewList, mdiVolumeHigh } from '@mdi/js'
+import { mdiAccount, mdiAccountFileText, mdiAccountMinus, mdiAccountPlus, mdiAccountVoice, mdiAlert, mdiAlertBox, mdiAmpersand, mdiApplicationVariable, mdiArchive, mdiArchiveEdit, mdiArchiveMarker, mdiArchivePlus, mdiArrowExpandDown, mdiArrowExpandHorizontal, mdiArrowExpandUp, mdiArrowExpandVertical, mdiArrowRightBox, mdiArrowULeftTop, mdiBookMultipleOutline, mdiBookOpenVariantOutline, mdiCheckboxBlankOutline, mdiCheckboxMarked, mdiCheckCircle, mdiChevronDown, mdiChevronRight, mdiClose, mdiCloseCircleOutline, mdiCog, mdiCreation, mdiDice3, mdiDiceD6, mdiDiceMultiple, mdiDotsCircle, mdiDotsHorizontal, mdiDragVerticalVariant, mdiEmoticon, mdiEqual, mdiEqualBox, mdiExclamationThick, mdiFastForward, mdiFlag, mdiFormatHorizontalAlignCenter, mdiFormatHorizontalAlignLeft, mdiFormatHorizontalAlignRight, mdiFormatLetterCaseLower, mdiFormatLetterCaseUpper, mdiFormatListCheckbox, mdiFormatListChecks, mdiFormatListGroup, mdiFormatListText, mdiFormatText, mdiFormTextbox, mdiGreaterThan, mdiGreaterThanOrEqual, mdiHome, mdiImageArea, mdiLessThan, mdiLessThanOrEqual, mdiMapSearch, mdiMenu, mdiMenuDown, mdiMinus, mdiMusic, mdiNotEqualVariant, mdiPause, mdiPercent, mdiPlay, mdiPlus, mdiPlusBox, mdiPound, mdiPoundBox, mdiRestart, mdiScriptText, mdiScriptTextPlay, mdiSignatureText, mdiSlashForward, mdiSourceBranch, mdiSquareOutline, mdiText, mdiTextBoxOutline, mdiTrashCan, mdiUpload, mdiVariable, mdiViewList, mdiVolumeHigh } from '@mdi/js'
 
-import type { ExprPrimitiveValueType, ExprType } from '../../types/expressions'
+import type { ExprType, ExprValueType } from '../../types/expressions'
 import type { StepType } from '../../types/steps'
 import type { ProjectEditorTab } from '../../types/viewstate'
 
@@ -32,6 +32,8 @@ export const COMMON_ICONS = {
     restart: mdiRestart,
     fastForward: mdiFastForward,
     list: mdiViewList,
+    randomize: mdiDice3,
+    menu: mdiMenu,
 } satisfies Record<string, string>
 
 export const EXPR_ICONS: Record<ExprType, string> = {
@@ -53,6 +55,9 @@ export const EXPR_ICONS: Record<ExprType, string> = {
     macro: mdiScriptText,
     characterVariable: mdiApplicationVariable,
     location: mdiArrowExpandHorizontal,
+    and: mdiAmpersand,
+    or: mdiDragVerticalVariant,
+    not: mdiExclamationThick,
     add: mdiPlus,
     subtract: mdiMinus,
     multiply: mdiClose,
@@ -63,6 +68,7 @@ export const EXPR_ICONS: Record<ExprType, string> = {
     roundDown: mdiArrowExpandDown,
     randomFloat: mdiDiceMultiple,
     randomInt: mdiDice3,
+    randomItem: mdiDiceD6,
     lowerCase: mdiFormatLetterCaseLower,
     upperCase: mdiFormatLetterCaseUpper,
     format: mdiSignatureText,
@@ -76,7 +82,7 @@ export const EXPR_ICONS: Record<ExprType, string> = {
     switch: mdiFormatListCheckbox,
 }
 
-export const EXPR_VALUE_ICONS: Record<ExprPrimitiveValueType, string> = {
+export const EXPR_VALUE_ICONS: Record<ExprValueType, string> = {
     string: EXPR_ICONS['string'],
     number: EXPR_ICONS['number'],
     boolean: EXPR_ICONS['boolean'],
@@ -92,6 +98,7 @@ export const EXPR_VALUE_ICONS: Record<ExprPrimitiveValueType, string> = {
     sound: EXPR_ICONS['sound'],
     location: EXPR_ICONS['location'],
     macro: EXPR_ICONS['macro'],
+    list: EXPR_ICONS['list'],
 }
 
 export const PROJECT_TAB_ICONS: Record<ProjectEditorTab, string> = {
@@ -125,8 +132,10 @@ export const STEP_ICONS: Record<StepType, string> = {
     decision: mdiFormatListText,
     branch: mdiSourceBranch,
     prompt: mdiFormTextbox,
-    set: mdiApplicationVariable,
+    set: mdiEqualBox,
+    setCharacter: mdiAccountFileText,
     macro: mdiScriptTextPlay,
     returnTo: mdiArrowULeftTop,
     goto: mdiArrowRightBox,
+    error: mdiAlertBox,
 }

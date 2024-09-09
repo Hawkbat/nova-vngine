@@ -74,6 +74,10 @@ const EXPRS = validateExprDefinitions({
     characterVariable: { label: 'Character Variable', args: [{ label: 'Value', type: 'variable' }], params: [{ label: 'Character', types: ['character'] }], returnTypes: ['variable'] },
     macro: { label: 'Macro', args: [{ label: 'Macro', type: 'macro' }], returnTypes: ['macro'] },
 
+    and: { label: 'And', params: [{ label: 'Left', types: ['boolean'] }, { label: 'Right', types: ['boolean'] }], returnTypes: ['boolean'] },
+    or: { label: 'And', params: [{ label: 'Left', types: ['boolean'] }, { label: 'Right', types: ['boolean'] }], returnTypes: ['boolean'] },
+    not: { label: 'Not', params: [{ label: 'Value', types: ['boolean'] }], returnTypes: ['boolean'] },
+
     add: { label: 'Add', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
     subtract: { label: 'Subtract', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
     multiply: { label: 'Multiply', params: [{ label: 'Left', types: ['number', 'integer'] }, { label: 'Right', types: ['number', 'integer'] }], returnTypes: ['number', 'integer'] },
@@ -86,6 +90,7 @@ const EXPRS = validateExprDefinitions({
 
     randomFloat: { label: 'Random Number', params: [{ label: 'Min', types: ['number', 'integer'] }, { label: 'Max', types: ['number', 'integer'] }], returnTypes: ['number'] },
     randomInt: { label: 'Random Integer', params: [{ label: 'Min', types: ['integer'] }, { label: 'Max', types: ['integer'] }], returnTypes: ['integer'] },
+    randomItem: { label: 'Random List Item', params: [{ label: 'List', types: null }], returnTypes: null },
 
     lowerCase: { label: 'To Lowercase', params: [{ label: 'Text', types: ['string'] }], returnTypes: ['string'] },
     upperCase: { label: 'To Uppercase', params: [{ label: 'Text', types: ['string'] }], returnTypes: ['string'] },
@@ -160,6 +165,8 @@ const PRIMITIVE_DEFAULT_VALUES: ExprPrimitiveValueTypeMap = {
     location: { position: 'auto', height: 'auto', scale: 'auto' },
 }
 
+export const EXPR_VALUE_TYPES = [...Object.keys(PRIMITIVE_DEFAULT_VALUES), 'list'] as ExprValueType[]
+
 function getContextualDefaultPrimitiveValue<T extends ExprPrimitiveValueType>(type: T, ctx: ExprContext): ExprPrimitiveRawValueOfType<T> {
     if (type in ctx.suggestions) {
         return (arrayHead(ctx.suggestions[type as keyof ExprContext['suggestions']]() as unknown[]) ?? '') as ExprPrimitiveRawValueOfType<T>
@@ -174,14 +181,12 @@ export type ExprPrimitiveValue<T extends ExprPrimitiveValueType> = { type: T, va
 export type ExprPrimitiveValueOfType<T extends ExprPrimitiveValueType> = T extends ExprPrimitiveValueType ? ExprPrimitiveValue<T> : never
 export type AnyExprPrimitiveValue = ExprPrimitiveValueOfType<ExprPrimitiveValueType>
 
-export type ExprListValueType<T extends ExprPrimitiveValueType> = `list:${T}`
-export type ExprListValue<T extends ExprPrimitiveValueType> = { type: ExprListValueType<T>, values: ExprValueOfType<T>[] }
-export type ExprListValueOfType<T extends ExprPrimitiveValueType> = T extends ExprPrimitiveValueType ? ExprListValue<T> : never
-export type AnyExprListValue = ExprListValueOfType<ExprPrimitiveValueType>
+export type ExprListValueType = 'list'
+export type ExprListValue = { type: 'list', value: AnyExprValue[] }
 
-export type ExprValueType = ExprPrimitiveValueType | ExprListValueType<ExprPrimitiveValueType>
-export type ExprValueOfType<T extends ExprValueType> = T extends ExprListValueType<infer U> ? ExprListValue<U> : T extends ExprPrimitiveValueType ? ExprPrimitiveValue<T> : never
-export type AnyExprValue = AnyExprPrimitiveValue | AnyExprListValue
+export type ExprValueType = ExprPrimitiveValueType | ExprListValueType
+export type ExprValueOfType<T extends ExprValueType> = T extends ExprListValueType ? ExprListValue : T extends ExprPrimitiveValueType ? ExprPrimitiveValue<T> : never
+export type AnyExprValue = AnyExprPrimitiveValue | ExprListValue
 
 export type StringExpr = AnyExpr
 export type NumberExpr = AnyExpr
@@ -231,8 +236,6 @@ export interface ExprContext {
         setValue: (id: VariableID, value: AnyExprValue) => void
         getCharacterValue: (id: VariableID, characterID: CharacterID) => AnyExprValue | null
         setCharacterValue: (id: VariableID, characterID: CharacterID, value: AnyExprValue) => void
-        getMacroValue: (id: VariableID, macroID: MacroID) => AnyExprValue | null
-        setMacroValue: (id: VariableID, macroID: MacroID, value: AnyExprValue) => void
     }
     random: {
         int: (min: number, max: number) => number
@@ -241,7 +244,7 @@ export interface ExprContext {
 }
 
 export function isPrimitiveValueType(type: ExprValueType): type is ExprPrimitiveValueType {
-    return !type.startsWith('list:')
+    return type !== 'list'
 }
 
 export function isPrimitiveValue(value: AnyExprValue): value is AnyExprPrimitiveValue {
@@ -275,60 +278,69 @@ export function resolveExprAs<T extends ExprValueType>(expr: AnyExpr, type: T, c
 }
 
 export function resolveExpr(expr: AnyExpr, ctx: ExprContext): AnyExprValue {
-    switch (expr.type) {
-        case 'unset': throw new Error('Could not resolve incomplete expression')
-        case 'list': {
-            const values = expr.children.map(([item]) => resolveExpr(item, ctx))
-            const subType: ExprValueType = arrayHead(values)?.type ?? 'string'
-            if (!isPrimitiveValueType(subType)) {
-                throw new Error(`Could not resolve expression containing a list of lists: ${JSON.stringify(expr)}`)
+    try {
+        switch (expr.type) {
+            case 'unset': throw new Error('Expression was not set or does not have a value.')
+            case 'list': return { type: 'list', value: expr.children.map(([item]) => resolveExpr(item, ctx)) }
+            case 'string': return { type: 'string', value: expr.args[0] }
+            case 'number': return { type: 'number', value: expr.args[0] }
+            case 'integer': return { type: 'integer', value: expr.args[0] }
+            case 'boolean': return { type: 'boolean', value: expr.args[0] }
+            case 'story': return { type: 'story', value: expr.args[0] }
+            case 'chapter': return { type: 'chapter', value: expr.args[0] }
+            case 'scene': return { type: 'scene', value: expr.args[0] }
+            case 'variable': return { type: 'variable', value: expr.args[0] }
+            case 'character': return { type: 'character', value: expr.args[0] }
+            case 'portrait': return { type: 'portrait', value: expr.args[0] }
+            case 'backdrop': return { type: 'backdrop', value: expr.args[0] }
+            case 'song': return { type: 'song', value: expr.args[0] }
+            case 'sound': return { type: 'sound', value: expr.args[0] }
+            case 'macro': return { type: 'macro', value: expr.args[0] }
+            case 'characterVariable': return throwIfNull(ctx.variables.getCharacterValue(expr.args[0], resolveExprAs(expr.params[0], 'character', ctx).value))
+            case 'location': return { type: 'location', value: expr.args[0] }
+            case 'and': return { type: 'boolean', value: resolveExprAs(expr.params[0], 'boolean', ctx).value && resolveExprAs(expr.params[1], 'boolean', ctx).value }
+            case 'or': return { type: 'boolean', value: resolveExprAs(expr.params[0], 'boolean', ctx).value && resolveExprAs(expr.params[1], 'boolean', ctx).value }
+            case 'not': return { type: 'boolean', value: !resolveExprAs(expr.params[0], 'boolean', ctx).value }
+            case 'add': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a + b, ctx)
+            case 'subtract': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a - b, ctx)
+            case 'multiply': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a * b, ctx)
+            case 'divide': return resolveNumberOp(expr.params[0], expr.params[1], (a, b, i) => i ? Math.floor(a / b) : a / b, ctx)
+            case 'modulo': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a % b, ctx)
+            case 'round': return { type: 'integer', value: Math.round(resolveExprAs(expr.params[0], 'number', ctx).value) }
+            case 'roundUp': return { type: 'integer', value: Math.ceil(resolveExprAs(expr.params[0], 'number', ctx).value) }
+            case 'roundDown': return { type: 'integer', value: Math.floor(resolveExprAs(expr.params[0], 'number', ctx).value) }
+            case 'randomFloat': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => ctx.random.float(a, b), ctx)
+            case 'randomInt': return resolveNumberOp(expr.params[0], expr.params[1], (a, b, isInt) => isInt ? ctx.random.int(a, b) : inlineThrow(new Error('Parameters to Random Integer expression were not integers')), ctx)
+            case 'randomItem': {
+                const listValue = resolveExprAs(expr.params[0], 'list', ctx)
+                if (isPrimitiveValue(listValue)) throw new Error('Parameter to Random List Item expression was not a list')
+                const index = ctx.random.int(0, listValue.value.length - 1)
+                return throwIfNull(listValue.value[index])
             }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-assignment
-            return { type: `list:${subType}`, values: values.map(v => castExprValue(v, subType, ctx)) as any }
-        }
-        case 'string': return { type: 'string', value: expr.args[0] }
-        case 'number': return { type: 'number', value: expr.args[0] }
-        case 'integer': return { type: 'integer', value: expr.args[0] }
-        case 'boolean': return { type: 'boolean', value: expr.args[0] }
-        case 'story': return { type: 'story', value: expr.args[0] }
-        case 'chapter': return { type: 'chapter', value: expr.args[0] }
-        case 'scene': return { type: 'scene', value: expr.args[0] }
-        case 'variable': return { type: 'variable', value: expr.args[0] }
-        case 'character': return { type: 'character', value: expr.args[0] }
-        case 'portrait': return { type: 'portrait', value: expr.args[0] }
-        case 'backdrop': return { type: 'backdrop', value: expr.args[0] }
-        case 'song': return { type: 'song', value: expr.args[0] }
-        case 'sound': return { type: 'sound', value: expr.args[0] }
-        case 'macro': return { type: 'macro', value: expr.args[0] }
-        case 'characterVariable': return throwIfNull(ctx.variables.getCharacterValue(expr.args[0], resolveExprAs(expr.params[0], 'character', ctx).value))
-        case 'location': return { type: 'location', value: expr.args[0] }
-        case 'add': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a + b, ctx)
-        case 'subtract': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a - b, ctx)
-        case 'multiply': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a * b, ctx)
-        case 'divide': return resolveNumberOp(expr.params[0], expr.params[1], (a, b, i) => i ? Math.floor(a / b) : a / b, ctx)
-        case 'modulo': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => a % b, ctx)
-        case 'round': return { type: 'integer', value: Math.round(resolveExprAs(expr.params[0], 'number', ctx).value) }
-        case 'roundUp': return { type: 'integer', value: Math.ceil(resolveExprAs(expr.params[0], 'number', ctx).value) }
-        case 'roundDown': return { type: 'integer', value: Math.floor(resolveExprAs(expr.params[0], 'number', ctx).value) }
-        case 'randomFloat': return resolveNumberOp(expr.params[0], expr.params[1], (a, b) => ctx.random.float(a, b), ctx)
-        case 'randomInt': return resolveNumberOp(expr.params[0], expr.params[1], (a, b, isInt) => isInt ? ctx.random.int(a, b) : inlineThrow(new Error('Parameters to Random Integer expression were not integers')), ctx)
-        case 'lowerCase': return { type: 'string', value: resolveExprAs(expr.params[0], 'string', ctx).value.toLowerCase() }
-        case 'upperCase': return { type: 'string', value: resolveExprAs(expr.params[0], 'string', ctx).value.toUpperCase() }
-        case 'format': return { type: 'string', value: expr.children.map(([part]) => resolveExprAs(part, 'string', ctx).value).join('') }
-        case 'equal': return { type: 'boolean', value: exprValuesEqual(resolveExpr(expr.params[0], ctx), resolveExpr(expr.params[1], ctx), ctx) }
-        case 'notEqual': return { type: 'boolean', value: !exprValuesEqual(resolveExpr(expr.params[0], ctx), resolveExpr(expr.params[1], ctx), ctx) }
-        case 'lessThan': return resolveNumberComparison(expr.params[0], expr.params[1], (a, b) => a < b, ctx)
-        case 'lessThanOrEqual': return resolveNumberComparison(expr.params[0], expr.params[1], (a, b) => a <= b, ctx)
-        case 'greaterThan': return resolveNumberComparison(expr.params[0], expr.params[1], (a, b) => a > b, ctx)
-        case 'greaterThanOrEqual': return resolveNumberComparison(expr.params[0], expr.params[1], (a, b) => a >= b, ctx)
-        case 'pick': return resolveExprAs(expr.params[0], 'boolean', ctx).value ? resolveExpr(expr.params[1], ctx) : resolveExpr(expr.params[2], ctx)
-        case 'switch': {
-            for (const c of expr.children) {
-                if (resolveExprAs(c[0], 'boolean', ctx).value) return resolveExpr(c[1], ctx)
+            case 'lowerCase': return { type: 'string', value: resolveExprAs(expr.params[0], 'string', ctx).value.toLowerCase() }
+            case 'upperCase': return { type: 'string', value: resolveExprAs(expr.params[0], 'string', ctx).value.toUpperCase() }
+            case 'format': return { type: 'string', value: expr.children.map(([part]) => resolveExprAs(part, 'string', ctx).value).join('') }
+            case 'equal': return { type: 'boolean', value: exprValuesEqual(resolveExpr(expr.params[0], ctx), resolveExpr(expr.params[1], ctx), ctx) }
+            case 'notEqual': return { type: 'boolean', value: !exprValuesEqual(resolveExpr(expr.params[0], ctx), resolveExpr(expr.params[1], ctx), ctx) }
+            case 'lessThan': return resolveNumberComparison(expr.params[0], expr.params[1], (a, b) => a < b, ctx)
+            case 'lessThanOrEqual': return resolveNumberComparison(expr.params[0], expr.params[1], (a, b) => a <= b, ctx)
+            case 'greaterThan': return resolveNumberComparison(expr.params[0], expr.params[1], (a, b) => a > b, ctx)
+            case 'greaterThanOrEqual': return resolveNumberComparison(expr.params[0], expr.params[1], (a, b) => a >= b, ctx)
+            case 'pick': return resolveExprAs(expr.params[0], 'boolean', ctx).value ? resolveExpr(expr.params[1], ctx) : resolveExpr(expr.params[2], ctx)
+            case 'switch': {
+                for (const c of expr.children) {
+                    if (resolveExprAs(c[0], 'boolean', ctx).value) return resolveExpr(c[1], ctx)
+                }
+                return resolveExpr(expr.params[0], ctx)
             }
-            return resolveExpr(expr.params[0], ctx)
+            default: return assertExhaustive(expr, `Could not resolve expression ${JSON.stringify(expr)}`)
         }
-        default: return assertExhaustive(expr, `Could not resolve expression ${JSON.stringify(expr)}`)
+    } catch (err) {
+        if (err instanceof ExpressionError) {
+            throw new AggregateExpressionError(expr, err, ctx)
+        } else {
+            throw new UnhandledExpressionError(expr, err, ctx)
+        }
     }
 }
 
@@ -368,13 +380,6 @@ export function guessExprReturnType(expr: AnyExpr, ctx: ExprContext): ExprValueT
     const def = EXPR_DEFINITION_MAP[expr.type]
     if (def.returnTypes?.length === 1) return throwIfNull(def.returnTypes[0])
     switch (expr.type) {
-        case 'list':
-            if (expr.children.length) {
-                const firstChildType = guessExprReturnType(throwIfNull(arrayHead(expr.children))[0], ctx)
-                if (firstChildType === null) return null
-                if (isPrimitiveValueType(firstChildType)) return `list:${firstChildType}`
-            }
-            break
         case 'add':
         case 'subtract':
         case 'multiply':
@@ -392,7 +397,6 @@ export function guessExprReturnType(expr: AnyExpr, ctx: ExprContext): ExprValueT
         default:
             return null
     }
-    return null
 }
 
 export function tryCastExprValue<T extends ExprValueType>(expr: AnyExprValue, type: T, ctx: ExprContext): ExprValueOfType<T> | null {
@@ -433,10 +437,9 @@ export function tryCastExprValue<T extends ExprValueType>(expr: AnyExprValue, ty
     return null
 }
 
-
-export function castExprValue<T extends ExprValueType>(expr: AnyExprValue, type: T, ctx: ExprContext): ExprValueOfType<T> {
-    const result = tryCastExprValue(expr, type, ctx)
-    if (!result) throw new Error(`Unable to convert expression value ${JSON.stringify(expr)} to ${type}`)
+export function castExprValue<T extends ExprValueType>(value: AnyExprValue, type: T, ctx: ExprContext): ExprValueOfType<T> {
+    const result = tryCastExprValue(value, type, ctx)
+    if (!result) throw new CastExpressionError(value, type, ctx)
     return result
 }
 
@@ -473,23 +476,84 @@ export function exprValuesEqual(left: AnyExprValue, right: AnyExprValue, ctx: Ex
     if (isPrimitiveValue(left) && isPrimitiveValue(right)) {
         return left.value === right.value
     } else if (!isPrimitiveValue(left) && !isPrimitiveValue(right)) {
-        return left.values.length === right.values.length && left.values.every((v, i) => exprValuesEqual(v, throwIfNull(right.values[i]), ctx))
+        return left.value.length === right.value.length && left.value.every((v, i) => exprValuesEqual(v, throwIfNull(right.value[i]), ctx))
     }
     return false
 }
 
-export function prettyPrintExpr(expr: AnyExpr): string {
+export function prettyPrintExprValue(value: AnyExprValue, ctx: ExprContext, variable?: AnyVariableDefinition): string {
+    switch (value.type) {
+        case 'boolean': {
+            if (variable?.type === 'flag') {
+                if (value.value && variable.setValueLabel.type !== 'unset') {
+                    return resolveExprAs(variable.setValueLabel, 'string', ctx).value
+                }
+                if (!value.value && variable.unsetValueLabel.type !== 'unset') {
+                    return resolveExprAs(variable.unsetValueLabel, 'string', ctx).value
+                }
+            }
+            return value.value ? 'True' : 'False'
+        }
+        case 'number': {
+            const s = String(value.value)
+            if (!s.includes('.')) return `${s}.0`
+            return s
+        }
+        case 'integer': return String(value.value)
+        case 'string': return JSON.stringify(value.value)
+        case 'story':
+        case 'chapter':
+        case 'scene':
+        case 'character':
+        case 'portrait':
+        case 'backdrop':
+        case 'song':
+        case 'sound':
+        case 'macro':
+        case 'variable': {
+            const resolver = ctx.resolvers[value.type]
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+            const entity = resolver(value.value as any)
+            return entity?.name ? entity.name : JSON.stringify(value.value)
+        }
+        case 'location': return String(value.value)
+        case 'list': {
+            return value.value.map(v => prettyPrintExprValue(v, ctx)).join(', ')
+        }
+        default: return JSON.stringify(value)
+    }
+}
+
+export function prettyPrintExpr(expr: AnyExpr, ctx: ExprContext): string {
     const def = EXPR_DEFINITION_MAP[expr.type]
     let out = `${expr.type}(`
     if (def.args && 'args' in expr) {
         forEachMultiple(hintTuple(def.args, expr.args), (i, d, e) => {
-            out += `${d.label}: ${JSON.stringify(e)}`
+            let v = JSON.stringify(e)
+            switch (d.type) {
+                case 'string':
+                case 'number':
+                case 'integer':
+                case 'boolean':
+                case 'location':
+                    break
+                default: {
+                    const resolver = ctx.resolvers[d.type]
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-explicit-any
+                    const entity = resolver(e as any)
+                    v = entity?.name ? entity.name : JSON.stringify(e)
+                    break
+                }
+            }
+            out += `${d.label}: ${v}, `
         })
+        if (out.endsWith(', ')) out = out.substring(0, out.length - 2)
     }
     if (def.params && 'params' in expr) {
         forEachMultiple(hintTuple(def.params, expr.params), (i, d, e) => {
-            out += `${d.label}: ${prettyPrintExpr(e)}`
+            out += `${d.label}: ${prettyPrintExpr(e, ctx)}, `
         })
+        if (out.endsWith(', ')) out = out.substring(0, out.length - 2)
     }
     if (def.children && 'children' in expr) {
         out += '['
@@ -497,7 +561,7 @@ export function prettyPrintExpr(expr: AnyExpr): string {
             out += '('
             for (let i = 0; i < def.children.length; i++) {
                 forEachMultiple(hintTuple(def.children, c), (i, d, e) => {
-                    out += `${d.label}: ${prettyPrintExpr(e)}`
+                    out += `${d.label}: ${prettyPrintExpr(e, ctx)}`
                 })
             }
             if (out.endsWith(', ')) out = out.substring(0, out.length - 2)
@@ -509,6 +573,22 @@ export function prettyPrintExpr(expr: AnyExpr): string {
     if (out.endsWith(', ')) out = out.substring(0, out.length - 2)
     out += ')'
     return out
+}
+
+export abstract class ExpressionError extends Error {
+
+}
+
+export class AggregateExpressionError extends ExpressionError {
+    constructor(public expr: AnyExpr, cause: ExpressionError, public ctx: ExprContext) { super(`An error occurred while processing an expression:\n${String(cause)}\nExpression: ${prettyPrintExpr(expr, ctx)}`, { cause }) }
+}
+
+export class CastExpressionError extends ExpressionError {
+    constructor(public value: AnyExprValue, public type: ExprValueType, public ctx: ExprContext) { super(`Could not convert expression value to ${type}.\nExpression Value: ${prettyPrintExprValue(value, ctx)}`) }
+}
+
+export class UnhandledExpressionError extends ExpressionError {
+    constructor(public expr: AnyExpr, cause: unknown, public ctx: ExprContext) { super(`An error occurred while processing an expression:\n${String(cause)}\nExpression: ${prettyPrintExpr(expr, ctx)}`, { cause }) }
 }
 
 const parseSingleExprTuple = defineParser<[AnyExpr]>((c, v, d) => $.tuple(c, v, hintTuple(parseAnyExpr), d))
@@ -550,6 +630,10 @@ export const parseAnyExpr: ParseFunc<AnyExpr> = defineParser<AnyExpr>((c, v, d) 
     macro: { args: (c, v, d) => $.tuple(c, v, hintTuple($.id), d) },
     characterVariable: { args: (c, v, d) => $.tuple(c, v, hintTuple($.id), d), params: parseSingleExprTuple },
 
+    and: { params: parseDualExprTuple },
+    or: { params: parseDualExprTuple },
+    not: { params: parseSingleExprTuple },
+
     add: { params: parseDualExprTuple },
     subtract: { params: parseDualExprTuple },
     multiply: { params: parseDualExprTuple },
@@ -562,6 +646,7 @@ export const parseAnyExpr: ParseFunc<AnyExpr> = defineParser<AnyExpr>((c, v, d) 
 
     randomFloat: { params: parseDualExprTuple },
     randomInt: { params: parseDualExprTuple },
+    randomItem: { params: parseSingleExprTuple },
 
     lowerCase: { params: parseSingleExprTuple },
     upperCase: { params: parseSingleExprTuple },

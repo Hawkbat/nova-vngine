@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 
 import { useProjectReadonly } from '../../operations/storage'
 import { classes } from '../../utils/display'
@@ -20,6 +20,13 @@ export const ParsedStringField = <T,>({ className, label, value, setValue, valid
     const getLatestValidate = useLatest(validate)
     const getLatestParse = useLatest(parse)
     const getLatestFormat = useLatest(format)
+    const inputRef = useRef<HTMLInputElement>(null)
+    const measureRef = useRef<HTMLSpanElement>(null)
+
+    useLayoutEffect(() => {
+        if (!inputRef.current || !measureRef.current) return
+        inputRef.current.style.width = `${String(measureRef.current.scrollWidth)}px`
+    }, [tempValue])
 
     const errorCheck = useCallback(() => {
         const result = getLatestParse()(getLatestTempValue())
@@ -71,7 +78,8 @@ export const ParsedStringField = <T,>({ className, label, value, setValue, valid
     const readonly = !setValue || projectReadonly
 
     return <Field label={label} error={errorCheck()}>
-        <input className={classes(styles.field, className)} type='text' readOnly={readonly} placeholder={label} onChange={onChange} onFocus={onFocus} onBlur={onBlur} value={tempValue} />
+        <span ref={measureRef} className={styles.measure}>{tempValue ? tempValue : label}</span>
+        <input ref={inputRef} className={classes(styles.field, className)} type='text' readOnly={readonly} placeholder={label} onChange={onChange} onFocus={onFocus} onBlur={onBlur} value={tempValue} />
         {children}
     </Field>
 }

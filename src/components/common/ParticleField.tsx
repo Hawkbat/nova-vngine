@@ -5,7 +5,7 @@ import { lerp } from '../../utils/math'
 
 import styles from './ParticleField.module.css'
 
-const DENSITY = 128 * 128
+const DENSITY = 160 * 160
 const SPEED = 5
 const MIN_SIZE = 5
 const MAX_SIZE = 20
@@ -57,7 +57,6 @@ function emitParticle(p: Particle, ctx: ParticleContext, first: boolean = false)
     ], {
         duration: t * 1000,
         easing: 'linear',
-        iterationStart: first ? Math.random() : 0,
     })
     anim.onfinish = () => {
         emitParticle(p, ctx)

@@ -4,7 +4,7 @@ import { immReplaceAt, immReplaceBy, immSet } from '../utils/imm'
 import type { Branded } from '../utils/types'
 import { assertExhaustive } from '../utils/types'
 import type { AnyExpr, BackdropExpr, BooleanExpr, CharacterExpr, ExprContext, LocationExpr, MacroExpr, PortraitExpr, SceneExpr, SongExpr, SoundExpr, StringExpr, ValueExpr, VariableExpr } from './expressions'
-import { createDefaultExpr, parseAnyExpr } from './expressions'
+import { createDefaultExpr, parseAnyExpr, prettyPrintExpr } from './expressions'
 
 export type StepID = Branded<string, 'Step'>
 
@@ -15,7 +15,7 @@ type StepMap = {
     }
     narrate: {
         text: StringExpr
-        mode: 'adv' | 'nvl'
+        mode: 'adv' | 'nvl' | 'pop'
     }
     backdrop: {
         backdrop: BackdropExpr
@@ -61,8 +61,14 @@ type StepMap = {
         label: string
         variable: VariableExpr
         initialValue: ValueExpr
+        randomValue: ValueExpr
     }
     set: {
+        variable: VariableExpr
+        value: ValueExpr
+    }
+    setCharacter: {
+        character: CharacterExpr
         variable: VariableExpr
         value: ValueExpr
     }
@@ -76,6 +82,9 @@ type StepMap = {
     }
     goto: {
         scene: SceneExpr
+    }
+    error: {
+        message: ValueExpr
     }
 }
 
@@ -93,9 +102,11 @@ const STEP_TYPE_MAP = {
     branch: true,
     prompt: true,
     set: true,
+    setCharacter: true,
     macro: true,
     returnTo: true,
     goto: true,
+    error: true,
 } satisfies Record<StepType, true>
 
 export const STEP_TYPES = Object.keys(STEP_TYPE_MAP) as StepType[]
@@ -125,16 +136,16 @@ export function createStep<T extends StepType>(id: StepID, type: T, ctx: ExprCon
         case 'sound': return validateStep('sound', { id, type, sound: createDefaultExpr('sound', ctx) }) as StepOfType<T>
         case 'decision': return validateStep('decision', { id, type, options: [{ text: createDefaultExpr('string', ctx), condition: createDefaultExpr('boolean', ctx), steps: [] }] }) as StepOfType<T>
         case 'branch': return validateStep('branch', { id, type, options: [{ condition: createDefaultExpr('boolean', ctx), steps: [] }] }) as StepOfType<T>
-        case 'prompt': return validateStep('prompt', { id, type, label: '', variable: createDefaultExpr('variable', ctx), initialValue: createDefaultExpr('unset', ctx) }) as StepOfType<T>
+        case 'prompt': return validateStep('prompt', { id, type, label: '', variable: createDefaultExpr('variable', ctx), initialValue: createDefaultExpr('unset', ctx), randomValue: createDefaultExpr('unset', ctx) }) as StepOfType<T>
         case 'set': return validateStep('set', { id, type, variable: createDefaultExpr('variable', ctx), value: createDefaultExpr('unset', ctx) }) as StepOfType<T>
+        case 'setCharacter': return validateStep('setCharacter', { id, type, character: createDefaultExpr('character', ctx), variable: createDefaultExpr('variable', ctx), value: createDefaultExpr('unset', ctx) }) as StepOfType<T>
         case 'macro': return validateStep('macro', { id, type, macro: createDefaultExpr('macro', ctx), inputs: [], outputs: [] }) as StepOfType<T>
         case 'returnTo': return validateStep('returnTo', { id, type, stepID: '' as StepID }) as StepOfType<T>
         case 'goto': return validateStep('goto', { id, type, scene: createDefaultExpr('scene', ctx) }) as StepOfType<T>
+        case 'error': return validateStep('error', { id, type, message: createDefaultExpr('string', ctx) }) as StepOfType<T>
         default: return assertExhaustive(type, `Could not create step of type ${JSON.stringify(type)}`)
     }
 }
-
-
 
 export function getDeepStep(stepID: StepID | null, steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, previousSteps: AnyStep[], nextStep: AnyStep | null): {
     step: AnyStep
@@ -166,9 +177,88 @@ export function getDeepStep(stepID: StepID | null, steps: AnyStep[], setSteps: (
     return null
 }
 
+export function prettyPrintStep(step: AnyStep, ctx: ExprContext) {
+    let out = `${step.type}(`
+    switch (step.type) {
+        case 'text':
+            out += `${prettyPrintExpr(step.speaker, ctx)}, `
+            out += `${prettyPrintExpr(step.text, ctx)}, `
+            break
+        case 'narrate':
+            out += `${step.mode.toUpperCase()}, `
+            out += `${prettyPrintExpr(step.text, ctx)}, `
+            break
+        case 'backdrop':
+            out += `${step.mode}, `
+            out += `${prettyPrintExpr(step.backdrop, ctx)}, `
+            break
+        case 'enter':
+            out += `${prettyPrintExpr(step.character, ctx)}, `
+            out += `${prettyPrintExpr(step.portrait, ctx)}, `
+            out += `${prettyPrintExpr(step.location, ctx)}, `
+            break
+        case 'exit':
+            out += `${prettyPrintExpr(step.character, ctx)}, `
+            out += `${prettyPrintExpr(step.location, ctx)}, `
+            break
+        case 'move':
+            out += `${prettyPrintExpr(step.character, ctx)}, `
+            out += `${prettyPrintExpr(step.location, ctx)}, `
+            break
+        case 'portrait':
+            out += `${prettyPrintExpr(step.character, ctx)}, `
+            out += `${prettyPrintExpr(step.portrait, ctx)}, `
+            break
+        case 'music':
+            out += `${prettyPrintExpr(step.song, ctx)}, `
+            break
+        case 'sound':
+            out += `${prettyPrintExpr(step.sound, ctx)}, `
+            break
+        case 'prompt':
+            out += `${step.label}, `
+            out += `${prettyPrintExpr(step.variable, ctx)}, `
+            out += `${prettyPrintExpr(step.initialValue, ctx)}, `
+            out += `${prettyPrintExpr(step.randomValue, ctx)}, `
+            break
+        case 'set':
+            out += `${prettyPrintExpr(step.variable, ctx)}, `
+            out += `${prettyPrintExpr(step.value, ctx)}, `
+            break
+        case 'setCharacter':
+            out += `${prettyPrintExpr(step.character, ctx)}, `
+            out += `${prettyPrintExpr(step.variable, ctx)}, `
+            out += `${prettyPrintExpr(step.value, ctx)}, `
+            break
+        case 'returnTo':
+            out += `${step.stepID}, `
+            break
+        case 'goto':
+            out += `${prettyPrintExpr(step.scene, ctx)}, `
+            break
+        case 'error':
+            out += `${prettyPrintExpr(step.message, ctx)}, `
+            break
+        case 'macro':
+            out += `${prettyPrintExpr(step.macro, ctx)}, `
+            out += `[${step.inputs.map(e => prettyPrintExpr(e, ctx)).join(', ')}], `
+            out += `[${step.outputs.map(e => prettyPrintExpr(e, ctx)).join(', ')}], `
+            break
+        case 'decision':
+            out += `[${step.options.map(o => `option(${prettyPrintExpr(o.text, ctx)}, ${prettyPrintExpr(o.condition, ctx)}, ${o.steps.map(s => prettyPrintStep(s, ctx)).join(', ')})`).join(', ')}]`
+            break
+        case 'branch':
+            out += `[${step.options.map(o => `option(${prettyPrintExpr(o.condition, ctx)}, ${o.steps.map(s => prettyPrintStep(s, ctx)).join(', ')})`).join(', ')}]`
+            break
+    }
+    if (out.endsWith(', ')) out = out.substring(0, out.length - 2)
+    out += ')'
+    return out
+}
+
 export const parseAnyStep: ParseFunc<AnyStep> = defineParser<AnyStep>((c, v, d) => $.typed(c, v, { id: $.id }, {
     text: { speaker: parseAnyExpr, text: parseAnyExpr },
-    narrate: { text: parseAnyExpr, mode: (c, v, d) => $.enum(c, v, ['adv', 'nvl'], d) },
+    narrate: { text: parseAnyExpr, mode: (c, v, d) => $.enum(c, v, ['adv', 'nvl', 'pop'], d) },
     backdrop: { backdrop: parseAnyExpr, mode: (c, v, d) => $.enum(c, v, ['replace', 'append', 'prepend'], d ?? 'replace') },
     enter: { character: parseAnyExpr, portrait: parseAnyExpr, location: parseAnyExpr },
     exit: { character: parseAnyExpr, location: parseAnyExpr },
@@ -178,9 +268,11 @@ export const parseAnyStep: ParseFunc<AnyStep> = defineParser<AnyStep>((c, v, d) 
     sound: { sound: parseAnyExpr },
     decision: { options: (c, v, d) => $.array(c, v, (c, v, d) => $.object(c, v, { text: parseAnyExpr, condition: parseAnyExpr, steps: (c, v, d) => $.array(c, v, parseAnyStep, d) }, d), d) },
     branch: { options: (c, v, d) => $.array(c, v, (c, v, d) => $.object(c, v, { condition: parseAnyExpr, steps: (c, v, d) => $.array(c, v, parseAnyStep, d) }, d), d) },
-    prompt: { label: $.string, variable: parseAnyExpr, initialValue: parseAnyExpr },
+    prompt: { label: $.string, variable: parseAnyExpr, initialValue: parseAnyExpr, randomValue: parseAnyExpr },
     set: { variable: parseAnyExpr, value: parseAnyExpr },
+    setCharacter: { character: parseAnyExpr, variable: parseAnyExpr, value: parseAnyExpr },
     macro: { macro: parseAnyExpr, inputs: (c, v, d) => $.array(c, v, parseAnyExpr, d), outputs: (c, v, d) => $.array(c, v, parseAnyExpr, d) },
     returnTo: { stepID: $.id },
     goto: { scene: parseAnyExpr },
+    error: { message: parseAnyExpr },
 }, d))

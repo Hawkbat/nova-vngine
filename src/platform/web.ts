@@ -1,6 +1,8 @@
+import { gamePlayerStore } from '../store/player'
 import { settingsStore } from '../store/settings'
 import { viewStateStore } from '../store/viewstate'
 import type { Platform } from '../types/platform'
+import { parseGameState } from '../types/player'
 import { parseSettingsState } from '../types/settings'
 import { parseViewState } from '../types/viewstate'
 import { tryParseJson } from '../utils/guard'
@@ -39,6 +41,19 @@ export const webPlatform: Platform = {
     },
     async saveSettings(settings) {
         localStorage.setItem('nvn-settings', JSON.stringify(settings))
+    },
+    async loadGame() {
+        const json = localStorage.getItem('nvn-saves')
+        const parsed = tryParseJson(json ?? '{}', 'game', parseGameState)
+        if (parsed.ctx.warnings.length) void this.warn(parsed.ctx.warnings)
+        if (!parsed.success) {
+            void this.error('Failed to load game', json, parsed.ctx.errors)
+            return gamePlayerStore.getSnapshot()
+        }
+        return parsed.value
+    },
+    async saveGame(game) {
+        localStorage.setItem('nvn-saves', JSON.stringify(game))
     },
     async setTitle(title) {
         document.title = title

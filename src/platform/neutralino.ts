@@ -3,9 +3,11 @@ import { app as nApp, clipboard as nClipboard, debug as nDebug, events as nEvent
 
 import { LOG_FILE_WRITES } from '../debug'
 import faviconUrl from '../favicon.png'
+import { gamePlayerStore } from '../store/player'
 import { settingsStore } from '../store/settings'
 import { viewStateStore } from '../store/viewstate'
 import type { Platform } from '../types/platform'
+import { parseGameState } from '../types/player'
 import { parseSettingsState } from '../types/settings'
 import { StorageError } from '../types/storage'
 import { parseViewState } from '../types/viewstate'
@@ -195,6 +197,24 @@ export const neutralinoPlatform: Platform = {
         const json = JSON.stringify(settings, undefined, 2)
         if (!await writeFile(path, json)) {
             void this.error('Failed to save settings', path, json)
+        }
+    },
+    async loadGame() {
+        const path = `${await getConfigFolderPath()}/saves.json`
+        const json = await readFile(path)
+        const parsed = tryParseJson(json ?? '', 'game', parseGameState)
+        if (parsed.ctx.warnings.length) void this.warn(parsed.ctx.warnings)
+        if (!parsed.success) {
+            void this.error('Failed to load game', json, parsed.ctx.errors)
+            return gamePlayerStore.getSnapshot()
+        }
+        return parsed.value
+    },
+    async saveGame(game) {
+        const path = `${await getConfigFolderPath()}/saves.json`
+        const json = JSON.stringify(game, undefined, 2)
+        if (!await writeFile(path, json)) {
+            void this.error('Failed to save game', path, json)
         }
     },
     async setTitle(title) {

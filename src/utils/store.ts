@@ -10,6 +10,8 @@ import { hintTuple } from './types'
 export type StoreValueGetter<T> = () => T
 export type StoreValueSetter<T> = (oldValue: T) => T
 
+//TODO: Allow deferred store updates by deferring calls of the subscription listeners until the end of the current frame using `setTimeout(cb, 0)`. State updates should still happen synchronously, and some listeners may need to be synchronous (like diffing listeners)
+
 export function createSimpleStore<T>(defaultValue: T) {
     const listeners = new Set<() => void>()
     let value = defaultValue

@@ -79,7 +79,7 @@ export const EntityWorkspace = <T extends EntityType>({ type, children, getVaria
         {asset ? <div className={styles.preview}>
             <EntityImagePreview type={type} entity={item} />
         </div> : null}
-    </Fragment> : <>
+    </Fragment> : <div className={styles.fields}>
         <EntityList type={type} />
-    </>
+    </div>
 }

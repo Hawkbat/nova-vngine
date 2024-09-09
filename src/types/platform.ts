@@ -1,4 +1,5 @@
 import type { PlatformType } from '../platform/platform'
+import type { GamePlayerState } from './player'
 import type { SettingsState } from './settings'
 import type { ViewState } from './viewstate'
 
@@ -11,6 +12,8 @@ export interface Platform {
     saveViewState(viewState: ViewState): Promise<void>
     loadSettings(): Promise<SettingsState>
     saveSettings(settings: SettingsState): Promise<void>
+    loadGame(): Promise<GamePlayerState>
+    saveGame(game: GamePlayerState): Promise<void>
     setTitle(title: string): Promise<void>
     readFromClipboard(): Promise<string | null>
     writeToClipboard(text: string): Promise<void>

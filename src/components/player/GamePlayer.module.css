@@ -66,4 +66,53 @@
     display: flex;
     font-size: 3em;
     padding: 0.5em;
+    z-index: 150;
+}
+
+.debugger {
+    position: absolute;
+    left: 0;
+    top: 0;
+    max-height: 1.5em;
+    max-width: 1.5em;
+    padding: 0.25em;
+    overflow: hidden;
+    background: var(--dialogue-box-bg-color);
+    z-index: 200;
+    transition: max-height 0.5s, max-width 0.5s;
+    border-bottom-right-radius: 0.5em;
+}
+
+.debugger.open {
+    max-height: 100%;
+    max-width: 100%;
+    overflow: auto;
+}
+
+.debuggerVariableList {
+    display: grid;
+    grid-template-columns: auto auto;
+    column-gap: 1em;
+}
+
+.debuggerVariableList > .debuggerVariableList {
+    grid-column: auto / span 2;
+    margin-left: 1em;
+}
+
+.debuggerVariableList > b {
+    font-style: normal;
+    text-align: left;
+    text-wrap: nowrap;
+}
+
+.debuggerVariableList > i {
+    font-style: normal;
+    text-align: right;
+}
+
+.debuggerActionList {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 0.25em;
 }
