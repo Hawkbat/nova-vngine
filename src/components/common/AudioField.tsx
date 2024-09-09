@@ -4,6 +4,7 @@ import { useProjectStorage } from '../../operations/storage'
 import { useAsset } from '../../store/assets'
 import type { AssetDefinition } from '../../types/project'
 import { AUDIO_EXTENSIONS, getMimeType } from '../../utils/media'
+import { AudioPlayer } from './AudioPlayer'
 import { EditorIcon } from './EditorIcon'
 import type { FieldProps } from './Field'
 import { Field } from './Field'
@@ -40,10 +41,9 @@ export const AudioField = ({ className, label, value, setValue, validate, target
         setValue?.(null)
     }, [setValue])
 
-    //TODO: Make custom audio player control component instead of using <audio controls />
     return <Field label={label} error={errorCheck()}>
         {value ? <>
-            {getAudioSrc() ? <audio src={getAudioSrc() ?? undefined} controls /> : <span>Loading...</span>}
+            <AudioPlayer src={getAudioSrc()} />
             {!readonly ? <EditorIcon path={COMMON_ICONS.deleteItem} label='Delete Audio' onClick={onDelete} /> : null}
         </> : <>
             {!readonly ? <UploadZone fileType='Audio File' extensions={AUDIO_EXTENSIONS} title='Upload Audio File' onUpload={onUpload} /> : null}

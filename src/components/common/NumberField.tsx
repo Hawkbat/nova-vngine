@@ -4,10 +4,11 @@ import { useDebounce, useStateFromProps } from '../../utils/hooks'
 import type { FieldProps } from './Field'
 import type { FieldFormatFunc, FieldParseFunc } from './ParsedStringField'
 import { ParsedStringField } from './ParsedStringField'
+import { Slider } from './Slider'
 
 import styles from './NumberField.module.css'
 
-export const NumberField = ({ className, label, value, setValue, validate, min, max, slider }: FieldProps<number> & { min?: number, max?: number, slider?: boolean }) => {
+export const NumberField = ({ className, label, value, setValue, validate, min, max, step, slider }: FieldProps<number> & { min?: number, max?: number, step?: number, slider?: boolean }) => {
     const [sliderValue, setSliderValue] = useStateFromProps(value)
 
     const parse: FieldParseFunc<number> = useCallback((str: string) => {
@@ -17,9 +18,8 @@ export const NumberField = ({ className, label, value, setValue, validate, min, 
     }, [])
     const format: FieldFormatFunc<number> = useCallback((n: number) => String(n), [])
 
-    const onSetSliderValue = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-        e.stopPropagation()
-        const result = parse(e.target.value)
+    const onSetSliderValue = useCallback((value: number) => {
+        const result = parse(String(value))
         if (result.success) {
             setSliderValue(result.value)
         }
@@ -38,6 +38,6 @@ export const NumberField = ({ className, label, value, setValue, validate, min, 
     }, [setValue, sliderValue, value]))
 
     return <ParsedStringField className={className} label={label} value={slider ? sliderValue : value} setValue={setValue} parse={parse} format={format} validate={doValidate}>
-        {slider ? <input className={styles.slider} type='range' value={sliderValue} min={min ?? 0} max={max ?? 1} step={0.1} onChange={onSetSliderValue} /> : null}
+        {slider ? <Slider value={sliderValue} setValue={onSetSliderValue} min={min} max={max} step={step} /> : null}
     </ParsedStringField>
 }

@@ -1,0 +1,21 @@
+
+.player {
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+    background: var(--expr-color);
+    border-radius: 1em;
+    padding: 0.25em;
+    gap: 0.1em;
+}
+
+.time {
+    text-wrap: nowrap;
+    font-size: 0.75em;
+    min-width: 6em;
+}
+
+.slider {
+    font-size: 0.5em;
+    max-width: 8em;
+}
