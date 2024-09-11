@@ -346,7 +346,7 @@ const Options = ({ options, onSelectOption }: { options: OptionPlayerState[], on
     </div>
 }
 
-const StringPromptField = ({ value, setValue }: { value: unknown, setValue: (value: unknown) => void }) => {
+const StringPromptField = ({ value, setValue }: { value: string, setValue: (value: string) => void }) => {
     const onKeyDown = useCallback((e: React.KeyboardEvent) => {
         if (e.key !== 'Enter') e.stopPropagation()
         if (e.key === ' ') e.preventDefault()
@@ -354,7 +354,7 @@ const StringPromptField = ({ value, setValue }: { value: unknown, setValue: (val
     return <input autoFocus value={String(value)} onChange={e => setValue(e.target.value)} onKeyDown={onKeyDown} />
 }
 
-const Prompt = ({ label, type, initialValue, randomizable, onSubmitPrompt, onRandomizePrompt }: PromptPlayerState & { onSubmitPrompt: (value: unknown) => void, onRandomizePrompt: () => void }) => {
+const Prompt = ({ label, type, initialValue, randomizable, onSubmitPrompt, onRandomizePrompt }: PromptPlayerState & { onSubmitPrompt: (value: string) => void, onRandomizePrompt: () => void }) => {
     const [value, setValue] = useStateFromProps(initialValue)
 
     const animRef = useTransitionAnimationRef(true, {
@@ -402,7 +402,7 @@ const Prompt = ({ label, type, initialValue, randomizable, onSubmitPrompt, onRan
     </div>
 }
 
-const Prompts = ({ prompt, onSubmitPrompt, onRandomizePrompt }: { prompt: PromptPlayerState | null, onSubmitPrompt: (value: unknown) => void, onRandomizePrompt: () => void }) => {
+const Prompts = ({ prompt, onSubmitPrompt, onRandomizePrompt }: { prompt: PromptPlayerState | null, onSubmitPrompt: (value: string) => void, onRandomizePrompt: () => void }) => {
     return <div className={styles.prompts}>
         <TransitionGroup values={prompt ? [prompt] : []} getKey={p => p.label}>
             {props => <Prompt {...props} onSubmitPrompt={onSubmitPrompt} onRandomizePrompt={onRandomizePrompt} />}
@@ -412,7 +412,7 @@ const Prompts = ({ prompt, onSubmitPrompt, onRandomizePrompt }: { prompt: Prompt
 
 const advanceEvent = createEventContext<boolean>('advance')
 
-export const ScenePlayer = ({ state, onAdvance, onSubmitPrompt, onRandomizePrompt, onSelectOption }: { state: ScenePlayerState, onAdvance: () => void, onSubmitPrompt: (value: unknown) => void, onRandomizePrompt: () => void, onSelectOption: (index: number) => void }) => {
+export const ScenePlayer = ({ state, onAdvance, onSubmitPrompt, onRandomizePrompt, onSelectOption }: { state: ScenePlayerState, onAdvance: () => void, onSubmitPrompt: (value: string) => void, onRandomizePrompt: () => void, onSelectOption: (index: number) => void }) => {
     const [EventProvider, dispatch] = advanceEvent.useEmitter()
     const canAdvance = !state.options.length && !state.prompt
     const latestCanAdvance = useLatest(canAdvance)

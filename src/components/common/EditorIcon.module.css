@@ -75,3 +75,16 @@
     cursor: pointer;
     pointer-events: auto;
 }
+
+.icon.spinning {
+    animation: spin infinite linear 2s;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}

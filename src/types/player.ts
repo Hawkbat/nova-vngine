@@ -11,7 +11,7 @@ interface GamePlayerAction<T extends string> {
 
 export interface GamePlayerActionSubmitPrompt extends GamePlayerAction<'prompt'> {
     stepID: StepID
-    value: unknown
+    value: string
 }
 
 export interface GamePlayerActionRandomizePrompt extends GamePlayerAction<'randomize'> {
@@ -113,7 +113,7 @@ export interface OptionPlayerState {
 export interface PromptPlayerState {
     label: string
     type: ExprValueType
-    initialValue: unknown
+    initialValue: string
     randomizable: boolean
 }
 
@@ -201,8 +201,7 @@ export const parseAnyGameAction: ParseFunc<AnyGamePlayerAction> = defineParser<A
         index: $.integer,
     },
     prompt: {
-        //TODO: Allow parsing prompt values other than strings
-        value: $.string as ParseFunc<unknown>,
+        value: $.string,
     },
     randomize: {},
 }, d))

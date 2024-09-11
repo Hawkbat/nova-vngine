@@ -85,6 +85,16 @@ export function useIsDialogOpen() {
     return isDialogOpen
 }
 
+export function closeDialog(value: string): boolean {
+    const s = arrayHead(dialogStore.getValue().states)
+    if (s) {
+        s.promise.resolve(value)
+        dialogStore.setValue(s => immSet(s, 'states', immRemoveAt(s.states, 0)))
+        return true
+    }
+    return false
+}
+
 export const Dialog = () => {
     const [getStore, setStore] = useStore(dialogStore)
     const currentState = arrayHead(getStore().states)

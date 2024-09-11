@@ -147,7 +147,7 @@ const GameScenePlayer = ({ setScreen }: { setScreen: (screen: MenuScreen) => voi
         })
     }, [getLatestStep, setState])
 
-    const onSubmitPrompt = useCallback((value: unknown) => {
+    const onSubmitPrompt = useCallback((value: string) => {
         setState(s => {
             const step = getLatestStep()
             if (!step || step.type !== 'prompt') return s

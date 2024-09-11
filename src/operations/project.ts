@@ -11,7 +11,7 @@ import type { StorageRootEntry } from '../types/storage'
 import type { ProjectMetaData } from '../types/viewstate'
 import { arrayHead } from '../utils/array'
 import { prettyPrintIdentifier } from '../utils/display'
-import { throwIfNull, tryParseJson } from '../utils/guard'
+import { existsFilter, throwIfNull, tryParseJson } from '../utils/guard'
 import { immAppend, immSet } from '../utils/imm'
 import { randFloat, randID, randInt, randSeedRandom, uncheckedRandID } from '../utils/rand'
 import { assertExhaustive, hintTuple } from '../utils/types'
@@ -234,6 +234,16 @@ export function getEntityByID<T extends EntityType>(type: T, id: EntityIDOf<T>):
     const entity = entities.find(e => e.id === id)
     if (entity) return entity as EntityOfType<T>
     return null
+}
+
+export function getEntityAssets(type: EntityType, entity: AnyEntity): AssetDefinition[] {
+    switch (type) {
+        case 'portrait': return [(entity as PortraitDefinition).image].filter(existsFilter)
+        case 'backdrop': return [(entity as BackdropDefinition).image].filter(existsFilter)
+        case 'song': return [(entity as SongDefinition).audio].filter(existsFilter)
+        case 'sound': return [(entity as SoundDefinition).audio].filter(existsFilter)
+        default: return []
+    }
 }
 
 export function getEntityPrimaryAsset<T extends EntityType>(type: T, entity: EntityOfType<T>): AssetDefinition | null {

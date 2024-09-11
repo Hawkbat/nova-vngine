@@ -363,8 +363,12 @@ export function applyStepToScenePlayerState(state: ScenePlayerState, step: AnySt
             if (!flags?.randomized && step.initialValue.type !== 'unset') {
                 initialExprValue = resolveExpr(step.initialValue, ctx)
             }
-            const initialValue = castExprValue(throwIfNull(initialExprValue), type, ctx).value
-            return immSet(state, 'prompt', { label, type, initialValue, randomizable })
+            if (type === 'string') {
+                const initialValue = castExprValue(throwIfNull(initialExprValue), 'string', ctx).value
+                return immSet(state, 'prompt', { label, type, initialValue, randomizable })
+            } else {
+                throw new Error(`Prompts for variable types other than string are not supported: ${type}`)
+            }
         }
         default: return state
     }

@@ -400,7 +400,7 @@ export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setS
         }
     }
 
-    const onSubmitPrompt = (promptValue: unknown) => {
+    const onSubmitPrompt = (promptValue: string) => {
         onAdvance()
     }
 
