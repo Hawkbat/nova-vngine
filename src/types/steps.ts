@@ -19,7 +19,7 @@ type StepMap = {
     }
     backdrop: {
         backdrop: BackdropExpr
-        mode: 'replace' | 'append' | 'prepend'
+        mode: 'replace' | 'append' | 'prepend' | 'remove'
     }
     enter: {
         character: CharacterExpr
@@ -259,7 +259,7 @@ export function prettyPrintStep(step: AnyStep, ctx: ExprContext) {
 export const parseAnyStep: ParseFunc<AnyStep> = defineParser<AnyStep>((c, v, d) => $.typed(c, v, { id: $.id }, {
     text: { speaker: parseAnyExpr, text: parseAnyExpr },
     narrate: { text: parseAnyExpr, mode: (c, v, d) => $.enum(c, v, ['adv', 'nvl', 'pop'], d) },
-    backdrop: { backdrop: parseAnyExpr, mode: (c, v, d) => $.enum(c, v, ['replace', 'append', 'prepend'], d ?? 'replace') },
+    backdrop: { backdrop: parseAnyExpr, mode: (c, v, d) => $.enum(c, v, ['replace', 'append', 'prepend', 'remove'], d ?? 'replace') },
     enter: { character: parseAnyExpr, portrait: parseAnyExpr, location: parseAnyExpr },
     exit: { character: parseAnyExpr, location: parseAnyExpr },
     move: { character: parseAnyExpr, location: parseAnyExpr },

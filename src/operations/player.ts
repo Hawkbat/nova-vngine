@@ -8,7 +8,7 @@ import { type AnyVariableDefinition, type AnyVariableScope, type ChapterID, type
 import { type AnyStep, prettyPrintStep, type StepID } from '../types/steps'
 import { arrayHead, arrayTail, forEachMultiple } from '../utils/array'
 import { throwIfNull } from '../utils/guard'
-import { immAppend, immPrepend, immReplaceWhere, immSet } from '../utils/imm'
+import { immAppend, immPrepend, immRemoveWhere, immReplaceWhere, immSet } from '../utils/imm'
 import { randFloat, randInt } from '../utils/rand'
 import { assertExhaustive, hintTuple } from '../utils/types'
 import { getEntityByID, getEntityEditorDisplayName, getProjectExprContext } from './project'
@@ -301,6 +301,7 @@ export function applyStepToScenePlayerState(state: ScenePlayerState, step: AnySt
                 case 'replace': return immSet(state, 'backdrops', [{ backdropID, dir: 0 }])
                 case 'append': return immSet(state, 'backdrops', immAppend(state.backdrops, { backdropID, dir: 1 as const }))
                 case 'prepend': return immSet(state, 'backdrops', immPrepend(state.backdrops, { backdropID, dir: -1 as const }))
+                case 'remove': return immSet(state, 'backdrops', immRemoveWhere(state.backdrops, b => b.backdropID === backdropID))
                 default: assertExhaustive(step, `Unhandled backdrop mode ${prettyPrintStep(step, ctx)}`)
             }
             break

@@ -76,7 +76,9 @@
 .character {
     position: absolute;
     width: auto;
-    transition: top 0.5s, height 0.5s;
+    height: 100%;
+    top: 100%;
+    transition: transform 0.5s, transform-origin 0.5s;
 }
 
 .dialoguePivot {

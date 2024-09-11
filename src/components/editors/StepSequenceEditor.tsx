@@ -80,7 +80,7 @@ const StepEditor = ({ step, setStep, deleteStep, steps, setSteps, selected, setS
             </>
             case 'backdrop': return <>
                 <ExpressionField label='Backdrop' value={step.backdrop} setValue={expr => setStep(s => isStepType(s, 'backdrop') ? immSet(s, 'backdrop', expr) : s)} paramTypes={['backdrop']} ctx={ctx} />
-                <DropdownField<typeof step.mode> label='Mode' value={step.mode} setValue={mode => setStep(s => isStepType(s, 'backdrop') ? immSet(s, 'mode', mode) : s)} options={['replace', 'append', 'prepend']} format={m => prettyPrintIdentifier(m)} />
+                <DropdownField<typeof step.mode> label='Mode' value={step.mode} setValue={mode => setStep(s => isStepType(s, 'backdrop') ? immSet(s, 'mode', mode) : s)} options={['replace', 'append', 'prepend', 'remove']} format={m => prettyPrintIdentifier(m)} />
             </>
             case 'enter': return <>
                 <ExpressionField label='Character' value={step.character} setValue={expr => setStep(s => isStepType(s, 'enter') ? immSet(s, 'character', expr) : s)} paramTypes={['character']} ctx={ctx} />

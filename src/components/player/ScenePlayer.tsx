@@ -38,7 +38,7 @@ const SCALE_VALUES = {
     auto: 1.0,
     near: 1.5,
     middle: 1.0,
-    far: 0.5,
+    far: 0.75,
 } satisfies Record<Extract<LocationScaleValue, string>, number>
 
 const playClick = () => {
@@ -126,10 +126,11 @@ interface PortraitProps {
     src: string
     mimeType: string
     y: number
+    o: number
     s: number
 }
 
-const PortraitImage = ({ src, mimeType, y, s }: PortraitProps) => {
+const PortraitImage = ({ src, mimeType, y, s, o }: PortraitProps) => {
     const ref = useTransitionAnimationRef(true, {
         in: [{ opacity: 0 }, { opacity: 1 }],
         inT: {},
@@ -137,7 +138,7 @@ const PortraitImage = ({ src, mimeType, y, s }: PortraitProps) => {
         outT: {},
     })
 
-    return <picture><source srcSet={src} type={mimeType} /><img ref={ref} src={src} className={styles.character} style={{ top: `${String(y * 100)}%`, height: `${String(s * 100)}%` }} /></picture>
+    return <picture><source srcSet={src} type={mimeType} /><img ref={ref} src={src} className={styles.character} style={{ transform: `translateY(${String(y * 100)}%) scale(${String(s)})`, transformOrigin: `50% ${String(o * 100)}%` }} /></picture>
 }
 
 const Character = ({ characterID, portraitID, location }: CharacterPlayerState) => {
@@ -168,13 +169,13 @@ const Character = ({ characterID, portraitID, location }: CharacterPlayerState) 
     const portraitHeightValue = getPortrait()?.height ?? 'auto'
     const portraitHeight = typeof portraitHeightValue === 'string' ? HEIGHT_VALUES[portraitHeightValue] : portraitHeightValue
 
-    const h = (1 / portraitHeight) * height
     const x = position
-    const y = (1 - height) * 0.2
-    const s = scale * (1 / h)
+    const y = -height - (1 - portraitHeight)
+    const s = scale * (1 + Math.pow(1 - height, 2) * 4) * portraitHeight
+    const o = height + (1 - portraitHeight)
 
     return <div ref={ref} className={styles.characterPivot} style={{ left: `${String(x * 100)}%` }}>
-        <TransitionGroup<PortraitProps> values={imgUrl ? [{ src: imgUrl, mimeType: getPortrait()?.image?.mimeType ?? 'image/png', s, y }] : []} getKey={v => v.src}>
+        <TransitionGroup<PortraitProps> values={imgUrl ? [{ src: imgUrl, mimeType: getPortrait()?.image?.mimeType ?? 'image/png', s, y, o }] : []} getKey={v => v.src}>
             {props => <PortraitImage key={props.src} {...props} />}
         </TransitionGroup>
     </div>
