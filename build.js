@@ -1,1 +1,1 @@
-window.PUBLISHED_PROJECT = `${location.origin}/project`;
+window.PUBLISHED_PROJECT = `${location.origin}/project`; window.PUBLISHED_DATE = 1726234764022;
