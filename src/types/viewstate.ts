@@ -1,11 +1,23 @@
 import type { ParseFunc } from '../utils/guard'
 import { defineParser, parsers as $ } from '../utils/guard'
-import type { BackdropID, ChapterID, CharacterID, EntityOfType, EntityType, MacroID, PortraitID, ProjectEntityKeyOf, SceneID, SongID, SoundID, StoryID, VariableID } from './project'
+import { hintTuple } from '../utils/types'
+import type { BackdropID, ChapterID, CharacterID, EntityOfType, EntityType, MacroID, PortraitID, ProjectEntityKey, ProjectEntityKeyOf, SceneID, SongID, SoundID, StoryID, VariableID } from './project'
 import { PROJECT_ENTITY_KEYS } from './project'
 import type { StepID } from './steps'
 import { parseStorageRootEntry, type StorageRootEntry } from './storage'
 
 export type ProjectEditorTab = 'home' | 'play' | 'manual' | 'settings' | 'project' | ProjectEntityKeyOf<EntityType>
+
+const PROJECT_EDITOR_TAB_MAP: Record<ProjectEditorTab, boolean> = {
+    home: true,
+    play: true,
+    project: true,
+    ...Object.fromEntries(PROJECT_ENTITY_KEYS.map(k => hintTuple(k, true))) as Record<ProjectEntityKey, true>,
+    manual: true,
+    settings: true,
+}
+
+export const PROJECT_EDITOR_TABS = Object.keys(PROJECT_EDITOR_TAB_MAP) as ProjectEditorTab[]
 
 export type SubEditorViewState = { type: 'sceneSteps', sceneID: SceneID, stepID: StepID | null } | { type: 'macroSteps', macroID: MacroID, stepID: StepID | null }
 

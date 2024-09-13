@@ -20,13 +20,8 @@ export const ParsedStringField = <T,>({ className, label, value, setValue, valid
     const getLatestValidate = useLatest(validate)
     const getLatestParse = useLatest(parse)
     const getLatestFormat = useLatest(format)
-    const inputRef = useRef<HTMLInputElement>(null)
-    const measureRef = useRef<HTMLSpanElement>(null)
-
-    useLayoutEffect(() => {
-        if (!inputRef.current || !measureRef.current) return
-        inputRef.current.style.width = `${String(measureRef.current.scrollWidth)}px`
-    }, [tempValue])
+    const inputRef = useRef<HTMLTextAreaElement>(null)
+    const measureRef = useRef<HTMLDivElement>(null)
 
     const errorCheck = useCallback(() => {
         const result = getLatestParse()(getLatestTempValue())
@@ -60,7 +55,7 @@ export const ParsedStringField = <T,>({ className, label, value, setValue, valid
 
     useDebounce(1000, useCallback(() => attemptCommit(tempValue), [attemptCommit, tempValue]))
 
-    const onChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const onChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setTempValue(e.target.value)
     }, [])
 
@@ -77,9 +72,16 @@ export const ParsedStringField = <T,>({ className, label, value, setValue, valid
 
     const readonly = !setValue || projectReadonly
 
+    useLayoutEffect(() => {
+        if (!inputRef.current || !measureRef.current) return
+        inputRef.current.style.width = `${String(measureRef.current.scrollWidth)}px`
+    }, [tempValue])
+
     return <Field label={label} error={errorCheck()}>
-        <span ref={measureRef} className={styles.measure}>{tempValue ? tempValue : label}</span>
+        <div className={styles.wrapper}>
+            <div ref={measureRef} className={styles.measure}>{tempValue ? tempValue : label}&nbsp;</div>
+            <textarea ref={inputRef} className={classes(styles.field, className)} rows={1} readOnly={readonly} placeholder={label} onChange={onChange} onFocus={onFocus} onBlur={onBlur} value={tempValue} />
+        </div>
         {children}
-        <input ref={inputRef} className={classes(styles.field, className)} type='text' readOnly={readonly} placeholder={label} onChange={onChange} onFocus={onFocus} onBlur={onBlur} value={tempValue} />
     </Field>
 }

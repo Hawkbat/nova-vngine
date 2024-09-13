@@ -6,7 +6,7 @@ import { LoadingApp } from './components/LoadingApp'
 import { loadInitialGame } from './operations/player'
 import { saveProject } from './operations/project'
 import { loadInitialSettings } from './operations/settings'
-import { loadInitialViewState } from './operations/viewState'
+import { getRoutePathFromViewState, loadInitialViewState, updateViewStateFromRoutePath } from './operations/viewState'
 import { platform } from './platform/platform'
 import { gamePlayerStore } from './store/player'
 import { projectStore } from './store/project'
@@ -16,7 +16,7 @@ import { isPlatformErrorCode } from './types/platform'
 import { wait } from './utils/async'
 import { openErrorDialog } from './utils/debug'
 import { immReplaceBy, immSet } from './utils/imm'
-import { subscribeToSelector, subscribeToStoreAsync } from './utils/store'
+import { subscribeToSelector, subscribeToStore, subscribeToStoreAsync } from './utils/store'
 
 const appContainer = document.createElement('div')
 appContainer.id = 'appContainer'
@@ -106,6 +106,17 @@ async function initializeAll() {
             const updatedProject = { ...recentProject, name }
             viewStateStore.setValue(s => immSet(s, 'recentProjects', immReplaceBy(s.recentProjects, p => p.id, updatedProject)))
         }
+    })
+
+    subscribeToStore(viewStateStore, viewState => {
+        location.hash = getRoutePathFromViewState(viewState)
+    })
+
+    window.addEventListener('hashchange', e => {
+        const url = new URL(e.newURL)
+        const path = url.hash.startsWith('#') ? url.hash.substring(1) : ''
+        if (!path) return
+        updateViewStateFromRoutePath(path)
     })
 
     await loadInitialGame()

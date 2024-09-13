@@ -35,3 +35,9 @@ export function arrayMax<T>(array: T[], selector: (value: T) => number, defaultV
 export function arrayJoin<T, U = T>(array: T[], separator: U): (T | U)[] {
     return array.flatMap((v, i) => i > 0 ? [separator, v] : [v])
 }
+
+type Exact<T> = T extends T ? T : never
+
+export function isAnyOf<T, U extends Exact<T>>(value: T, options: U[]): value is U {
+    return options.includes(value as unknown as U)
+}

@@ -203,6 +203,13 @@ export function getCurrentPlayerState(gameState: GameSaveState, settings: SceneP
                     exprContext.variables.setValue(variableID, value)
                     break
                 }
+                case 'setCharacter': {
+                    const characterID = resolveExprAs(step.character, 'character', exprContext).value
+                    const variableID = resolveExprAs(step.variable, 'variable', exprContext).value
+                    const value = resolveExpr(step.value, exprContext)
+                    exprContext.variables.setCharacterValue(variableID, characterID, value)
+                    break
+                }
                 case 'macro': {
                     const macroID = resolveExprAs(step.macro, 'macro', exprContext).value
                     processMacro(macroID, step.inputs, step.outputs)

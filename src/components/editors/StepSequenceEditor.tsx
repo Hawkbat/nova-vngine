@@ -1,13 +1,13 @@
 import { Fragment, useCallback, useEffect, useMemo, useState } from 'react'
 
 import { applyStepToScenePlayerState } from '../../operations/player'
-import { getEntityDisplayNameByID, getEntityEditorDisplayName, getEntityEditorDisplayNameByID, getProjectExprContext, immGenerateID } from '../../operations/project'
+import { getEntityDisplayName, getEntityDisplayNameByID, getEntityEditorDisplayName, getEntityEditorDisplayNameByID, immGenerateID } from '../../operations/project'
 import { useProjectReadonly } from '../../operations/storage'
 import { platform } from '../../platform/platform'
 import { projectStore } from '../../store/project'
 import { settingsStore } from '../../store/settings'
 import { viewStateStore } from '../../store/viewstate'
-import { createDefaultExpr, type ExprContext, resolveExprAs } from '../../types/expressions'
+import { createDefaultExpr, type ExprContext, resolveExprAs, tryResolveExprAs } from '../../types/expressions'
 import { getInitialScenePlayerState, type ScenePlayerState } from '../../types/player'
 import type { MacroDefinition } from '../../types/project'
 import type { AnyStep, StepID, StepType } from '../../types/steps'
@@ -31,6 +31,14 @@ import { ExpressionEditor, ExpressionField } from './ExpressionEditor'
 
 import styles from './StepSequenceEditor.module.css'
 
+function getStepTypeLabel(type: StepType) {
+    switch (type) {
+        case 'set': return 'Set Variable'
+        case 'setCharacter': return 'Set Character Variable'
+        default: return prettyPrintIdentifier(type)
+    }
+}
+
 const StepField = ({ className, label, value, setValue, steps, setSteps, selected, setSelected }: FieldProps<StepID> & { steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, selected: StepID | null, setSelected: (id: StepID | null) => void }) => {
     const [dropProps, dragOver] = useDrop('move', useCallback(values => {
         if (values.type === 'json') {
@@ -49,7 +57,7 @@ const StepField = ({ className, label, value, setValue, steps, setSteps, selecte
     return <Field label={label}>
         <div className={classes(styles.stepField, className)}>
             {deepStep ? <div className={classes(styles.simpleBubble)} onClick={() => setSelected(value)}>
-                <EditorIcon path={STEP_ICONS[deepStep.step.type]} label={prettyPrintIdentifier(deepStep.step.type)} />
+                <EditorIcon path={STEP_ICONS[deepStep.step.type]} label={getStepTypeLabel(deepStep.step.type)} />
             </div> : null}
             <div {...dropProps} className={classes(styles.stepGap, { [styles.dragOver ?? '']: dragOver })}>
                 <div className={styles.stepLine} />
@@ -140,7 +148,7 @@ const StepEditor = ({ step, setStep, deleteStep, steps, setSteps, selected, setS
             </>
             case 'setCharacter': return <>
                 <ExpressionField label='Character' value={step.character} setValue={expr => setStep(s => isStepType(s, 'setCharacter') ? immSet(s, 'character', expr) : s)} paramTypes={['character']} ctx={ctx} />
-                <ExpressionField label='Variable' value={step.variable} setValue={expr => setStep(s => isStepType(s, 'setCharacter') ? immSet(s, 'variable', expr) : s)} paramTypes={['variable']} ctx={ctx} />
+                <ExpressionField label='Variable' value={step.variable} setValue={expr => setStep(s => isStepType(s, 'setCharacter') ? immSet(s, 'variable', expr) : s)} paramTypes={['variable']} ctx={immSet(ctx, 'scope', { ...ctx.scope, character: tryResolveExprAs(step.character, 'character', ctx)?.value ?? true })} />
                 <ExpressionField label='Value' value={step.value} setValue={expr => setStep(s => isStepType(s, 'setCharacter') ? immSet(s, 'value', expr) : s)} paramTypes={null} ctx={ctx} />
             </>
             case 'macro': {
@@ -178,7 +186,7 @@ const StepEditor = ({ step, setStep, deleteStep, steps, setSteps, selected, setS
     return <div className={styles.stepEditor}>
         {getDeveloperMode() ? <>
             <StringField label='Step ID' value={step.id} />
-            <StringField label='Step Type' value={prettyPrintIdentifier(step.type)} />
+            <StringField label='Step Type' value={getStepTypeLabel(step.type)} />
         </> : null}
         {subEditor()}
         {!readonly ? <Field label='Delete Step'>
@@ -232,8 +240,8 @@ const StepList = ({ steps, setSteps, selected, setSelected, ctx, rootSteps, setR
         </div> : null}
         <SearchDropdownMenu items={STEP_TYPES} filter={(t, search) => t.toLowerCase().includes(search.toLowerCase())} {...dropdownProps}>
             {(type) => <DropdownMenuItem key={type} onClick={e => (onAddStep(e, type), dropdownProps.onClose())}>
-                <EditorIcon path={STEP_ICONS[type]} label={prettyPrintIdentifier(type)} />
-                <span>{prettyPrintIdentifier(type)}</span>
+                <EditorIcon path={STEP_ICONS[type]} label={getStepTypeLabel(type)} />
+                <span>{getStepTypeLabel(type)}</span>
             </DropdownMenuItem>}
         </SearchDropdownMenu>
     </div>
@@ -247,6 +255,8 @@ const StepBubble = ({ step, setStep, selected, setSelected, ctx, rootSteps, setR
         setSelected(step.id)
     }
 
+    const isEndPoint = step.type === 'goto' || step.type === 'returnTo'
+
     const getPreview = () => {
         try {
             switch (step.type) {
@@ -255,7 +265,7 @@ const StepBubble = ({ step, setStep, selected, setSelected, ctx, rootSteps, setR
                     const speaker = ctx.resolvers.character(speakerID)
                     if (!speaker) break
                     const text = resolveExprAs(step.text, 'string', ctx).value
-                    return <>{getEntityEditorDisplayName('character', speaker)}: {text.substring(0, 10)}...</>
+                    return <>{getEntityEditorDisplayName('character', speaker)}:<br />{text.substring(0, 10)}...</>
                 }
                 case 'narrate': {
                     const text = resolveExprAs(step.text, 'string', ctx).value
@@ -270,11 +280,32 @@ const StepBubble = ({ step, setStep, selected, setSelected, ctx, rootSteps, setR
                 case 'exit': {
                     return getEntityEditorDisplayNameByID('character', resolveExprAs(step.character, 'character', ctx).value)
                 }
+                case 'portrait': {
+                    const characterID = resolveExprAs(step.character, 'character', ctx).value
+                    const character = ctx.resolvers.character(characterID)
+                    if (!character) break
+                    const portraitID = resolveExprAs(step.portrait, 'portrait', ctx).value
+                    const portrait = ctx.resolvers.portrait(portraitID)
+                    if (!portrait) break
+                    return <>{getEntityEditorDisplayName('character', character)}<br />{getEntityDisplayName('portrait', portrait, false)}</>
+                }
                 case 'backdrop': {
                     const backdropID = resolveExprAs(step.backdrop, 'backdrop', ctx).value
                     const backdrop = ctx.resolvers.backdrop(backdropID)
                     if (!backdrop) break
                     return getEntityEditorDisplayName('backdrop', backdrop)
+                }
+                case 'music': {
+                    const songID = resolveExprAs(step.song, 'song', ctx).value
+                    const song = ctx.resolvers.song(songID)
+                    if (!song) break
+                    return getEntityEditorDisplayName('song', song)
+                }
+                case 'sound': {
+                    const soundID = resolveExprAs(step.sound, 'sound', ctx).value
+                    const sound = ctx.resolvers.sound(soundID)
+                    if (!sound) break
+                    return getEntityEditorDisplayName('sound', sound)
                 }
                 case 'goto': {
                     const sceneID = resolveExprAs(step.scene, 'scene', ctx).value
@@ -287,6 +318,15 @@ const StepBubble = ({ step, setStep, selected, setSelected, ctx, rootSteps, setR
                     const variable = ctx.resolvers.variable(variableID)
                     if (!variable) break
                     return getEntityEditorDisplayName('variable', variable)
+                }
+                case 'setCharacter': {
+                    const characterID = resolveExprAs(step.character, 'character', ctx).value
+                    const character = ctx.resolvers.character(characterID)
+                    if (!character) break
+                    const variableID = resolveExprAs(step.variable, 'variable', ctx).value
+                    const variable = ctx.resolvers.variable(variableID)
+                    if (!variable) break
+                    return <>{getEntityEditorDisplayName('character', character)}<br />{getEntityEditorDisplayName('variable', variable)}</>
                 }
                 case 'macro': {
                     const macroID = resolveExprAs(step.macro, 'macro', ctx).value
@@ -305,8 +345,8 @@ const StepBubble = ({ step, setStep, selected, setSelected, ctx, rootSteps, setR
     switch (step.type) {
         case 'decision':
         case 'branch':
-            return <div {...dragProps} className={classes(styles.bubble, { [styles.active ?? '']: selected === step.id, [styles.dragging ?? '']: dragging })}>
-                <div className={styles.bubbleFront} onClick={onSelect}>
+            return <div className={classes(styles.bubble, { [styles.active ?? '']: selected === step.id, [styles.dragging ?? '']: dragging })}>
+                <div {...dragProps} className={styles.bubbleFront} onClick={onSelect}>
                     <EditorIcon path={STEP_ICONS[step.type]} />
                 </div>
                 <div className={styles.bubbleBody}>
@@ -327,19 +367,19 @@ const StepBubble = ({ step, setStep, selected, setSelected, ctx, rootSteps, setR
                         </div>)}
                     </> : null}
                 </div>
-                <div className={styles.bubbleBack} onClick={onSelect}>
+                <div {...dragProps} className={styles.bubbleBack} onClick={onSelect}>
 
                 </div>
             </div>
         default:
-            return <div {...dragProps} className={classes(styles.simpleBubble, { [styles.active ?? '']: selected === step.id, [styles.dragging ?? '']: dragging })} onClick={onSelect}>
-                <EditorIcon path={STEP_ICONS[step.type]} label={prettyPrintIdentifier(step.type)} />
+            return <div {...dragProps} className={classes(styles.simpleBubble, selected === step.id && styles.active, dragging && styles.dragging, isEndPoint && styles.end)} onClick={onSelect}>
+                <EditorIcon path={STEP_ICONS[step.type]} label={getStepTypeLabel(step.type)} />
                 <span className={styles.bubblePreview}>{getPreview()}</span>
             </div>
     }
 }
 
-export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void }) => {
+export const StepSequenceEditor = ({ steps, setSteps, ctx }: { steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, ctx: ExprContext }) => {
     const [autoPlay, setAutoPlay] = useState(false)
 
     const getEditorState = useSelector(viewStateStore, s => s.editor?.type === 'sceneSteps' || s.editor?.type === 'macroSteps' ? s.editor : null)
@@ -347,8 +387,6 @@ export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setS
     const setSelectedStepID = useCallback((value: StepID | null) => {
         viewStateStore.setValue(s => immSet(s, 'editor', s.editor?.type === 'sceneSteps' || s.editor?.type === 'macroSteps' ? immSet(s.editor, 'stepID', value) : s.editor))
     }, [])
-
-    const ctx = getProjectExprContext()
 
     const selected = useMemo(() => getDeepStep(getSelectedStepID(), steps, setSteps, [], null), [getSelectedStepID, steps, setSteps])
 
@@ -450,7 +488,9 @@ export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setS
     }, [])
 
     return <div className={styles.sequenceEditor}>
-        <ScenePlayer state={sceneState} onAdvance={onAdvance} onSelectOption={onSelectOption} onSubmitPrompt={onSubmitPrompt} onRandomizePrompt={onRandomizePrompt} />
+        <div className={styles.player}>
+            <ScenePlayer state={sceneState} onAdvance={onAdvance} onSelectOption={onSelectOption} onSubmitPrompt={onSubmitPrompt} onRandomizePrompt={onRandomizePrompt} />
+        </div>
         <div className={styles.playerIcons}>
             <PlayerIcon path={COMMON_ICONS.restart} onClick={onRestartClick} />
             <PlayerIcon path={autoPlay ? COMMON_ICONS.pause : COMMON_ICONS.play} onClick={onAutoPlayClick} />
@@ -464,10 +504,8 @@ export const StepSequenceEditor = ({ steps, setSteps }: { steps: AnyStep[], setS
 }
 
 
-export const StepSequenceField = ({ steps, setSteps }: { steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void }) => {
+export const StepSequenceField = ({ steps, setSteps, ctx }: { steps: AnyStep[], setSteps: (setter: (steps: AnyStep[]) => AnyStep[]) => void, ctx: ExprContext }) => {
     const [selectedStepID, setSelectedStepID] = useState<StepID | null>(null)
-
-    const ctx = getProjectExprContext()
 
     const selected = useMemo(() => getDeepStep(selectedStepID, steps, setSteps, [], null), [selectedStepID, setSteps, steps])
 

@@ -4,7 +4,7 @@ import clickSrc from '../../sounds/click.mp3'
 import { useAsset } from '../../store/assets'
 import { projectStore } from '../../store/project'
 import { settingsStore } from '../../store/settings'
-import type { LocationHeightValue, LocationPositionValue, LocationScaleValue } from '../../types/expressions'
+import type { LocationHeightValue, LocationPositionValue, LocationScaleValue, LocationValue } from '../../types/expressions'
 import type { BackdropPlayerState, CharacterPlayerState, DialoguePlayerState, OptionPlayerState, PromptPlayerState, ScenePlayerState, SongPlayerState, SoundPlayerState } from '../../types/player'
 import { classes } from '../../utils/display'
 import { throwIfNull } from '../../utils/guard'
@@ -19,9 +19,9 @@ import styles from './ScenePlayer.module.css'
 
 const POSITION_VALUES = {
     auto: 0.5,
-    left: 0.15,
+    left: 0.2,
     center: 0.5,
-    right: 0.85,
+    right: 0.8,
 } satisfies Record<Extract<LocationPositionValue, string>, number>
 
 const HEIGHT_VALUES = {
@@ -40,6 +40,13 @@ const SCALE_VALUES = {
     middle: 1.0,
     far: 0.75,
 } satisfies Record<Extract<LocationScaleValue, string>, number>
+
+const evalLocation = (location: LocationValue) => {
+    const position = typeof location.position === 'string' ? POSITION_VALUES[location.position] : location.position
+    const height = typeof location.height === 'string' ? HEIGHT_VALUES[location.height] : location.height
+    const scale = typeof location.scale === 'string' ? SCALE_VALUES[location.scale] : location.scale
+    return { position, height, scale }
+}
 
 const playClick = () => {
     const audio = new Audio(clickSrc)
@@ -162,9 +169,8 @@ const Character = ({ characterID, portraitID, location }: CharacterPlayerState) 
         outT: {},
     })
 
-    const position = typeof location.position === 'string' ? POSITION_VALUES[location.position] : location.position
-    const height = typeof location.height === 'string' ? HEIGHT_VALUES[location.height] : location.height
-    const scale = typeof location.scale === 'string' ? SCALE_VALUES[location.scale] : location.scale
+
+    const { position, height, scale } = evalLocation(location)
 
     const portraitHeightValue = getPortrait()?.height ?? 'auto'
     const portraitHeight = typeof portraitHeightValue === 'string' ? HEIGHT_VALUES[portraitHeightValue] : portraitHeightValue
@@ -183,7 +189,7 @@ const Character = ({ characterID, portraitID, location }: CharacterPlayerState) 
 
 const Characters = ({ characters }: { characters: CharacterPlayerState[] }) => {
     return <div className={styles.characters}>
-        <TransitionGroup values={characters} getKey={c => getDedupedKey(characters, c => c.characterID, c)}>
+        <TransitionGroup values={characters} getKey={c => getDedupedKey(characters, c => c.characterID, c)} sort={(a, b) => evalLocation(b.location).height - evalLocation(a.location).height}>
             {props => <Character key={props.characterID} {...props} />}
         </TransitionGroup>
     </div>

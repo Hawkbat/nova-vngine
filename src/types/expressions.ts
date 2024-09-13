@@ -241,6 +241,11 @@ export interface ExprContext {
         int: (min: number, max: number) => number
         float: (min: number, max: number) => number
     }
+    scope: {
+        character?: boolean | CharacterID
+        scene?: boolean | SceneID
+        macro?: boolean | MacroID
+    }
 }
 
 export function isPrimitiveValueType(type: ExprValueType): type is ExprPrimitiveValueType {
@@ -275,6 +280,14 @@ function resolveNumberComparison(left: AnyExpr, right: AnyExpr, op: (a: number, 
 
 export function resolveExprAs<T extends ExprValueType>(expr: AnyExpr, type: T, ctx: ExprContext): ExprValueOfType<T> {
     return castExprValue(resolveExpr(expr, ctx), type, ctx)
+}
+
+export function tryResolveExprAs<T extends ExprValueType>(expr: AnyExpr, type: T, ctx: ExprContext): ExprValueOfType<T> | null {
+    try {
+        return resolveExprAs(expr, type, ctx)
+    } catch {
+        return null
+    }
 }
 
 export function resolveExpr(expr: AnyExpr, ctx: ExprContext): AnyExprValue {

@@ -8,7 +8,7 @@
 
 .expr {
     display: flex;
-    flex-flow: row wrap;
+    flex-flow: row;
     gap: 0.25em;
     background: var(--expr-color);
     min-height: 1.5em;

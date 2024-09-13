@@ -4,9 +4,10 @@ import { platform } from '../platform/platform'
 import { getStorageProvider } from '../storage/storage'
 import { viewStateStore } from '../store/viewstate'
 import { DEFAULT_PROJECT_FILENAME, isPlatformErrorCode } from '../types/platform'
-import { ENTITY_TYPES, type EntityIDOf, type EntityType, getEntityTypeHierarchy, parseProjectDefinition } from '../types/project'
+import { ENTITY_TYPES, type EntityIDOf, type EntityType, getEntityTypeByProjectKey, getEntityTypeHierarchy, getProjectEntityKey, parseProjectDefinition, PROJECT_ENTITY_KEYS } from '../types/project'
 import { isStorageErrorCode, type StorageRootEntry } from '../types/storage'
-import type { ProjectEditorTab, ProjectMetaData } from '../types/viewstate'
+import { PROJECT_EDITOR_TABS, type ProjectEditorTab, type ProjectMetaData, type ViewState } from '../types/viewstate'
+import { arrayHead, isAnyOf } from '../utils/array'
 import { existsFilter, tryParseJson } from '../utils/guard'
 import { immAppend, immSet } from '../utils/imm'
 import { useSelector } from '../utils/store'
@@ -34,7 +35,7 @@ export function useViewStateScope<T extends EntityType>(type: T | null): [() => 
         }
         const hierarchy = getEntityHierarchy(type, id)
         const scopeValues = Object.fromEntries(hierarchy.map(h => hintTuple(h.type, h.entity.id)))
-        viewStateStore.setValue(s => ({ ...s, scopes: { ...s.scopes, ...scopeValues }, editor: null }))
+        viewStateStore.setValue(s => ({ ...s, scopes: { ...(Object.fromEntries(ENTITY_TYPES.map(t => hintTuple(t, null))) as Record<EntityType, null>), ...scopeValues }, editor: null }))
     }, [type])
     return hintTuple(getScope, setScope)
 }
@@ -104,5 +105,61 @@ export async function loadInitialViewState() {
         loadedProject: null,
         loaded: true,
     }))
+}
+
+export function getRoutePathFromViewState(viewState: ViewState) {
+    const tab = viewState.currentTab
+    if (isAnyOf(tab, PROJECT_ENTITY_KEYS)) {
+        const entityType = getEntityTypeByProjectKey(tab)
+        if (entityType) {
+            const typeHierarchy = getEntityTypeHierarchy(entityType).reverse()
+            for (const subType of typeHierarchy) {
+                const id = viewState.scopes[subType]
+                if (id) {
+                    const hierarchy = getEntityHierarchy(subType, id)
+                    const path = hierarchy.map(p => `${getProjectEntityKey(p.type)}/${p.entity.id}`).join('/')
+                    return path.startsWith(tab) ? `/${path}/` : `/${tab}/${path}/`
+                }
+            }
+        }
+    }
+    return `/${tab}/`
+}
+
+export function updateViewStateFromRoutePath(path: string) {
+    if (path.startsWith('/')) path = path.substring(1)
+    if (!path) return
+    const parts = path.split('/')
+    const tab = parts.shift()
+    if (!tab || !isAnyOf(tab, PROJECT_EDITOR_TABS)) return
+    const scopeReset = Object.fromEntries(ENTITY_TYPES.map(t => hintTuple(t, null))) as Record<EntityType, null>
+    if (isAnyOf(tab, PROJECT_ENTITY_KEYS)) {
+        const entityType = getEntityTypeByProjectKey(tab)
+        console.log(tab, entityType,  path)
+        if (entityType) {
+            const typeHierarchy = getEntityTypeHierarchy(entityType)
+            if (typeHierarchy[0] === entityType) {
+                const id = arrayHead(parts)
+                viewStateStore.setValue(s => ({ ...s, currentTab: tab, scopes: { ...scopeReset, [entityType]: id } }))
+                return
+            }
+            let scopes = { ...viewStateStore.getValue().scopes, ...scopeReset }
+            for (const t of typeHierarchy) {
+                const projectKey = parts.shift()
+                if (!projectKey) break
+                const type = getEntityTypeByProjectKey(projectKey)
+                if (!type) break
+                if (type !== t) {
+                    throw new Error(`Invalid entity path: ${path}`)
+                }
+                const id = parts.shift()
+                if (!id) break
+                scopes = { ...scopes, [type]: id }
+            }
+            viewStateStore.setValue(s => ({ ...s, currentTab: tab, scopes }))
+            return
+        }
+    }
+    viewStateStore.setValue(s => ({ ...s, currentTab: tab, scopes: scopeReset }))
 }
 

@@ -1,3 +1,4 @@
+import { getProjectExprContext } from '../../operations/project'
 import { projectStore } from '../../store/project'
 import { viewStateStore } from '../../store/viewstate'
 import type { SceneDefinition } from '../../types/project'
@@ -12,7 +13,8 @@ const SceneEditor = () => {
     const getScene = useSelector(projectStore, s => s.scenes.find(s => s.id === getSubEditorState()?.sceneID))
     const scene = getScene()
     const setScene = (setter: (scene: SceneDefinition) => SceneDefinition) => projectStore.setValue(project => immSet(project, 'scenes', immReplaceWhere(project.scenes, s => s.id === scene?.id, e => setter(e))))
-    return scene ? <StepSequenceEditor steps={scene.steps} setSteps={setter => setScene(s => immSet(s, 'steps', setter(s.steps)))} /> : null
+    const ctx = immSet(getProjectExprContext(), 'scope', { scene: scene?.id ?? true })
+    return scene ? <StepSequenceEditor steps={scene.steps} setSteps={setter => setScene(s => immSet(s, 'steps', setter(s.steps)))} ctx={ctx} /> : null
 }
 
 export const SceneWorkspace = () => {
@@ -21,7 +23,7 @@ export const SceneWorkspace = () => {
         <SceneEditor />
     </> : <>
         <EntityWorkspace type='scene' getVariableScopes={scene => [{ type: 'scene', value: scene.id }, { type: 'scenes', value: [scene.id] }, { type: 'allScenes' }]}>{(scene, setScene) => <>
-            <StepSequenceField steps={scene.steps} setSteps={setter => setScene(s => immSet(s, 'steps', setter(s.steps)))} />
+            <StepSequenceField steps={scene.steps} setSteps={setter => setScene(s => immSet(s, 'steps', setter(s.steps)))} ctx={immSet(getProjectExprContext(), 'scope', { scene: scene.id })} />
             <EditorButtonGroup side='left'>
                 <EditorButton onClick={() => viewStateStore.setValue(s => immSet(s, 'editor', { type: 'sceneSteps', sceneID: scene.id, stepID: null }))}>Open Scene in  Sequence Editor</EditorButton>
             </EditorButtonGroup>

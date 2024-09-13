@@ -202,6 +202,9 @@ export function getProjectExprContext(): ExprContext {
             float: (min, max) => randFloat(randSeedRandom(), min, max)[1],
             int: (min, max) => randInt(randSeedRandom(), min, max)[1],
         },
+        scope: {
+
+        },
     }
     return ctx
 }

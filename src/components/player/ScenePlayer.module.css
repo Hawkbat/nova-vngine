@@ -195,13 +195,14 @@
 }
 
 .option.enabled {
-    opacity: 0.8;
+    opacity: 1;
     cursor: pointer;
     border: 2px solid var(--text-color);
 }
 
 .option.enabled:hover {
-    opacity: 1;
+    color: var(--primary-color);
+    border: 2px solid var(--primary-color);
 }
 
 .prompts {

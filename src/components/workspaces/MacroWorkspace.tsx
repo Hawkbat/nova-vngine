@@ -1,3 +1,4 @@
+import { getProjectExprContext } from '../../operations/project'
 import { projectStore } from '../../store/project'
 import { viewStateStore } from '../../store/viewstate'
 import { isVariableInScope, type MacroDefinition, type VariableID } from '../../types/project'
@@ -18,11 +19,14 @@ const MacroStepEditor = () => {
     const getMacro = useSelector(projectStore, s => s.macros.find(s => s.id === getSubEditorState()?.macroID))
     const macro = getMacro()
     const setMacro = (setter: (macro: MacroDefinition) => MacroDefinition) => projectStore.setValue(project => immSet(project, 'macros', immReplaceWhere(project.macros, s => s.id === macro?.id, e => setter(e))))
-    return macro ? <StepSequenceEditor steps={macro.steps} setSteps={setter => setMacro(s => immSet(s, 'steps', setter(s.steps)))} /> : null
+    const ctx = immSet(getProjectExprContext(), 'scope', { macro: macro?.id ?? true })
+    return macro ? <StepSequenceEditor steps={macro.steps} setSteps={setter => setMacro(s => immSet(s, 'steps', setter(s.steps)))} ctx={ctx} /> : null
 }
 
 const MacroEditor = ({ macro, setMacro }: { macro: MacroDefinition, setMacro: (setter: (macro: MacroDefinition) => MacroDefinition) => void }) => {
     const macroVariables = useSelector(projectStore, s => s.variables)().filter(v => isVariableInScope(v, { type: 'macro', value: macro.id }) || isVariableInScope(v, { type: 'macros', value: [macro.id] }) || isVariableInScope(v, { type: 'allMacros' }))
+
+    const ctx = immSet(getProjectExprContext(), 'scope', { macro: macro.id })
 
     return <>
         <Field label='Inputs'>
@@ -39,7 +43,7 @@ const MacroEditor = ({ macro, setMacro }: { macro: MacroDefinition, setMacro: (s
             </div>)}
             <EditorIcon path={COMMON_ICONS.addItem} label='Add Output' onClick={() => setMacro(m => immSet(m, 'outputs', immAppend(m.outputs, '' as VariableID)))} />
         </Field>
-        <StepSequenceField steps={macro.steps} setSteps={setter => setMacro(m => immSet(m, 'steps', setter(m.steps)))} />
+        <StepSequenceField steps={macro.steps} setSteps={setter => setMacro(m => immSet(m, 'steps', setter(m.steps)))} ctx={ctx} />
         <EditorButtonGroup side='left'>
             <EditorButton onClick={() => viewStateStore.setValue(s => immSet(s, 'editor', { type: 'macroSteps', macroID: macro.id, stepID: null }))}>Open Macro in  Sequence Editor</EditorButton>
         </EditorButtonGroup>
