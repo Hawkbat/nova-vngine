@@ -96,6 +96,10 @@ async function initializeAll() {
     subscribeToStoreAsync(projectStore.meta, updateTitle)
     await updateTitle()
 
+    await loadInitialGame()
+    await loadInitialSettings()
+    await loadInitialViewState()
+
     subscribeToSelector(projectStore, s => s.name, name => {
         const viewState = viewStateStore.getSnapshot()
         if (viewState.loadedProject && viewState.loadedProject.name !== name) {
@@ -118,10 +122,6 @@ async function initializeAll() {
         if (!path) return
         updateViewStateFromRoutePath(path)
     })
-
-    await loadInitialGame()
-    await loadInitialSettings()
-    await loadInitialViewState()
 
     appRoot.render(<StrictMode><App /></StrictMode>)
 }

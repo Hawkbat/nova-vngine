@@ -357,6 +357,14 @@ export function resolveExpr(expr: AnyExpr, ctx: ExprContext): AnyExprValue {
     }
 }
 
+export function tryResolveExpr(expr: AnyExpr, ctx: ExprContext): AnyExprValue | null {
+    try {
+        return resolveExpr(expr, ctx)
+    } catch {
+        return null
+    }
+}
+
 export function validateExpr(expr: AnyExpr, ctx: ExprContext): string[] {
     return []
 }

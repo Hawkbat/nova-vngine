@@ -69,6 +69,7 @@ export const EntityList = <T extends EntityType>({ type, label, filter, createEn
         const [project, item] = createEntity ? createEntity(projectStore.getSnapshot(), parentID) : immCreateEntity(type, projectStore.getSnapshot(), parentID)
         projectStore.setValue(() => project)
         setScope(item.id as EntityIDOf<T>)
+        setCurrentTab(projectKey)
     }
 
     const onSelectParent = (parentID: EntityParentIDOf<T>) => {

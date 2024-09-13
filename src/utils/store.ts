@@ -10,23 +10,38 @@ import { hintTuple } from './types'
 export type StoreValueGetter<T> = () => T
 export type StoreValueSetter<T> = (oldValue: T) => T
 
-//TODO: Allow deferred store updates by deferring calls of the subscription listeners until the end of the current frame using `setTimeout(cb, 0)`. State updates should still happen synchronously, and some listeners may need to be synchronous (like diffing listeners)
-
 export function createSimpleStore<T>(defaultValue: T) {
-    const listeners = new Set<() => void>()
+    const immediateListeners = new Set<() => void>()
+    const deferredListeners = new Set<() => void>()
     let value = defaultValue
     let disposed = false
+    let notifyTimeout: number | undefined = undefined
 
-    const subscribe = (listener: () => void) => {
+    const subscribeImmediate = (listener: () => void) => {
         if (!disposed) {
-            listeners.add(listener)
+            immediateListeners.add(listener)
         }
         return () => {
             if (disposed) return
-            listeners.delete(listener)
+            immediateListeners.delete(listener)
         }
     }
-    const notify = () => listeners.forEach(l => l())
+    const subscribeDeferred = (listener: () => void) => {
+        if (!disposed) {
+            deferredListeners.add(listener)
+        }
+        return () => {
+            if (disposed) return
+            deferredListeners.delete(listener)
+        }
+    }
+    const notify = () => {
+        immediateListeners.forEach(l => l())
+        clearTimeout(notifyTimeout)
+        notifyTimeout = setTimeout(() => {
+            deferredListeners.forEach(l => l())
+        }, 0)
+    }
     const getSnapshot = () => value
     const getValue = () => value
     const setValue = (setter: StoreValueSetter<T>) => {
@@ -46,12 +61,13 @@ export function createSimpleStore<T>(defaultValue: T) {
     const dispose = () => {
         if (disposed) return
         disposed = true
-        listeners.clear()
+        immediateListeners.clear()
     }
     const isDisposed = () => disposed
 
     return {
-        subscribe,
+        subscribeImmediate,
+        subscribeDeferred,
         notify,
         getSnapshot,
         getValue,
@@ -152,38 +168,39 @@ export function createTrackedStore<T>(defaultValue: T) {
 
 export type TrackedStore<T> = ReturnType<typeof createTrackedStore<T>>
 
-export function useStore<T>(store: SimpleStore<T>) {
-    useSyncExternalStore(store.subscribe, store.getSnapshot)
+export function useStore<T>(store: SimpleStore<T>, immediate: boolean = false) {
+    useSyncExternalStore(immediate ? store.subscribeImmediate : store.subscribeDeferred, store.getSnapshot)
     return hintTuple(store.getValue, store.setValue)
 }
 
-export function useMetaStore<T>(store: TrackedStore<T>) {
-    useSyncExternalStore(store.meta.subscribe, store.meta.getSnapshot)
+export function useMetaStore<T>(store: TrackedStore<T>, immediate: boolean = false) {
+    useSyncExternalStore(immediate ? store.meta.subscribeImmediate : store.meta.subscribeDeferred, store.meta.getSnapshot)
     return hintTuple(store.meta.getValue, store.meta.setValue)
 }
 
-export function useSelector<T, U>(store: SimpleStore<T>, selector: (value: T) => U): StoreValueGetter<U> {
+export function useSelector<T, U>(store: SimpleStore<T>, selector: (value: T) => U, immediate: boolean = false): StoreValueGetter<U> {
     const latestSelector = useLatest(selector)
     const getValue = useCallback(() => latestSelector()(store.getSnapshot()), [latestSelector, store])
-    useSyncExternalStore(store.subscribe, getValue)
+    useSyncExternalStore(immediate ? store.subscribeImmediate : store.subscribeDeferred, getValue)
     return getValue
 }
 
-export function useMetaSelector<T, U>(store: TrackedStore<T>, selector: (value: StoreMetaState<T>) => U) {
-    return useSelector(store.meta, selector)
+export function useMetaSelector<T, U>(store: TrackedStore<T>, selector: (value: StoreMetaState<T>) => U, immediate: boolean = false) {
+    return useSelector(store.meta, selector, immediate)
 }
 
-export function subscribeToStore<T>(store: SimpleStore<T>, callback: (newState: T, oldState: T) => void) {
-    return subscribeToSelector(store, s => s, callback)
+export function subscribeToStore<T>(store: SimpleStore<T>, callback: (newState: T, oldState: T) => void, immediate: boolean = false) {
+    return subscribeToSelector(store, s => s, callback, immediate)
 }
 
-export function subscribeToStoreAsync<T>(store: SimpleStore<T>, callback: (newState: T, oldState: T) => Promise<void>) {
-    return subscribeToSelectorAsync(store, s => s, callback)
+export function subscribeToStoreAsync<T>(store: SimpleStore<T>, callback: (newState: T, oldState: T) => Promise<void>, immediate: boolean = false) {
+    return subscribeToSelectorAsync(store, s => s, callback, immediate)
 }
 
-export function subscribeToSelector<T, U>(store: SimpleStore<T>, selector: (state: T) => U, callback: (newValue: U, oldValue: U) => void) {
+export function subscribeToSelector<T, U>(store: SimpleStore<T>, selector: (state: T) => U, callback: (newValue: U, oldValue: U) => void, immediate: boolean = false) {
     let oldValue = selector(store.getSnapshot())
-    return store.subscribe(() => {
+    const subscribe = immediate ? store.subscribeImmediate : store.subscribeDeferred
+    return subscribe(() => {
         const newValue = selector(store.getSnapshot())
         if (newValue !== oldValue) {
             callback(newValue, oldValue)
@@ -192,7 +209,7 @@ export function subscribeToSelector<T, U>(store: SimpleStore<T>, selector: (stat
     })
 }
 
-export function subscribeToSelectorAsync<T, U>(store: SimpleStore<T>, selector: (state: T) => U, callback: (newValue: U, oldValue: U) => Promise<void>) {
+export function subscribeToSelectorAsync<T, U>(store: SimpleStore<T>, selector: (state: T) => U, callback: (newValue: U, oldValue: U) => Promise<void>, immediate: boolean = false) {
     let updateInProgress = false
     let pendingUpdate: { newState: U, oldState : U } | null = null
 
@@ -207,5 +224,5 @@ export function subscribeToSelectorAsync<T, U>(store: SimpleStore<T>, selector: 
         }
     }
 
-    return subscribeToSelector(store, selector, (newState, oldState) => void syncCallback(newState, oldState))
+    return subscribeToSelector(store, selector, (newState, oldState) => void syncCallback(newState, oldState), immediate)
 }

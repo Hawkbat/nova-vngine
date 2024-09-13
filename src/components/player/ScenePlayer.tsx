@@ -19,9 +19,9 @@ import styles from './ScenePlayer.module.css'
 
 const POSITION_VALUES = {
     auto: 0.5,
-    left: 0.2,
+    left: 0.15,
     center: 0.5,
-    right: 0.8,
+    right: 0.85,
 } satisfies Record<Extract<LocationPositionValue, string>, number>
 
 const HEIGHT_VALUES = {

@@ -69,8 +69,6 @@
 .bubbleBody {
     display: flex;
     flex-direction: column;
-    padding: 0.1em;
-    gap: 0.1em;
     border-top: 1px solid var(--text-color);
     border-bottom: 1px solid var(--text-color);
 }
@@ -92,6 +90,12 @@
 
 .bubbleBodyRow {
     display: flex;
+    border-top: 1px solid var(--text-color);
+    padding: 0.1em;
+}
+
+.bubbleBodyRow:first-child {
+    border-top: 0;
 }
 
 .option {
@@ -193,4 +197,11 @@
 
 .stepField > span {
     font-size: 0.5em;
+}
+
+.exprLabel {
+    align-self: center;
+    padding-top: 1em;
+    font-size: 0.75em;
+    font-weight: bold;
 }

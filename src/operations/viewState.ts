@@ -127,7 +127,8 @@ export function getRoutePathFromViewState(viewState: ViewState) {
 }
 
 export function updateViewStateFromRoutePath(path: string) {
-    if (path.startsWith('/')) path = path.substring(1)
+    while (path.startsWith('/')) path = path.slice(1)
+    while (path.endsWith('/')) path = path.slice(0, -1)
     if (!path) return
     const parts = path.split('/')
     const tab = parts.shift()
@@ -135,7 +136,6 @@ export function updateViewStateFromRoutePath(path: string) {
     const scopeReset = Object.fromEntries(ENTITY_TYPES.map(t => hintTuple(t, null))) as Record<EntityType, null>
     if (isAnyOf(tab, PROJECT_ENTITY_KEYS)) {
         const entityType = getEntityTypeByProjectKey(tab)
-        console.log(tab, entityType,  path)
         if (entityType) {
             const typeHierarchy = getEntityTypeHierarchy(entityType)
             if (typeHierarchy[0] === entityType) {

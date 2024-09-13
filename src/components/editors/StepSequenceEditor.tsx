@@ -162,10 +162,14 @@ const StepEditor = ({ step, setStep, deleteStep, steps, setSteps, selected, setS
                 return <>
                     <ExpressionField label='Macro' value={step.macro} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'macro', expr) : s)} paramTypes={['macro']} ctx={ctx} />
                     {macro ? <>
+                        <span className={styles.exprLabel}>Inputs:</span>
                         {macro.inputs.map((input, i) => <ExpressionField key={i} label={getEntityDisplayNameByID('variable', input, false)} value={step.inputs[i] ?? createDefaultExpr('unset', ctx)} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'inputs', immReplaceAt(immPadTo(s.inputs, i + 1, () => createDefaultExpr('unset', ctx)), i, expr)) : s)} paramTypes={null} ctx={ctx} />)}
+                        <span className={styles.exprLabel}>Outputs:</span>
                         {macro.outputs.map((output, i) => <ExpressionField key={i} label={getEntityDisplayNameByID('variable', output, false)} value={step.outputs[i] ?? createDefaultExpr('unset', ctx)} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'outputs', immReplaceAt(immPadTo(s.outputs, i + 1, () => createDefaultExpr('unset', ctx)), i, expr)) : s)} paramTypes={['variable']} ctx={ctx} />)}
                     </> : <>
+                        <span className={styles.exprLabel}>Inputs:</span>
                         {step.inputs.map((input, i) => <ExpressionField key={i} label={`Input ${String(i)}`} value={input} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'inputs', immReplaceAt(s.inputs, i, expr)) : s)} paramTypes={null} ctx={ctx} />)}
+                        <span className={styles.exprLabel}>Outputs:</span>
                         {step.outputs.map((output, i) => <ExpressionField key={i} label={`Output ${String(i)}`} value={output} setValue={expr => setStep(s => isStepType(s, 'macro') ? immSet(s, 'outputs', immReplaceAt(s.outputs, i, expr)) : s)} paramTypes={['variable']} ctx={ctx} />)}
                     </>}
                 </>

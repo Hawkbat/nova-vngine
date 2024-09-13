@@ -1,8 +1,8 @@
 import { platform } from '../platform/platform'
 import { gamePlayerStore } from '../store/player'
 import { viewStateStore } from '../store/viewstate'
-import { type AnyExpr, type AnyExprValue, castExprValue, type ExprContext, prettyPrintExprValue, resolveExpr, resolveExprAs } from '../types/expressions'
-import type { GamePlayerActionOfType, GamePlayerActionType, GamePlayerEvalState, GameSaveState, ScenePlayerSettingsState, ScenePlayerState } from '../types/player'
+import { type AnyExpr, type AnyExprValue, castExprValue, type ExprContext, prettyPrintExprValue, resolveExpr, resolveExprAs, tryResolveExpr } from '../types/expressions'
+import type { GamePlayerActionOfType, GamePlayerActionType, GamePlayerEvalState, GameSaveState, MacroPlayerEvalState, ScenePlayerSettingsState, ScenePlayerState } from '../types/player'
 import { GamePlayerSignal, getInitialGameSaveState, getInitialScenePlayerState, GoToSceneGamePlayerSignal, ReturnToStepGamePlayerSignal, StepErrorGamePlayerSignal, StopGamePlayerSignal } from '../types/player'
 import { type AnyVariableDefinition, type AnyVariableScope, type ChapterID, type CharacterID, getVariableValueType, type MacroID, type SceneID, type StoryID, type VariableID } from '../types/project'
 import { type AnyStep, prettyPrintStep, type StepID } from '../types/steps'
@@ -119,20 +119,41 @@ export function getCurrentPlayerState(gameState: GameSaveState, settings: SceneP
 
     const processMacro = (macroID: MacroID, inputs: AnyExpr[], outputs: AnyExpr[]) => {
         const macro = throwIfNull(getEntityByID('macro', macroID))
-        evalState.macros.push({
+        const macroState: MacroPlayerEvalState = {
             id: macro.id,
             variables: {},
-        })
+        }
+        evalState.macros.push(macroState)
         try {
             forEachMultiple(hintTuple(macro.inputs, inputs), (i, d, e) => {
-                exprContext.variables.setValue(d, resolveExpr(e, exprContext))
+                const inputVar = exprContext.resolvers.variable(d)
+                if (i > inputs.length || e.type === 'unset') {
+                    throw new Error(`No value was provided for the input variable ${JSON.stringify(inputVar?.name ?? d)} of macro ${JSON.stringify(macro.name)} but no value was provided`)
+                }
+                const value = tryResolveExpr(e, exprContext)
+                if (!value) {
+                    throw new Error(`Tried to set a value for the input variable ${JSON.stringify(inputVar?.name ?? d)} of macro ${JSON.stringify(macro.name)} but the value provided was invalid`)
+                }
+                exprContext.variables.setValue(d, value)
             })
             processSteps(macro.steps)
-            forEachMultiple(hintTuple(macro.outputs, outputs), (i, d, e) => {
-                const variableID = resolveExprAs(e, 'variable', exprContext).value
-                exprContext.variables.setValue(variableID, throwIfNull(exprContext.variables.getValue(d)))
-            })
             popMacro()
+            forEachMultiple(hintTuple(macro.outputs, outputs), (i, d, e) => {
+                const outputVar = exprContext.resolvers.variable(d)
+                if (i >= outputs.length || e.type === 'unset') {
+                    // Skip missing or unset outputs
+                    return
+                }
+                const variableID = resolveExprAs(e, 'variable', exprContext).value
+                let value = macroState.variables[d] ?? null
+                if (!value && outputVar) {
+                    value = tryResolveExpr(outputVar.default, exprContext)
+                }
+                if (!value) {
+                    throw new Error(`Tried to read the output variable ${JSON.stringify(outputVar?.name ?? d)} from macro ${JSON.stringify(macro.name)} but it did not have a value set`)
+                }
+                exprContext.variables.setValue(variableID, value)
+            })
         } catch (err) {
             if (err instanceof GoToSceneGamePlayerSignal) {
                 popMacro()
