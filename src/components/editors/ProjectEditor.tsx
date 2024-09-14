@@ -82,8 +82,9 @@ const TabButton = ({ tab }: { tab: ProjectEditorTab }) => {
 const Sidebar = () => {
     const [getCurrentTab] = useViewStateTab()
     const getProjectIsLoaded = useSelector(viewStateStore, s => s.loadedProject !== null)
+    const getInGame = useSelector(viewStateStore, s => s.editor?.type === 'game' && s.editor.menu === 'play')
 
-    return <div className={styles.sidebar}>
+    return !getInGame() ? <div className={styles.sidebar}>
         <TabButton tab='home' />
         {getProjectIsLoaded() ? <>
             <TabButton tab='play' />
@@ -95,7 +96,7 @@ const Sidebar = () => {
         <div className={styles.sidebarLine} />
         <TabButton tab='manual' />
         <TabButton tab='settings' />
-    </div>
+    </div> : null
 }
 
 const Footer = () => {

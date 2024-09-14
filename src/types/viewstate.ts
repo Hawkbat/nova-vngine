@@ -1,3 +1,4 @@
+import type { MenuScreen } from '../components/player/GamePlayer'
 import type { ParseFunc } from '../utils/guard'
 import { defineParser, parsers as $ } from '../utils/guard'
 import { hintTuple } from '../utils/types'
@@ -19,7 +20,7 @@ const PROJECT_EDITOR_TAB_MAP: Record<ProjectEditorTab, boolean> = {
 
 export const PROJECT_EDITOR_TABS = Object.keys(PROJECT_EDITOR_TAB_MAP) as ProjectEditorTab[]
 
-export type SubEditorViewState = { type: 'sceneSteps', sceneID: SceneID, stepID: StepID | null } | { type: 'macroSteps', macroID: MacroID, stepID: StepID | null }
+export type SubEditorViewState = { type: 'sceneSteps', sceneID: SceneID, stepID: StepID | null } | { type: 'macroSteps', macroID: MacroID, stepID: StepID | null } | { type: 'game', menu: MenuScreen }
 
 export interface ProjectMetaData {
     id: string
@@ -50,6 +51,9 @@ export const parseSubEditorViewState: ParseFunc<SubEditorViewState> = definePars
     macroSteps: {
         macroID: $.id,
         stepID: (c, v, d) => $.either<StepID, null>(c, v, $.id, $.null, d),
+    },
+    game: {
+        menu: (c, v, d) => $.enum(c, v, ['main', 'play', 'stories', 'saves', 'gameover'], d),
     },
 }, d))
 

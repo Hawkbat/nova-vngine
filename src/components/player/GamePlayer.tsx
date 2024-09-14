@@ -6,6 +6,7 @@ import { useViewStateTab } from '../../operations/viewState'
 import { gamePlayerStore } from '../../store/player'
 import { projectStore } from '../../store/project'
 import { settingsStore } from '../../store/settings'
+import { viewStateStore } from '../../store/viewstate'
 import { type AnyExprValue, type ExprContext, resolveExprAs } from '../../types/expressions'
 import { type CharacterPlayerEvalState, type GamePlayerEvalState, type GameSaveState, prettyPrintActions } from '../../types/player'
 import type { CharacterID, StoryID, VariableID } from '../../types/project'
@@ -283,11 +284,17 @@ const MainMenu = ({ setScreen }: { setScreen: (screen: MenuScreen) => void }) =>
     </Menu>
 }
 
-type MenuScreen = 'main' | 'stories' | 'saves' | 'play' | 'gameover'
+export type MenuScreen = 'main' | 'stories' | 'saves' | 'play' | 'gameover'
 
 export const GamePlayer = () => {
     const getEnableParticles = useSelector(settingsStore, s => s.menuAnimationEnabled)
-    const [screen, setScreen] = useState<MenuScreen>('main')
+    const screen = useSelector(viewStateStore, s => s.editor?.type === 'game' ? s.editor.menu : 'main')()
+    const setScreen = useCallback((screen: MenuScreen) => {
+        viewStateStore.setValue(s => immSet(s, 'editor', { type: 'game', menu: screen }))
+    }, [])
+    useEffect(() => {
+        setScreen('main')
+    }, [setScreen])
     return <div className={styles.gamePlayer}>
         {getEnableParticles() ? <ParticleField /> : null}
         <TransitionGroup values={[screen]} getKey={s => s}>

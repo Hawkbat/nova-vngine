@@ -57,3 +57,31 @@ picture {
 *:hover {
     scrollbar-color: var(--text-color) transparent;
 }
+
+body {
+    font-size: 0.75em;
+}
+
+@media (min-width: 500px) {
+    body {
+        font-size: 1em;
+    }
+}
+
+@media (min-width: 1000px) {
+    body {
+        font-size: 1.25em;
+    }
+}
+
+@media (min-width: 1500px) {
+    body {
+        font-size: 1.5em;
+    }
+}
+
+@media (min-width: 2000px) {
+    body {
+        font-size: 1.75em;
+    }
+}

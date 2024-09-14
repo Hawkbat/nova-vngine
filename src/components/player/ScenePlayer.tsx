@@ -1,4 +1,4 @@
-import { type CSSProperties, useCallback, useLayoutEffect, useRef, useState } from 'react'
+import { type CSSProperties, Fragment, useCallback, useLayoutEffect, useRef, useState } from 'react'
 
 import clickSrc from '../../sounds/click.mp3'
 import { useAsset } from '../../store/assets'
@@ -92,6 +92,11 @@ const textToContent = (text: string, animate: boolean, start: number = 0, end: n
                 styles = { [k ?? '']: v }
                 i = endIndex + 1
             }
+            start = i
+        } else if (text[i] === '-' && text[i + 1] === '-') {
+            if (i > start) commitText()
+            content.push(<Fragment key={i}>{animate ? <Letter>&mdash;</Letter> : <>&mdash;</>}</Fragment>)
+            i += 2
             start = i
         } else if (text[i] === '\\') {
             if (i > start) commitText()
@@ -341,7 +346,7 @@ const Option = ({ enabled, text, index, onSelectOption }: OptionPlayerState & { 
         onSelectOption(index)
         playClick()
     }, [enabled, index, onSelectOption])
-    return <div ref={animRef} className={classes(styles.option, { [styles.enabled ?? '']: enabled })} onClick={onClick}>{index + 1}. {textToContent(text, false)}</div>
+    return <div ref={animRef} className={classes(styles.option, { [styles.enabled ?? '']: enabled })} onClick={onClick}>{index + 1}.&nbsp;{textToContent(text, false)}</div>
 }
 
 const Options = ({ options, onSelectOption }: { options: OptionPlayerState[], onSelectOption: (index: number) => void }) => {

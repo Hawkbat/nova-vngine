@@ -1,0 +1,8 @@
+
+Preload assets by recursing through the step sequences to find upcoming backdrops, character sprites, etc.
+
+Improve step editors with multi-select and multi-drag, keyboard shortcuts to navigate or delete, etc.
+
+Split entities off from the project file and into separate files, one per entity. The project store can stay as-is but with the files saved and loaded separately at project load and save steps. This will help avoid Git conflicts with multiple concurrent edits.
+
+Add a storage backend that utilizes some form of cloud storage so projects can be shared and edited collaboratively.
